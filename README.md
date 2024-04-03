@@ -34,11 +34,13 @@ This project requires you to have ``a native gcc/g++ compiler, make, bison, and 
 
 ## Usage
 
-1. Compile the program using make. The command first cleans the old objects and artifacts from previous compilations.
+1. Compile the program.
 
     ``make clean;make``
 
-2. Executing the program...
+    *This first cleans the old objects/artifacts from previous compilations and then compiles.*
+
+3. Executing the program...
   
 ## License
 
