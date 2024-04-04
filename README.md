@@ -40,8 +40,27 @@ This project requires you to have ``a native gcc/g++ compiler, make, bison, and 
 
     *This first cleans the old objects/artifacts from previous compilations and then compiles.*
 
-3. Executing the program...
-  
+2. Executing the program...
+
+    Inside the **test** folder of the repository contains C- files that we can use to compile.
+    You can execute the program as follows:
+   
+   ``./c- <c- file path>`` *(An input file is required!)*
+
+    #### Arguments (Pass these into the execution of the program, example below...):
+   
+    - **M** - Prints the augmented tree of the code.
+    - **p** - Prints the regular tree of the code.
+    - **P** - Prints the annotated tree of the code.
+    - **d** - Enables yydebug (YACC debug print-outs).
+    - **#** - My custom debug for various random things.
+    
+   *Ex:* To print the annotated and augmented trees you would execute the following...
+   
+   ``./c- <c- file path> -P -M``
+
+3. Enjoy!
+    
 ## License
 
 This project is licensed under the [MIT License](LICENSE). See the [LICENSE](LICENSE) file for details.
