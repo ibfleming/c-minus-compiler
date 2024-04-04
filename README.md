@@ -10,6 +10,7 @@ This was assigned as a class project for my CS445 Compiler course at the Univers
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Example](#example)
 - [License](#license)
 
 ## Features
@@ -59,8 +60,34 @@ This project requires you to have ``a native gcc/g++ compiler, make, bison, and 
    
    ``./c- -P -M <c- file path>`` *(The input file must be the last argument!)*
 
-3. Enjoy!
-    
+3. A ``.tm`` file will be generated after the execution of the program.
+
+    *This file contains information of the Turing Machine code produced by the passed C- file.*
+
+4. Enjoy the program! You can find a series of program examples in the ``examples`` folder.
+
+    *You can view the language and grammar of C- in each ``.c-`` file. Furthermore, each program has an expected output and ``.tm`` code file.*
+
+## Example
+
+Executing the ``a2a.c-`` program...
+
+#### Augmented Tree Output:
+
+![Augmented Tree](https://github.com/ibfleming/my-compiler/blob/final/img/example-augtree.png)
+
+#### Regular Tree Output:
+
+![Regular Tree](https://github.com/ibfleming/my-compiler/blob/final/img/example-regtree.png)
+
+#### Annotated Tree Output:
+
+![Annotated Tree](https://github.com/ibfleming/my-compiler/blob/final/img/example-annotree.png)
+
+#### YYDEBUG Output:
+
+![YYDEBUG](https://github.com/ibfleming/my-compiler/blob/final/img/example-yydebug.png)
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE). See the [LICENSE](LICENSE) file for details.
