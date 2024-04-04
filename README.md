@@ -57,7 +57,7 @@ This project requires you to have ``a native gcc/g++ compiler, make, bison, and 
     
    *Ex:* To print the annotated and augmented trees you would execute the following...
    
-   ``./c- <c- file path> -P -M``
+   ``./c- -P -M <c- file path>`` *(The input file must be the last argument!)*
 
 3. Enjoy!
     
