@@ -16,11 +16,52 @@ BOOLEAN         "True"|"true"|"False"|"false"
 
 %%
 
-{BOOLEAN}       { yylval.token = new Token(std::string(yytext), yylineno, token::TokenType::BOOLCONST); return BOOLCONST; }
-{IDENTIFIER}    { yylval.token = new Token(std::string(yytext), yylineno, token::TokenType::ID); return ID; }
-{NUMBER}        { yylval.token = new Token(std::string(yytext), yylineno, token::TokenType::NUMCONST); return NUMCONST; }
-{CHARACTER}     { yylval.token = new Token(std::string(yytext), yylineno, token::TokenType::CHARCONST); return CHARCONST; }
-{STRING}        { yylval.token = new Token(std::string(yytext), yylineno, token::TokenType::STRINGCONST); return STRINGCONST; }
+"%"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"*"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"("             { printf("Line %d Token: %s\n", yylineno, yytext); }
+")"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"="             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"-"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"{"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"}"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"["             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"]"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+":"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+";"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"<"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+">"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"?"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+","             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"/"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"+"             { printf("Line %d Token: %s\n", yylineno, yytext); }
+"int"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::INT); return INT; }
+"bool"          { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::BOOL); return BOOL; }
+"char"          { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::CHAR); return CHAR; }
+"static"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::STATIC); return STATIC; }
+"if"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::IF); return IF; }
+"then"
+"else"
+"for"
+"to"
+"by"
+"do"
+"while"
+"break"
+":="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ASGN); return ASGN; }
+"+="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ADDASS); return ADDASS; }
+"++"
+"--"
+">="
+"<="
+"and"
+"or"
+"not"
+"return"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::RETURN); return RETURN; }
+{BOOLEAN}       { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::BOOLCONST); return BOOLCONST; }
+{IDENTIFIER}    { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ID); return ID; }
+{NUMBER}        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::NUMCONST); return NUMCONST; }
+{CHARACTER}     { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::CHARCONST); return CHARCONST; }
+{STRING}        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::STRINGCONST); return STRINGCONST; }
 [ \t]+          ; /* IGNORE WHITESPACE */
 \/\/[^\n]*      ; /* IGNORE SINGLE LINE COMMENTS */
 \n              ; /* NEW LINE IGNORED */

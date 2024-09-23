@@ -15,4 +15,4 @@ parser.hpp parser.cpp: parser.y
 	$(BISON) -o parser.cpp parser.y
 
 clean:
-	rm -f $(TARGET) lexer.cpp lexer.hpp parser.cpp parser.hpp parser.output
+	rm -f $(TARGET) lexer.cpp lexer.hpp parser.cpp parser.hpp parser.output results.txt
