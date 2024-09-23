@@ -1,11 +1,11 @@
 CC = g++
-FLAGS = -O3 -std=c++11
+FLAGS = -O3 -std=c++23
 FLEX = flex --header-file=lexer.hpp
 BISON = bison -d #-v
 
 TARGET = c-
 
-$(TARGET): lexer.cpp parser.cpp
+$(TARGET): lexer.cpp parser.cpp token.cpp
 	$(CC) $(FLAGS) $^ -o $@
 
 lexer.hpp lexer.cpp: lexer.l

@@ -18,9 +18,8 @@
 %locations
 
 %start expression
-
-%token <token> NUMCONST
-%type <token> token
+%type  <token> token
+%token <token> ID NUMCONST CHARCONST STRINGCONST BOOLCONST
 
 %% 
 
@@ -28,7 +27,11 @@ expression  :   token
             |   expression token
             ;
 
-token       :   NUMCONST { $$ = $1; $$->print(); delete $1; }
+token       :   ID            { $$ = $1; $$->print(); delete $1; }
+            |   NUMCONST      { $$ = $1; $$->print(); delete $1; }
+            |   CHARCONST     { $$ = $1; $$->print(); delete $1; }
+            |   STRINGCONST   { $$ = $1; $$->print(); delete $1; }
+            |   BOOLCONST     { $$ = $1; $$->print(); delete $1; }
             ;
 
 %%
@@ -37,7 +40,7 @@ int main(int argc, char **argv) {
    if (argc > 1) {
       yyin = fopen(argv[1], "r");
       if (yyin == NULL){
-         printf("syntax: %s filename\n", argv[0]);
+         printf("Error opening file.\n");
       }
    }
    yyparse();
@@ -45,5 +48,5 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *msg) {
-   printf("ERROR(%d): %s\n", yylloc.first_line, msg);
+   return;
 }
