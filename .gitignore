@@ -1,0 +1,14 @@
+# C- Compiler Git Ignore
+
+.vscode
+*.exe
+*.o
+*.out
+
+# Specific
+
+lexer.cpp
+lexer.hpp
+parser.cpp
+parser.hpp
+parser.output
