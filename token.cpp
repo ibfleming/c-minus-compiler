@@ -1,43 +1,9 @@
-#include <cstdio>
-#include "../include/token.hpp"
+#include "token.hpp"
+#include <iostream>
+
+using namespace types;
 
 namespace token {
-
-std::string tokenTypeToString(TokenType type) {
-    switch (type) {
-        case TokenType::ID:              return "ID";
-        case TokenType::NUMCONST:        return "NUMCONST";
-        case TokenType::CHARCONST:       return "CHARCONST";
-        case TokenType::STRINGCONST:     return "STRINGCONST";
-        case TokenType::BOOLCONST:       return "BOOLCONST";
-        case TokenType::INT:             return "INT";
-        case TokenType::BOOL:            return "BOOL";
-        case TokenType::CHAR:            return "CHAR";
-        case TokenType::STATIC:          return "STATIC";
-        case TokenType::IF:              return "IF";
-        case TokenType::THEN:            return "THEN";
-        case TokenType::ELSE:            return "ELSE";
-        case TokenType::FOR:             return "FOR";
-        case TokenType::TO:              return "TO";
-        case TokenType::BY:              return "BY";
-        case TokenType::DO:              return "DO";
-        case TokenType::WHILE:           return "WHILE";
-        case TokenType::BREAK:           return "BREAK";
-        case TokenType::ASGN:            return "ASGN";
-        case TokenType::ADDASS:          return "ADDASS";
-        case TokenType::INC:             return "INC";
-        case TokenType::DEC:             return "DEC";
-        case TokenType::GEQ:             return "GEQ";
-        case TokenType::LEQ:             return "LEQ";
-        case TokenType::NEQ:             return "NEQ";
-        case TokenType::AND:             return "AND";
-        case TokenType::OR:              return "OR";
-        case TokenType::NOT:             return "NOT";
-        case TokenType::RETURN:          return "RETURN";
-        case TokenType::EMPTY:           return "EMPTY";
-        default:                         return "UNKNOWN";
-    }
-}
 
 char processCharConst(Token& token) {
     std::string lexeme = token.getToken();
@@ -80,14 +46,14 @@ int processBoolConst(const std::string& token) {
     }
 }
 
-std::string processStringConst(token::Token& token) {
+std::string processStringConst(Token& token) {
     // token = "abc" || "a" || "a\nb" || "a\\b" || "a\"b" || "a\0b"
 
     const std::string& lexeme = token.getToken();
     const int length = token.getLength();
 
     if (length == 2) { // ""
-        token.setStringLength(0);
+        token.setStrLength(0);
         return "";
     }
 
@@ -113,25 +79,25 @@ std::string processStringConst(token::Token& token) {
         }
     }
 
-    token.setStringLength(result.length());
+    token.setStrLength(result.length());
     return result; // returning the processed string into value_
 }
 
-void processLexeme(Token& token) {
+void processToken(Token& token) {
     switch (token.getType()) {
-        case TokenType::ID:
+        case TokenType::ID_CONST:
             token.setValue(token.getToken());
             break;
-        case TokenType::NUMCONST:
+        case TokenType::NUM_CONST:
             token.setValue(std::stoi(token.getToken()));
             break;
-        case TokenType::CHARCONST:
+        case TokenType::CHAR_CONST:
             token.setValue(processCharConst(token));
             break;
-        case TokenType::STRINGCONST:
+        case TokenType::STRING_CONST:
             token.setValue(processStringConst(token));
             break;
-        case TokenType::BOOLCONST:
+        case TokenType::BOOL_CONST:
             token.setValue(processBoolConst(token.getToken()));  
             break;
         default:
@@ -143,27 +109,27 @@ void processLexeme(Token& token) {
 void lexicalPrint(const Token& token) {
     std::cout << "Line " << token.getLine() << " Token: ";
     switch (token.getType()) {
-        case TokenType::ID:
-            std::cout << tokenTypeToString(token.getType()) << " Value: " << token.getToken() << std::endl;
+        case TokenType::ID_CONST:
+            std::cout << token.printType() << " Value: " << token.getToken() << std::endl;
             break;
-        case TokenType::NUMCONST:
-            std::cout << tokenTypeToString(token.getType()) << " Value: " << token.getInt();
+        case TokenType::NUM_CONST:
+            std::cout << token.printType() << " Value: " << token.getInt();
             std::cout << "  Input: " << token.getToken() << std::endl;
             break;
-        case TokenType::CHARCONST:
-            std::cout << tokenTypeToString(token.getType()) << " Value: '" << token.getChar(); 
+        case TokenType::CHAR_CONST:
+            std::cout << token.printType() << " Value: '" << token.getChar(); 
             std::cout << "'  Input: " << token.getToken() << std::endl;
             break;
-        case TokenType::STRINGCONST:
-            std::cout << tokenTypeToString(token.getType()) << " Value: \"" << token.getString(); 
-            std::cout << "\"  Len: " << token.getStringLength() << "  Input: " << token.getToken() << std::endl;
+        case TokenType::STRING_CONST:
+            std::cout << token.printType() << " Value: \"" << token.getString(); 
+            std::cout << "\"  Len: " << token.getStrLength() << "  Input: " << token.getToken() << std::endl;
             break;
-        case TokenType::BOOLCONST:
-            std::cout << tokenTypeToString(token.getType()) << " Value: " << token.getBool(); 
+        case TokenType::BOOL_CONST:
+            std::cout << token.printType() << " Value: " << token.getBool(); 
             std::cout << "  Input: " << token.getToken() << std::endl;
             break;
         default:
-            std::cout << tokenTypeToString(token.getType()) << std::endl;
+            std::cout << token.printType() << std::endl;
             break;
     } 
     return;

@@ -1,5 +1,6 @@
 %code requires{
-    #include "include/token.hpp"
+    #include "token.hpp"
+    #include "node.hpp"
 }
 
 %{
@@ -8,23 +9,41 @@
 %}
 
 %union{
-  token::Token* token;
+  token::Token *token;
+  node::Node *node;
 }
 
 %define parse.error verbose
 %locations
 
 %start program
-%type  <token> token
-%token <token> ID NUMCONST CHARCONST STRINGCONST BOOLCONST
-%token <token> INT CHAR BOOL STATIC
-%token <token> IF THEN ELSE FOR TO BY DO WHILE BREAK
-%token <token> ASGN ADDASS INC DEC GEQ LEQ NEQ
-%token <token> AND OR NOT RETURN
+
+// Tokens
+%token <token>
+ID NUMCONST CHARCONST STRINGCONST BOOLCONST
+INT CHAR BOOL STATIC
+IF THEN ELSE 
+FOR TO BY DO WHILE BREAK
+AND OR EQL NEQ LESS LEQ GREATER GEQ
+ASGN ADDASGN SUBASGN MULASGN DIVASGN
+ADD SUB MUL DIV MOD 
+DEC INC NOT QUES 
+RETURN
+
+// Non-terminals
+%type <node> 
+program declarationList declaration variableDeclaration scopedVariableDeclaration 
+variableDeclarationList variableDeclarationInit variableDeclarationId typeSpecifier 
+functionDeclaration parameters parameterList parameterTypeList parameterIdList parameterId 
+statement expressionStatement compoundStatement localDeclarations statementList selectStatement 
+ifStatement iterationStatement iterationRange returnStatement breakStatement expression assignmentOperator 
+simpleExpression andExpression unaryRelationalExpression relationalExpression relationalOperator sumExpression 
+sumOperator mulExpression mulOperator unaryExpression unaryOperator factor mutable immutable call arguments 
+argumentList constant
 
 %% 
 
-program                   : declarationList
+program                   : declarationList { node::root = $1; }
                           ;
 
 declarationList           : declarationList declaration
@@ -59,47 +78,172 @@ typeSpecifier             : INT
                           | BOOL
                           ;
 
+functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatement
+                          | ID '(' parameters ')' compoundStatement
+                          ;
+
+parameters                : parameterList
+                          | %empty  { $$ = nullptr; }
+                          ;
+
+parameterList             : parameterList ';' parameterTypeList
+                          | parameterTypeList
+                          ;
+
+parameterTypeList         : typeSpecifier parameterIdList
+                          ;
+
+parameterIdList           : parameterIdList ',' parameterId
+                          | parameterId
+                          ;
+
+parameterId               : ID
+                          | ID '[' ']'
+                          ;
+
+statement                 : expressionStatement
+                          | compoundStatement
+                          | selectStatement
+                          | iterationStatement
+                          | returnStatement
+                          | breakStatement
+                          ;
+
+expressionStatement       : expression ';'
+                          | ';'
+                          ;
+
+compoundStatement         : '{' localDeclarations statementList '}'
+
+localDeclarations         : localDeclarations scopedVariableDeclaration
+                          | %empty  { $$ = nullptr; }
+                          ;
+
+statementList             : statementList statement
+                          | %empty  { $$ = nullptr; }
+                          ;
+
+selectStatement           : ifStatement ';'
+                          ;
+
+ifStatement               : IF simpleExpression THEN statement
+                          | IF simpleExpression THEN statement ELSE ifStatement
+
+iterationStatement        : WHILE simpleExpression DO statement
+                          | FOR ID ASGN iterationRange DO statement
+
+iterationRange            : simpleExpression TO simpleExpression
+                          | simpleExpression TO simpleExpression BY simpleExpression
+
+returnStatement           : RETURN ';'
+                          | RETURN expression ';'
+
+breakStatement            : BREAK ';'
+
+expression                : mutable assignmentOperator expression
+                          | mutable INC
+                          | mutable DEC
+                          | simpleExpression
+                          ; 
+
+assignmentOperator        : ASGN
+                          | ADDASGN
+                          | SUBASGN
+                          | MULASGN
+                          | DIVASGN
+                          ;
+
+simpleExpression          : simpleExpression OR andExpression 
+                          | andExpression
+                          ;
+
+andExpression             : andExpression AND unaryRelationalExpression
+                          | unaryRelationalExpression
+                          ;
+
+unaryRelationalExpression : NOT unaryRelationalExpression
+                          | relationalExpression
+                          ;
+
+relationalExpression      : sumExpression relationalOperator sumExpression
+                          | sumExpression
+                          ;
+
+relationalOperator        : LESS
+                          | LEQ
+                          | GREATER
+                          | GEQ
+                          | EQL
+                          | NEQ
+                          ;
+
+sumExpression             : sumExpression sumOperator mulExpression
+                          | mulExpression
+                          ;
+
+sumOperator               : ADD
+                          | SUB
+                          ;
+
+mulExpression             : mulExpression mulOperator unaryExpression
+                          | unaryExpression
+                          ;
+
+mulOperator               : MUL
+                          | DIV
+                          | MOD
+                          ;
+
+unaryExpression           : unaryOperator unaryExpression
+                          | factor
+                          ;
+
+unaryOperator             : SUB
+                          | MUL
+                          | QUES
+                          ; 
+
+factor                    : mutable
+                          | immutable
+
+mutable                   : ID  { $$ = new node::Node($1, types::NodeType::ID); delete $1; }
+                          | ID '[' expression ']' 
+                          ;
+
+immutable                 : '(' expression ')'  { $$ = $2; delete $2; }
+                          | call                { $$ = $1; delete $1; }
+                          | constant            { $$ = $1; delete $1; }
+                          ;
+
+call                      : ID '(' arguments ')' {
+                              $$ = new node::Node($1, types::NodeType::CALL);
+                              if ( $3 != nullptr ) {
+                                $$->setChild($3);
+                              }
+                          }
+                          ;
+
+arguments                 : argumentList  { $$ = $1; delete $1; }
+                          | %empty        { $$ = nullptr;}
+                          ;
+
+argumentList              : argumentList ',' expression {
+                              if ( $1 != nullptr ) {
+                                $1->setSibling($3);
+                                $$ = $1;
+                                delete $1; delete $3;
+                              }
+                              else {
+                                $$ = $3;
+                                delete $1; delete $3;
+                              }
+                          }
+                          | expression  { $$ = $1; delete $1; }
+                          ;
+
+constant                  : NUMCONST    { $$ = new node::Node($1, types::NodeType::CONSTANT); delete $1; }   
+                          | CHARCONST   { $$ = new node::Node($1, types::NodeType::CONSTANT); delete $1; }  
+                          | STRINGCONST { $$ = new node::Node($1, types::NodeType::CONSTANT); delete $1; }  
+                          | BOOLCONST   { $$ = new node::Node($1, types::NodeType::CONSTANT); delete $1; }  
+                          ;                    
 %%
-
-/*
-expression  :   token
-            |   expression token
-            ;
-
-token       :   ID            { $$ = $1; $$->print(); delete $1; }
-            |   NUMCONST      { $$ = $1; $$->print(); delete $1; }
-            |   CHARCONST     { $$ = $1; $$->print(); delete $1; }
-            |   STRINGCONST   { $$ = $1; $$->print(); delete $1; }
-            |   BOOLCONST     { $$ = $1; $$->print(); delete $1; }
-            // Types
-            |   INT           { $$ = $1; $$->print(); delete $1; }
-            |   CHAR          { $$ = $1; $$->print(); delete $1; }
-            |   BOOL          { $$ = $1; $$->print(); delete $1; }
-            |   STATIC        { $$ = $1; $$->print(); delete $1; }
-            // Conditional Block
-            |   IF            { $$ = $1; $$->print(); delete $1; }
-            |   THEN          { $$ = $1; $$->print(); delete $1; }
-            |   ELSE          { $$ = $1; $$->print(); delete $1; }
-            // Loops
-            |   FOR           { $$ = $1; $$->print(); delete $1; }
-            |   TO            { $$ = $1; $$->print(); delete $1; }
-            |   BY            { $$ = $1; $$->print(); delete $1; }
-            |   DO            { $$ = $1; $$->print(); delete $1; }
-            |   WHILE         { $$ = $1; $$->print(); delete $1; }
-            |   BREAK         { $$ = $1; $$->print(); delete $1; }
-            // Operators
-            |   ASGN          { $$ = $1; $$->print(); delete $1; }
-            |   ADDASS        { $$ = $1; $$->print(); delete $1; }
-            |   INC           { $$ = $1; $$->print(); delete $1; }
-            |   DEC           { $$ = $1; $$->print(); delete $1; }
-            |   GEQ           { $$ = $1; $$->print(); delete $1; }
-            |   LEQ           { $$ = $1; $$->print(); delete $1; }
-            |   NEQ           { $$ = $1; $$->print(); delete $1; }
-            // Logical Operators
-            |   AND           { $$ = $1; $$->print(); delete $1; }
-            |   OR            { $$ = $1; $$->print(); delete $1; }
-            |   NOT           { $$ = $1; $$->print(); delete $1; }
-            // Return
-            |   RETURN        { $$ = $1; $$->print(); delete $1; }
-            ;
-*/
