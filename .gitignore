@@ -3,7 +3,6 @@
 .vscode
 *.exe
 *.o
-*.out
 
 # Specific
 

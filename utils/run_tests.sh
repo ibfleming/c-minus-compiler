@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Set the directory and output file
-TEST_DIR="./tests"
+HW_DIR="hw1"
+TEST_DIR="./tests/${HW_DIR}"
 OUTPUT_FILE="./results.txt"
 
 # Create the output file if it doesn't exist

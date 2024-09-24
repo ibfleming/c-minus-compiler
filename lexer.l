@@ -1,5 +1,5 @@
 %{   
-#include "token.hpp"
+#include "include/token.hpp"
 #include "parser.hpp"
 #include <string>
 using namespace token;
@@ -39,23 +39,24 @@ BOOLEAN         "True"|"true"|"False"|"false"
 "char"          { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::CHAR); return CHAR; }
 "static"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::STATIC); return STATIC; }
 "if"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::IF); return IF; }
-"then"
-"else"
-"for"
-"to"
-"by"
-"do"
-"while"
-"break"
+"then"          { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::THEN); return THEN; }
+"else"          { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ELSE); return ELSE; }
+"for"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::FOR); return FOR; }
+"to"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::TO); return TO; }
+"by"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::BY); return BY; }
+"do"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::DO); return DO; }
+"while"         { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::WHILE); return WHILE; }
+"break"         { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::BREAK); return BREAK; }
 ":="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ASGN); return ASGN; }
 "+="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ADDASS); return ADDASS; }
-"++"
-"--"
-">="
-"<="
-"and"
-"or"
-"not"
+"++"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::INC); return INC; }        
+"--"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::DEC); return DEC; }
+">="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::GEQ); return GEQ; }
+"<="            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::LEQ); return LEQ; }
+"><"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::NEQ); return NEQ; }
+"and"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::AND); return AND; }
+"or"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::OR); return OR; }
+"not"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::NOT); return NOT; }
 "return"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::RETURN); return RETURN; }
 {BOOLEAN}       { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::BOOLCONST); return BOOLCONST; }
 {IDENTIFIER}    { yylval.token = new Token(std::string(yytext), yylineno, yyleng, token::TokenType::ID); return ID; }

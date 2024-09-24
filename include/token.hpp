@@ -10,22 +10,16 @@ namespace token {
 class Token;
 
 enum class TokenType {
-    ID,
-    NUMCONST,
-    CHARCONST,
-    STRINGCONST,
-    BOOLCONST,
-    INT,
-    BOOL,
-    CHAR,
-    STATIC,
-    ADDASS,
-    RETURN,
-    IF,
+    ID, NUMCONST, CHARCONST, STRINGCONST, BOOLCONST,
+    INT, CHAR, BOOL, STATIC,
+    IF, THEN, ELSE,
+    FOR, TO, BY, DO, WHILE, BREAK,
+    ASGN, ADDASS, INC, DEC, GEQ, LEQ, NEQ,
+    AND, OR, NOT, RETURN,
     EMPTY,
 };
 
-using TokenValue = std::variant<int, char, std::string, bool>;
+using TokenValue = std::variant<int, char, std::string>;
 
 void processLexeme(Token& token);
 void lexicalPrint(const Token& token);
@@ -48,7 +42,7 @@ public:
     int getLine() const { return line_; }
     int getStringLength() const { return strLength_; }
 
-    // TokenValue Getters (int, char, string, bool)
+    // TokenValue Getters (int, char, string, bool?)
     int getInt() const {
         if (std::holds_alternative<int>(value_)) {
             return std::get<int>(value_);
@@ -67,12 +61,12 @@ public:
         }
         throw std::bad_variant_access();
     }
-    bool getBool() const {
-        if (std::holds_alternative<bool>(value_)) {
-            return std::get<bool>(value_);
+    int getBool() const {
+        if (std::holds_alternative<int>(value_)) {
+            return std::get<int>(value_);
         }
         throw std::bad_variant_access();
-    }
+    } // 0 = false, 1 = true (compiler specs say boolean values are 0 or 1 integers)
     
     // Setters
     void setValue(TokenValue value) { value_ = value; }
@@ -88,4 +82,4 @@ private:
 
 } // namespace token
 
-#endif
+#endif // TOKEN_HPP

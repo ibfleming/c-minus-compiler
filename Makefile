@@ -3,9 +3,10 @@ FLAGS = -O3 -std=c++23
 FLEX = flex --header-file=lexer.hpp
 BISON = bison -d #-v
 
+SRCS = main.cpp lexer.cpp parser.cpp src/token.cpp src/node.cpp
 TARGET = c-
 
-$(TARGET): lexer.cpp parser.cpp token.cpp
+$(TARGET): $(SRCS)
 	$(CC) $(FLAGS) $^ -o $@
 
 lexer.hpp lexer.cpp: lexer.l
