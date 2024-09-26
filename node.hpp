@@ -14,8 +14,13 @@ public:
         line = token->getLine();
         value = token->getValue();
         tokenType = token->getType();
-        std::cout << "Created Node: " << token->getToken() << std::endl;
     }
+    Node(token::Token *token, types::NodeType nodeType, types::VarType varType) : nodeType(nodeType), varType(varType), arrayType(types::ArrayType::NOT_ARRAY) {
+        line = token->getLine();
+        value = token->getValue();
+        tokenType = token->getType();
+    }
+
     std::vector<node::Node*> children;
     Node* sibling;
     types::NodeType nodeType;   // FUNCTION, VAR, etc.
@@ -26,11 +31,17 @@ public:
     int line;
 
     void setSibling(node::Node* sibling) { this->sibling = sibling; }
-    void setChild(node::Node* child) { children.push_back(child); }
+    Node* getSibling() { return sibling; }
+    void addChild(node::Node* child) { children.push_back(child); }
+    void setType(types::VarType varType) { this->varType = varType; }
+    void setNodeType(types::NodeType nodeType) { this->nodeType = nodeType; }
+    types::VarType getType() { return varType; }
 private:
 };
 
-extern Node* root;
+extern Node *root; // root node of AST
+
+void printTree(Node *root);
 
 } // namespace node
 

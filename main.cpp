@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include "utils.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
@@ -12,7 +13,11 @@ int main(int argc, char **argv) {
          printf("Error opening file.\n");
       }
    }
+
    yyparse();
+
+   utils::printTree();
+
    return 0;
 }
 

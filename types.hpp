@@ -82,8 +82,8 @@ enum class TokenType {
 enum class VarType {
     INT,
     CHAR,
+    STRING,
     BOOL,
-    STATIC,
     UNKNOWN,
 };
 
@@ -97,6 +97,24 @@ enum class NodeType {
     CALL,
     ID,
     ARRAY,
+    UNARY,
+    OPERATOR,
+    NOT,
+    AND,
+    OR,
+    ASSIGNMENT,
+    BREAK,
+    RANGE,
+    FOR,
+    WHILE,
+    VARIABLE,
+    VARIABLE_ARRAY,
+    IF,
+    COMPOUND,
+    PARAMETER,
+    PARAMETER_ARRAY,
+    STATIC_VARIABLE,
+    RETURN,
     UNKNOWN,
 };
 
