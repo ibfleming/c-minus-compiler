@@ -9,7 +9,17 @@ namespace node {
     Node *root = nullptr;
 
     void printTree(Node *root) {
-        cout << "Print Tree" << endl;
+
+        if (root == nullptr) {
+            return;
+        }
+
+        Node *current = root;
+
+        while (current != nullptr) {
+            current->printNode();
+            current = current->getSibling();
+        }
     }
 
 } // namespace node

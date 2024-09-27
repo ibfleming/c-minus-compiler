@@ -10,37 +10,96 @@ namespace node {
 
 class Node {
 public:
-    Node(token::Token *token, types::NodeType nodeType) : nodeType(nodeType), varType(types::VarType::UNKNOWN), arrayType(types::ArrayType::NOT_ARRAY) {
-        line = token->getLine();
-        value = token->getValue();
-        tokenType = token->getType();
-    }
-    Node(token::Token *token, types::NodeType nodeType, types::VarType varType) : nodeType(nodeType), varType(varType), arrayType(types::ArrayType::NOT_ARRAY) {
-        line = token->getLine();
-        value = token->getValue();
-        tokenType = token->getType();
+    /**
+     * @fn Node
+     * @param token The token to create a node from.
+     * @param nodeType The type of node to create.
+     */
+    Node(token::Token *token, types::NodeType nodeType) : nodeType_(nodeType), varType_(types::VarType::UNKNOWN) {
+        line_ = token->getLine();
+        value_ = token->getValue();
+        tokenType_ = token->getType();
+        sibling_ = nullptr;
+        siblingLocation_ = 0;
     }
 
-    std::vector<node::Node*> children;
-    Node* sibling;
-    types::NodeType nodeType;   // FUNCTION, VAR, etc.
-    types::VarType varType;     // INT, CHAR, BOOL, STATIC, UNKNOWN
-    types::ArrayType arrayType; // optional?
-    types::TokenType tokenType; // ID, NUMCONST, CHARCONST, STRINGCONST, BOOLCONST, etc.
-    types::TokenValue value;    // value of the token (int, char, string) after processing
-    int line;
+    /**
+     * @fn Node
+     * @param token The token to create a node from.
+     * @param nodeType The type of node to create.
+     * @param varType The variable type of the node.
+     */
+    Node(token::Token *token, types::NodeType nodeType, types::VarType varType) : nodeType_(nodeType), varType_(varType) {
+        line_ = token->getLine();
+        value_ = token->getValue();
+        tokenType_ = token->getType();
+        sibling_ = nullptr;
+        siblingLocation_ = 0;
+    }
 
-    void setSibling(node::Node* sibling) { this->sibling = sibling; }
-    Node* getSibling() { return sibling; }
-    void addChild(node::Node* child) { children.push_back(child); }
-    void setType(types::VarType varType) { this->varType = varType; }
-    void setNodeType(types::NodeType nodeType) { this->nodeType = nodeType; }
-    types::VarType getType() { return varType; }
+    // Getters
+    types::NodeType getNodeType() const { return nodeType_; }
+    types::VarType getVarType() const { return varType_; }
+    types::TokenType getTokenType() const { return tokenType_; }
+    std::vector<node::Node*> getChildren() const { return children_; }
+    Node* getSibling() const { return sibling_; }
+    int getLine() const { return line_; }
+    int getSibLoc() const { return siblingLocation_; }
+
+    // Setters
+    void setNodeType(types::NodeType nodeType) { nodeType_ = nodeType; }
+    void setVarType(types::VarType varType) { varType_ = varType; }
+    void setSibLoc(int loc) { siblingLocation_ = loc; } 
+    void addChild(Node* child) { children_.push_back(child); }
+    
+    // Functions
+    void printNode() {
+        if ( siblingLocation_ != 0 ) {
+            std::cout << "Sibling: " << siblingLocation_ << "  ";
+        }
+        std::cout << types::nodeTypeToStr(nodeType_) << ": ";
+        std::cout << "  [line: " << line_ << "]";
+        std::cout << std::endl;
+    }
+
+    void setSibling(Node* sibling) {
+        if (sibling_ == nullptr) {
+            sibling_ = sibling;
+            sibling_->setSibLoc(siblingLocation_ + 1);
+        } else {
+            Node *temp = sibling_;
+            int loc = temp->getSibLoc();
+            while( temp->getSibling() != nullptr) {
+                temp = temp->getSibling();
+                loc = temp->getSibLoc();
+            }
+            temp->setSibling(sibling);
+            sibling->setSibLoc(loc + 1);
+        }
+    }
+
+
+
+
 private:
+    std::vector<node::Node*> children_;
+    Node* sibling_;
+    int siblingLocation_;
+    types::NodeType nodeType_;   // FUNCTION, VAR, etc.
+    types::VarType varType_;     // INT, CHAR, BOOL, STATIC, UNKNOWN
+    types::TokenType tokenType_; // ID, NUMCONST, CHARCONST, STRINGCONST, BOOLCONST, etc.
+    types::TokenValue value_;    // value of the token (int, char, string) after processing
+    int line_;
 };
 
 extern Node *root; // root node of AST
 
+/**
+ * @fn printTree
+ * @param root Pointer to the root node of the AST.
+ * @brief Prints the AST to the console.
+ * @return void
+ */
 void printTree(Node *root);
 
 } // namespace node

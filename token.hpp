@@ -74,7 +74,7 @@ public:
 
     // Print
     void print() { lexicalPrint(*this); }
-    std::string printType() const { return ""; } 
+    std::string printType() const { return types::tknTypeToStr(type_); } 
 };
 
 } // namespace token

@@ -2,7 +2,7 @@
 
 namespace types {
 
-std::string typeToStr(TokenType type) {
+std::string tknTypeToStr(TokenType type) {
     switch (type) {
         case TokenType::ID_CONST:       return "ID";
         case TokenType::NUM_CONST:      return "NUMCONST";
@@ -46,6 +46,46 @@ std::string typeToStr(TokenType type) {
         case TokenType::QUES_OP:        return "?";
         case TokenType::RETURN:         return "RETURN";
         default:                        return "UNKNOWN";
+    }
+}
+
+std::string nodeTypeToStr(NodeType type) {
+    switch (type) {
+        case NodeType::FUNCTION:            return "Func";
+        case NodeType::CONSTANT:            return "Const";
+        case NodeType::CALL:                return "Call";
+        case NodeType::ID:                  return "Id";
+        case NodeType::ARRAY:               return "[";
+        case NodeType::UNARY:               return "UNARY";
+        case NodeType::OPERATOR:            return "Op";
+        case NodeType::NOT:                 return "NOT";
+        case NodeType::AND:                 return "AND";
+        case NodeType::OR:                  return "OR";
+        case NodeType::ASSIGNMENT:          return "Assign";
+        case NodeType::BREAK:               return "BREAK";
+        case NodeType::RANGE:               return "Range";
+        case NodeType::FOR:                 return "FOR";
+        case NodeType::WHILE:               return "WHILE";
+        case NodeType::VARIABLE:            return "Var";
+        case NodeType::VARIABLE_ARRAY:      return "Var"; // Var Array...
+        case NodeType::IF:                  return "IF";
+        case NodeType::COMPOUND:            return "Compound";
+        case NodeType::PARAMETER:           return "Parm";
+        case NodeType::PARAMETER_ARRAY:     return "PARAMETER_ARRAY";
+        case NodeType::STATIC_VARIABLE:     return "STATIC_VARIABLE";
+        case NodeType::RETURN:              return "Return";
+        case NodeType::UNKNOWN:             return "UNKNOWN";
+        default:                            return "INVALID_NODE_TYPE";
+    }
+}
+
+std::string varTypeToStr(VarType type) {
+    switch (type) {
+        case VarType::INT:      return "INT";
+        case VarType::CHAR:     return "CHAR";
+        case VarType::STRING:   return "STRING";
+        case VarType::BOOL:     return "BOOL";
+        default:                return "UNKNOWN";
     }
 }
 

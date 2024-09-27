@@ -50,12 +50,8 @@ program                   : declarationList { node::root = $1; }
 
 declarationList           : declarationList declaration
                           {
-                            if ($1 != nullptr) {
-                              $1->setSibling($2);
-                              $$ = $1;
-                            } else {
-                              $$ = $2;
-                            }
+                            $$ = $1;
+                            $$->setSibling($2);
                           }
                           | declaration   { $$ = $1; }
                           ;
@@ -68,7 +64,7 @@ variableDeclaration       : typeSpecifier variableDeclarationList ';'
                           {
                             auto *temp = $2;
                             while (temp != nullptr) {
-                              temp->setType($1->getType());
+                              temp->setVarType($1->getVarType());
                               if( temp->getSibling() != nullptr ) {
                                 temp = temp->getSibling();
                               } else {
@@ -83,7 +79,7 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                           {
                             auto *temp = $3;
                             while( temp != nullptr ) {
-                              temp->setType($2->getType());
+                              temp->setVarType($2->getVarType());
                               if( temp->getSibling() != nullptr ) {
                                 temp = temp->getSibling();
                               } else {
@@ -97,7 +93,7 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                           {
                             auto *temp = $2;
                             while (temp != nullptr) {
-                              temp->setType($1->getType());
+                              temp->setVarType($1->getVarType());
                               if( temp->getSibling() != nullptr ) {
                                 temp = temp->getSibling();
                               } else {
@@ -110,8 +106,8 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
 
 variableDeclarationList   : variableDeclarationList ',' variableDeclarationInit
                           {
-                            $1->setSibling($3);
                             $$ = $1;
+                            $$->setSibling($3);
                           }
                           | variableDeclarationInit   { $$ = $1; }
                           ;
@@ -131,19 +127,18 @@ variableDeclarationId     : ID
                           | ID '[' NUMCONST ']'
                           {
                             $$ = new node::Node($1, NT::VARIABLE_ARRAY);
-                            $$->addChild(new node::Node($3, NT::CONSTANT, VT::INT));
                           }
                           ;
 
-typeSpecifier             : INT    { $$->setType(VT::INT); }
-                          | CHAR   { $$->setType(VT::CHAR); }
-                          | BOOL   { $$->setType(VT::BOOL); }
+typeSpecifier             : INT    { $$->setVarType(VT::INT); }
+                          | CHAR   { $$->setVarType(VT::CHAR); }
+                          | BOOL   { $$->setVarType(VT::BOOL); }
                           ;
 
 functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatement
                           {
                             $$ = new node::Node($2, NT::FUNCTION);
-                            $$->setType($1->getType());
+                            $$->setVarType($1->getVarType());
                             if ($4 != nullptr) {
                               $$->addChild($4);
                             }
@@ -170,9 +165,7 @@ parameters                : parameterList   { $$ = $1; }
 parameterList             : parameterList ';' parameterTypeList
                           {
                             $$ = $1;
-                            if ($3 != nullptr) {
-                              $$->setSibling($3);
-                            }
+                            $$->setSibling($3);
                           }
                           | parameterTypeList   { $$ = $1; }
                           ;
@@ -181,7 +174,7 @@ parameterTypeList         : typeSpecifier parameterIdList
                           {
                             auto *temp = $2;
                             while (temp != nullptr) {
-                              temp->setType($1->getType());
+                              temp->setVarType($1->getVarType());
                               if( temp->getSibling() != nullptr ) {
                                 temp = temp->getSibling();
                               } else {
@@ -194,12 +187,8 @@ parameterTypeList         : typeSpecifier parameterIdList
 
 parameterIdList           : parameterIdList ',' parameterId
                           {
-                            if ($1 != nullptr) {
-                              $1->setSibling($3);
-                              $$ = $1;
-                            } else {
-                              $$ = $1;
-                            }
+                            $$ = $1;
+                            $1->setSibling($3);
                           }
                           | parameterId   { $$ = $1; }
                           ;

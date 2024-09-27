@@ -127,7 +127,26 @@ enum class ArrayType {
     NOT_ARRAY,
 };
 
-std::string typeToStr(TokenType type);
+/**
+ * @fn tknTypeToStr
+ * @param type The type of token to convert to a string.
+ * @brief Converts token type to a printable string.
+ */
+std::string tknTypeToStr(TokenType type);
+
+/**
+ * @fn nodeTypeToStr
+ * @param type The type of node to convert to a string.
+ * @brief Converts node type to a printable string.
+ */
+std::string nodeTypeToStr(NodeType type);
+
+/**
+ * @fn varTypeToStr
+ * @param type The type of node to convert to a string.
+ * @brief Converts node type to a printable string.
+ */
+std::string varTypeToStr(VarType type);
 
 } // namespace types
 

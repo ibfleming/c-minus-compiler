@@ -106,6 +106,12 @@ void processToken(Token& token) {
     }
 }
 
+/**
+ * @fn lexicalPrint
+ * @param token The token to print.
+ * @return void
+ * @brief Prints the token to the console (used in hw1)
+ */
 void lexicalPrint(const Token& token) {
     std::cout << "Line " << token.getLine() << " Token: ";
     switch (token.getType()) {
