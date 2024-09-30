@@ -5,13 +5,34 @@
 #include <string>
 #include <variant>
 
+/**
+ * @namespace token
+ * @brief Contains the Token class and related functions.
+ */
 namespace token {
 
-class Token;
+class Token;    // forward declaration
 
+/**
+ * @fn processToken
+ * @param token The token to process.
+ * @return void
+ * @brief Processes the token and sets the value based on the token type.
+ */
 void processToken(Token& token);
+
+/**
+ * @fn lexicalPrint
+ * @param token The token to print.
+ * @return void
+ * @brief Prints the token to the console (used in hw1).
+ */
 void lexicalPrint(const Token& token);
 
+/**
+ * @class Token
+ * @brief Represents a token (lexeme) that was read by the lexer.
+ */
 class Token {
 
 private:
@@ -23,6 +44,14 @@ private:
     int line_;                      // Line number where the token was found
 
 public:
+    /**
+     * @fn Token
+     * @param token The token (lexeme) that was read by the lexer.
+     * @param line The line number where the token was found.
+     * @param length The length of the token (lexeme).
+     * @param type The name of the token class (ID, ASGN, SUB, IF, FOR, etc.).
+     * @brief Constructor for the Token class.
+     */
     Token(const std::string& token, int line, int length, types::TokenType type) 
     : type_(type),
       strLength_(0),
@@ -34,45 +63,60 @@ public:
     }
     
     // Getters
-    types::TokenValue getValue() const      { return value_; }
-    types::TokenType getType() const        { return type_; }
-    std::string getToken() const     { return token_; }
-    int getLength() const            { return length_; }
-    int getLine() const              { return line_; }
-    int getStrLength() const         { return strLength_; }
+
+    types::TokenValue getValue() const  { return value_; }
+    types::TokenType getType() const    { return type_; }
+    std::string getToken() const        { return token_; }
+    int getLength() const               { return length_; }
+    int getLine() const                 { return line_; }
+    int getStrLength() const            { return strLength_; }
 
     // Setters
+
     void setValue(types::TokenValue value)  { value_ = value; }
-    void setStrLength(int length)    { strLength_ = length; }
+    void setStrLength(int length)           { strLength_ = length; }
 
     // TokenValue Getters (int, char, string)
-    int getInt() const {
-        if (std::holds_alternative<int>(value_)) {
-            return std::get<int>(value_);
-        }
-        throw std::bad_variant_access();
-    }
-    char getChar() const {
-        if (std::holds_alternative<char>(value_)) {
-            return std::get<char>(value_);
-        }
-        throw std::bad_variant_access();
-    }
-    std::string getString() const {
-        if (std::holds_alternative<std::string>(value_)) {
-            return std::get<std::string>(value_);
-        }
-        throw std::bad_variant_access();
-    }
-    int getBool() const {
-        if (std::holds_alternative<int>(value_)) {
-            return std::get<int>(value_);
-        }
-        throw std::bad_variant_access();
-    } // 0 = false, 1 = true (compiler specs say boolean values are 0 or 1 integers)
 
-    // Print
+    /**
+     * @fn getInt
+     * @brief Returns integer variant of the value.
+     * @return int
+     */
+    int getInt() const;
+
+    /**
+     * @fn getChar
+     * @brief Returns character variant of the value.
+     * @return char
+     */
+    char getChar() const;
+
+    /**
+     * @fn getString
+     * @brief Returns string variant of the value.
+     * @return std::string
+     */
+    std::string getString() const;
+
+    /**
+     * @fn getBool
+     * @brief Returns boolean variant of the value.
+     * @return int
+     */
+    int getBool() const;
+
+    /**
+     * @fn print
+     * @brief Prints the token to the console using lexcalPrint().
+     */
     void print() { lexicalPrint(*this); }
+
+    /**
+     * @fn printType
+     * @brief Returns the name of the token class (ID, ASGN, SUB, IF, FOR, etc.).
+     * @return std::string
+     */
     std::string printType() const { return types::tknTypeToStr(type_); } 
 };
 

@@ -6,6 +6,12 @@
 
 namespace types {
 
+/**
+ * @typedef TokenValue
+ * @brief Represents the value of a token.
+ * 
+ * A token can have a value of type int, char, or string.
+ */
 using TokenValue = std::variant<int, char, std::string>;
 
 /**
@@ -19,29 +25,39 @@ using TokenValue = std::variant<int, char, std::string>;
  * unary operators, and return statements.
  */
 enum class TokenType {
+
     // CONSTANTS
+
     ID_CONST,
     NUM_CONST,
     CHAR_CONST,
     STRING_CONST,
     BOOL_CONST,
+
     // TYPES
+
     INT_TYPE,
     CHAR_TYPE,
     BOOL_TYPE,
     STATIC_TYPE,
+
     // CONTROL
+
     IF_CONTROL,
     THEN_CONTROL,
     ELSE_CONTROL,
+
     // LOOPS (ITERATION)
+
     FOR_LOOP,
     TO_LOOP,
     BY_LOOP,
     DO_LOOP,
     WHILE_LOOP,
     BREAK_LOOP,
+
     // BINARY OPERATORS
+
     AND_OP,
     OR_OP,
     EQL_OP,
@@ -50,7 +66,7 @@ enum class TokenType {
     LEQ_OP,
     GREATER_OP,
     GEQ_OP,
-    ASGN_OP, // assignment 'x := 0' => 'x = 0' OR 'x is 0'
+    ASGN_OP,    // assignment 'x := 0' => 'x = 0' OR 'x is 0'
     ADDASGN_OP, // assignment
     SUBASGN_OP, // assignment
     MULASGN_OP, // assignment
@@ -60,18 +76,28 @@ enum class TokenType {
     MUL_OP,
     DIV_OP,
     MOD_OP,
+
     // UNARY OPERATORS
+
     DEC_OP, // -- = are assignment operators
     INC_OP, // ++ = are assignment operators
     NOT_OP,
     // MUL_OP -- defined already but maybe differentiated
     // SUB_OP -- defined already but maybe differentiated
     QUES_OP,
-    // RETURN
-    RETURN,
-    // UNKNOWN
+
+    // COMPOUND
+
     LBRACE,
-    UNKNOWN,
+    RBRACE,
+
+    // RETURN
+
+    RETURN,
+
+    // UNKNOWN
+
+    UNKNOWN
 };
 
 /**
@@ -87,7 +113,7 @@ enum class VarType {
     BOOL,
     STATIC,
     VOID,
-    UNKNOWN,
+    UNKNOWN
 };
 
 /**
@@ -95,14 +121,20 @@ enum class VarType {
  * @brief Represents the node type in the AST.
  */
 enum class NodeType {
+
+    // DATA TYPES
+
+    BOOLEAN,
+    CHARACTER,
+    NUMBER,
+    STRING,
+    ARRAY,
+
+    // EXPRESSIONS
+
     FUNCTION,
-    BOOLCONST,
-    CHARCONST,
-    NUMCONST,
-    STRINGCONST,
     CALL,
     ID,
-    ARRAY,
     QUES_UNARY,
     CHSIGN_UNARY,
     SIZEOF_UNARY,
@@ -110,29 +142,35 @@ enum class NodeType {
     NOT,
     AND,
     OR,
-    ASSIGNMENT,
+
+    // CONTROL FLOW
+
     BREAK,
-    RANGE,
     FOR,
     WHILE,
-    VARIABLE,
-    VARIABLE_ARRAY,
     IF,
     COMPOUND,
+    RETURN,
+
+    // VARIABLES
+
+    VARIABLE,
+    VARIABLE_ARRAY,
     PARAMETER,
     PARAMETER_ARRAY,
     STATIC_VARIABLE,
-    RETURN,
-    UNKNOWN,
-};
 
-/**
- * @enum ArrayType
- * @brief Represents if a token/node is an array or not.
- */
-enum class ArrayType {
-    IS_ARRAY,
-    NOT_ARRAY,
+    // ASSIGNMENT
+
+    ASSIGNMENT,
+
+    // LOOPS (ITERATION)
+
+    RANGE,
+
+    // MISCELLANEOUSS
+
+    UNKNOWN
 };
 
 /**

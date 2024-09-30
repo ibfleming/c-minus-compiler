@@ -5,6 +5,41 @@ using namespace types;
 
 namespace token {
 
+
+    int Token::getInt() const {
+        if (std::holds_alternative<int>(value_)) {
+            return std::get<int>(value_);
+        }
+        throw std::bad_variant_access();
+    }
+
+    char Token::getChar() const {
+        if (std::holds_alternative<char>(value_)) {
+            return std::get<char>(value_);
+        }
+        throw std::bad_variant_access();
+    }
+
+    std::string Token::getString() const {
+        if (std::holds_alternative<std::string>(value_)) {
+            return std::get<std::string>(value_);
+        }
+        throw std::bad_variant_access();
+    }
+
+    int Token::getBool() const {
+        if (std::holds_alternative<int>(value_)) {
+            return std::get<int>(value_);
+        }
+        throw std::bad_variant_access();
+    }
+
+/**
+ * @fn processCharConst
+ * @param token The character token to process.
+ * @return char
+ * @brief Processes the character token and returns the character.
+ */
 char processCharConst(Token& token) {
     std::string lexeme = token.getToken();
     int length = token.getLength() - 2; // remove single quotes
@@ -38,6 +73,12 @@ char processCharConst(Token& token) {
     return lexeme[1]; // return single char by default
 }
 
+/**
+ * @fn processBoolConst
+ * @param token The boolean token to process.
+ * @return int
+ * @brief Processes the boolean token and returns the integer value.
+ */
 int processBoolConst(const std::string& token) {
     if (token == "true" || token == "True") {
         return 1;
@@ -46,6 +87,12 @@ int processBoolConst(const std::string& token) {
     }
 }
 
+/**
+ * @fn processStringConst
+ * @param token The string token to process.
+ * @return string
+ * @brief Processes the string token and returns the string.
+ */
 std::string processStringConst(Token& token) {
     // token = "abc" || "a" || "a\nb" || "a\\b" || "a\"b" || "a\0b"
 
@@ -106,12 +153,6 @@ void processToken(Token& token) {
     }
 }
 
-/**
- * @fn lexicalPrint
- * @param token The token to print.
- * @return void
- * @brief Prints the token to the console (used in hw1)
- */
 void lexicalPrint(const Token& token) {
     std::cout << "Line " << token.getLine() << " Token: ";
     switch (token.getType()) {

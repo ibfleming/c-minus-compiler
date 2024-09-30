@@ -4,7 +4,6 @@
 
 typedef types::NodeType NT;
 
-
 using namespace std;
 
 namespace node {
@@ -97,54 +96,60 @@ namespace node {
      */
     void Node::printValue() {
         switch (nodeType_) {
-            case NT::FUNCTION:
-                cout << "Func: " << getString() << " ";
-                return;
-            case NT::PARAMETER:
-                cout << "Parm: " << getString() << " ";
-                return;
-            case NT::PARAMETER_ARRAY:
-                cout << "Parm: " << getString() << " ";
-                return;
-            case NT::ASSIGNMENT:
-                cout << "Assign: " << getString();
-                return;
-            case NT::VARIABLE:
-                cout << "Var: " << getString() << " ";
-                return;
-            case NT::VARIABLE_ARRAY:
-                cout << "Var: " << getString() << " ";
-                return;
-            case NT::STATIC_VARIABLE:
-                cout << "Var: " << getString() << " ";
-                return;
-            case NT::ID:
-                cout << "Id: " << getString();
-                return;
-            case NT::CHARCONST:
+
+            // Print these specific CONSTANT nodes.
+
+            case NT::CHARACTER:
                 cout << "Const ";
                 cout << "'" << getChar() << "'";
                 return;
-            case NT::BOOLCONST:
+            case NT::BOOLEAN:
                 cout << "Const ";
                 getBool() == 1 ? cout << "true" : cout << "false";
                 return;
-            case NT::NUMCONST:
+            case NT::NUMBER:
                 cout << "Const ";
                 cout << getInt();
                 return;
-            case NT::STRINGCONST:
+            case NT::STRING:
                 cout << "Const ";
                 cout << "\"" << getString() << "\"";
                 return;
-            case NT::OPERATOR:
-                cout << "Op: " << getString();
+
+            // These nodes are no different from the rest other than having an extra space after them in the output.
+
+            case NT::FUNCTION:
+            case NT::PARAMETER:
+            case NT::PARAMETER_ARRAY:
+            case NT::VARIABLE:
+            case NT::VARIABLE_ARRAY:
+            case NT::STATIC_VARIABLE:
+                cout << types::nodeTypeToStr(nodeType_) << getString() << " ";
                 return;
-            case NT::CALL:
-                cout << "Call: " << getString();
-                return;
-            default:
+
+            // Print these nodes expect for their stored value.
+
+            case NT::COMPOUND:
+            case NT::ARRAY:
+            case NT::CHSIGN_UNARY:
+            case NT::RETURN:
+            case NT::FOR:
+            case NT::SIZEOF_UNARY:
+            case NT::RANGE:
+            case NT::WHILE:
+            case NT::IF:
+            case NT::BREAK:
+            case NT::OR:
+            case NT::AND:
+            case NT::NOT:
+            case NT::QUES_UNARY:
                 cout << types::nodeTypeToStr(nodeType_);
+                return;
+
+            // By default, print the nodetype and the value.
+
+            default:
+                cout << types::nodeTypeToStr(nodeType_) << getString();
                 return;
         }
     }
@@ -178,14 +183,18 @@ namespace node {
             return;
         }
 
+        /**
+         * @note Children and Siblings
+         * 
+         * If the: 
+         * 
+         * - first child of a function is a compound statement then the child location will be 1.
+         * 
+         * - first child of a compound statement is anything but a VARIABLE or VARIABLE_ARRAY then the child location will start be 1.
+         * 
+         * These were very well addressed in the 'parser.y' wherein adding a child has a parameter to which location (i.e. childLocation)
+         */
         Node *current = root;
-
-        /*
-            NOTES:
-
-            - If the first child of a function is a compound statement then the child location will be 1 not 0 starting
-            - If the first child of a compound statement is anything but a VARIABLE or VARIABLE_ARRAY then the child location will start at 1 not 0
-        */
 
         while (current != nullptr) {
             current->printNode(depth);

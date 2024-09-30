@@ -30,18 +30,21 @@ AND OR EQL NEQ LESS LEQ GREATER GEQ
 ASGN ADDASGN SUBASGN MULASGN DIVASGN
 ADD SUB MUL DIV MOD 
 DEC INC NOT QUES 
-RETURN LBRACE '[' '('
+CMPD_OPEN CMPD_CLOSE
+RETURN '(' '['
 
 // Non-terminals
 %type <node> 
 program declarationList declaration variableDeclaration scopedVariableDeclaration 
 variableDeclarationList variableDeclarationInit variableDeclarationId typeSpecifier 
-functionDeclaration parameters parameterList parameterTypeList parameterIdList parameterId 
-statement expressionStatement compoundStatement localDeclarations statementList selectStatement 
-ifStatement iterationStatement iterationRange returnStatement breakStatement expression assignmentOperator 
-simpleExpression andExpression unaryRelationalExpression relationalExpression relationalOperator sumExpression 
-sumOperator mulExpression mulOperator unaryExpression unaryOperator factor mutable immutable call arguments 
-argumentList constant
+functionDeclaration parameters parameterList parameterTypeList parameterIdList 
+parameterId statement matchedStatements unmatchedStatements expressionStatement 
+compoundStatement localDeclarations statementList matchedIfStatement unmatchedIfStatement 
+unmatchedIterationStatement matchedIterationStatement iterationRange returnStatement 
+breakStatement expression assignmentOperator simpleExpression andExpression 
+unaryRelationalExpression relationalExpression relationalOperator sumExpression sumOperator 
+mulExpression mulOperator unaryExpression unaryOperator factor mutable immutable call 
+arguments argumentList constant
 
 %% 
 
@@ -53,11 +56,11 @@ declarationList           : declarationList declaration
                             $1->setSibling($2);
                             $$ = $1;
                           }
-                          | declaration   { $$ = $1; }
+                          | declaration
                           ;
 
-declaration               : variableDeclaration   { $$ = $1; }
-                          | functionDeclaration   { $$ = $1; }
+declaration               : variableDeclaration
+                          | functionDeclaration
                           ;
 
 variableDeclaration       : typeSpecifier variableDeclarationList ';'
@@ -74,7 +77,7 @@ variableDeclaration       : typeSpecifier variableDeclarationList ';'
 scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                           {
                             auto *temp = $3;
-                            while( temp != nullptr ) {
+                            while (temp != nullptr) {
                               temp->setVarType($2->getVarType());
                                 temp = temp->getSibling();
                             }
@@ -83,7 +86,7 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                           }
                           | typeSpecifier variableDeclarationList ';'
                           {
-                            node::Node *temp = $2;
+                            auto *temp = $2;
                             while (temp != nullptr) {
                               temp->setVarType($1->getVarType());
                               temp = temp->getSibling();
@@ -97,10 +100,10 @@ variableDeclarationList   : variableDeclarationList ',' variableDeclarationInit
                             $1->setSibling($3);
                             $$ = $1;
                           }
-                          | variableDeclarationInit   { $$ = $1; }
+                          | variableDeclarationInit
                           ;
 
-variableDeclarationInit   : variableDeclarationId   { $$ = $1; } 
+variableDeclarationInit   : variableDeclarationId
                           | variableDeclarationId ':' simpleExpression
                           {
                             $1->addChild($3);
@@ -114,10 +117,10 @@ variableDeclarationId     : ID
                           }
                           | ID '[' NUMCONST ']'
                           {
-                            $$ = new node::Node($1, NT::VARIABLE_ARRAY);
+                            $$ = new node::Node($2, NT::VARIABLE_ARRAY);
                           }
                           ;
-
+                          
 typeSpecifier             : INT    { $$->setVarType(VT::INT); }
                           | CHAR   { $$->setVarType(VT::CHAR); }
                           | BOOL   { $$->setVarType(VT::BOOL); }
@@ -127,10 +130,10 @@ functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatemen
                           {
                             $$ = new node::Node($2, NT::FUNCTION);
                             $$->setVarType($1->getVarType());
-                            if( $4 != nullptr ) {
+                            if ($4 != nullptr) {
                               $$->addChild($4);
                             }
-                            if( $6 != nullptr ) { // if maybe be optional
+                            if ($6 != nullptr) {
                               $$->addChild($6, 1);
                             }
                           }
@@ -138,17 +141,17 @@ functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatemen
                           {
                             $$ = new node::Node($1, NT::FUNCTION);
                             $$->setVarType(VT::VOID);
-                            if( $3 != nullptr ) {
+                            if ($3 != nullptr) {
                               $$->addChild($3);
                             }
-                            if( $5 != nullptr ) { // if maybe be optional
+                            if ($5 != nullptr) {
                               $$->addChild($5, 1);
                             }
                           }
                           ;
 
-parameters                : parameterList   { $$ = $1; }
-                          | %empty   { $$ = nullptr; }
+parameters                : parameterList
+                          | %empty          { $$ = nullptr; }
                           ;
 
 parameterList             : parameterList ';' parameterTypeList
@@ -156,12 +159,12 @@ parameterList             : parameterList ';' parameterTypeList
                             $1->setSibling($3);
                             $$ = $1;
                           }
-                          | parameterTypeList   { $$ = $1; }
+                          | parameterTypeList
                           ;
 
 parameterTypeList         : typeSpecifier parameterIdList
                           {
-                            node::Node *temp = $2;
+                            auto *temp = $2;
                             while (temp != nullptr) {
                               temp->setVarType($1->getVarType());
                               temp = temp->getSibling();
@@ -175,7 +178,7 @@ parameterIdList           : parameterIdList ',' parameterId
                             $1->setSibling($3);
                             $$ = $1;
                           }
-                          | parameterId   { $$ = $1; }
+                          | parameterId
                           ;
 
 parameterId               : ID           
@@ -188,25 +191,33 @@ parameterId               : ID
                           }
                           ;
 
-statement                 : expressionStatement   { $$ = $1; }
-                          | compoundStatement     { $$ = $1; }
-                          | selectStatement       { $$ = $1; }
-                          | iterationStatement    { $$ = $1; }
-                          | returnStatement       { $$ = $1; }
-                          | breakStatement        { $$ = $1; }
+statement                 : matchedStatements
+                          | unmatchedStatements       
                           ;
 
-expressionStatement       : expression ';'        { $$ = $1; }
+matchedStatements         : expressionStatement
+                          | compoundStatement
+                          | matchedIfStatement
+                          | matchedIterationStatement     
+                          | returnStatement    
+                          | breakStatement     
+                          ;
+
+unmatchedStatements       : unmatchedIfStatement        
+                          | unmatchedIterationStatement 
+                          ;
+
+expressionStatement       : expression ';'        
                           | ';'                   { $$ = nullptr; }
                           ;
 
-compoundStatement         : LBRACE localDeclarations statementList '}'
+compoundStatement         : CMPD_OPEN localDeclarations statementList CMPD_CLOSE
                           {
                             $$ = new node::Node($1, NT::COMPOUND);
-                            if( $2 != nullptr ) {
+                            if ($2 != nullptr) {
                               $$->addChild($2);
                             }
-                            if( $3 != nullptr ) {
+                            if ($3 != nullptr) {
                               $$->addChild($3, 1);
                             }
                           }
@@ -214,7 +225,7 @@ compoundStatement         : LBRACE localDeclarations statementList '}'
 
 localDeclarations         : localDeclarations scopedVariableDeclaration
                           {
-                            if ( $1 != nullptr ) {
+                            if ($1 != nullptr) {
                               $1->setSibling($2);
                               $$ = $1;
                             } else {
@@ -226,7 +237,7 @@ localDeclarations         : localDeclarations scopedVariableDeclaration
 
 statementList             : statementList statement
                           {
-                            if ( $1 != nullptr ) {
+                            if ($1 != nullptr) {
                               $1->setSibling($2);
                               $$ = $1;
                             } else {
@@ -236,38 +247,76 @@ statementList             : statementList statement
                           | %empty   { $$ = nullptr; }
                           ;
 
-selectStatement           : ifStatement   { $$ = $1; }
-                          ;
-
-ifStatement               : IF simpleExpression THEN statement
+matchedIfStatement        : IF simpleExpression THEN matchedStatements ELSE matchedStatements
                           {
                             $$ = new node::Node($1, NT::IF);
                             $$->addChild($2);
-                            $$->addChild($4, 1);
-                          }
-                          | IF simpleExpression THEN statement ELSE statement
-                          {
-                            $$ = new node::Node($1, NT::IF);
-                            $$->addChild($2);
-                            $$->addChild($4, 1);
-                            $$->addChild($6, 2);
+                            if( $4 != nullptr) {
+                              $$->addChild($4, 1);
+                            }
+                            if ($6 != nullptr) {
+                              $$->addChild($6, 2);
+                            }
                           }
                           ;
 
-iterationStatement        : WHILE simpleExpression DO statement
+unmatchedIfStatement      : IF simpleExpression THEN statement
+                          {
+                            $$ = new node::Node($1, NT::IF);
+                            $$->addChild($2);
+                            if( $4 != nullptr) {
+                              $$->addChild($4, 1);
+                            }
+                          }
+                          | IF simpleExpression THEN matchedStatements ELSE unmatchedStatements
+                          {
+                            $$ = new node::Node($1, NT::IF);
+                            $$->addChild($2);
+                            if( $4 != nullptr) {
+                              $$->addChild($4, 1);
+                            }
+                            if ($6 != nullptr) {
+                              $$->addChild($6, 2);
+                            }
+                          }
+                          ;
+
+matchedIterationStatement : WHILE simpleExpression DO matchedStatements
                           {
                             $$ = new node::Node($1, NT::WHILE);
                             $$->addChild($2);
-                            $$->addChild($4, 1);
+                            if ($4 != nullptr) {
+                              $$->addChild($4, 1);
+                            }
                           }
-                          | FOR ID ASGN iterationRange DO statement
+                          | FOR ID ASGN iterationRange DO matchedStatements
                           {
                             $$ = new node::Node($1, NT::FOR);
                             $$->addChild(new node::Node($2, NT::VARIABLE, VT::INT));
                             $$->addChild($4, 1);
-                            $$->addChild($6, 2);
+                            if ($6 != nullptr) {
+                              $$->addChild($6, 2);
+                            }
                           }
-                          ;
+
+unmatchedIterationStatement : WHILE simpleExpression DO unmatchedStatements
+                            {
+                              $$ = new node::Node($1, NT::WHILE);
+                              $$->addChild($2);
+                              if ($4 != nullptr) {
+                                $$->addChild($4, 1);
+                              }
+                            }
+                            | FOR ID ASGN iterationRange DO unmatchedStatements
+                            {
+                              $$ = new node::Node($1, NT::FOR);
+                              $$->addChild(new node::Node($2, NT::VARIABLE, VT::INT));
+                              $$->addChild($4, 1);
+                              if ($6 != nullptr) {
+                                $$->addChild($6, 2);
+                              }
+                            }
+                            ;
 
 iterationRange            : simpleExpression TO simpleExpression 
                           {
@@ -314,7 +363,7 @@ expression                : mutable assignmentOperator expression
                             $$ = new node::Node($2, NT::ASSIGNMENT); 
                             $$->addChild($1);
                           }
-                          | simpleExpression   { $$ = $1; }
+                          | simpleExpression   
                           ; 
 
 assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT); }
@@ -330,7 +379,7 @@ simpleExpression          : simpleExpression OR andExpression
                             $$->addChild($1);
                             $$->addChild($3, 1);
                           }
-                          | andExpression   { $$ = $1; }
+                          | andExpression   
                           ;
 
 andExpression             : andExpression AND unaryRelationalExpression
@@ -339,7 +388,7 @@ andExpression             : andExpression AND unaryRelationalExpression
                             $$->addChild($1);
                             $$->addChild($3, 1);
                           }
-                          | unaryRelationalExpression   { $$ = $1; }
+                          | unaryRelationalExpression   
                           ;
 
 unaryRelationalExpression : NOT unaryRelationalExpression
@@ -347,7 +396,7 @@ unaryRelationalExpression : NOT unaryRelationalExpression
                             $$ = new node::Node($1, NT::NOT);
                             $$->addChild($2);
                           }
-                          | relationalExpression   { $$ = $1; }    
+                          | relationalExpression       
                           ;
 
 relationalExpression      : sumExpression relationalOperator sumExpression
@@ -356,7 +405,7 @@ relationalExpression      : sumExpression relationalOperator sumExpression
                             $2->addChild($3, 1);
                             $$ = $2;
                           }
-                          | sumExpression   { $$ = $1; }
+                          | sumExpression   
                           ;
 
 relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR); }
@@ -373,7 +422,7 @@ sumExpression             : sumExpression sumOperator mulExpression
                             $2->addChild($3, 1);
                             $$ = $2;
                           }
-                          | mulExpression   { $$ = $1; }
+                          | mulExpression   
                           ;
 
 sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR); }
@@ -386,7 +435,7 @@ mulExpression             : mulExpression mulOperator unaryExpression
                             $2->addChild($3, 1);
                             $$ = $2; 
                           }
-                          | unaryExpression   { $$ = $1; }
+                          | unaryExpression   
                           ;
 
 mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR); }
@@ -399,7 +448,7 @@ unaryExpression           : unaryOperator unaryExpression
                             $1->addChild($2);
                             $$ = $1;
                           }
-                          | factor      { $$ = $1; }
+                          | factor      
                           ;
 
 unaryOperator             : SUB         { $$ = new node::Node($1, NT::CHSIGN_UNARY); }
@@ -407,35 +456,35 @@ unaryOperator             : SUB         { $$ = new node::Node($1, NT::CHSIGN_UNA
                           | QUES        { $$ = new node::Node($1, NT::QUES_UNARY); }
                           ; 
 
-factor                    : mutable     { $$ = $1; }
-                          | immutable   { $$ = $1; }
+factor                    : mutable     
+                          | immutable   
 
 mutable                   : ID  { $$ = new node::Node($1, NT::ID); }
                           | ID '[' expression ']' 
                           {
                             $$ = new node::Node($2, NT::ARRAY);
-                            node::Node *id = new node::Node($1, NT::ID);
+                            auto *id = new node::Node($1, NT::ID);
                             $$->addChild(id);
                             $$->addChild($3, 1);
                           }
                           ;
 
 immutable                 : '(' expression ')'  { $$ = $2; }
-                          | call                { $$ = $1; }
-                          | constant            { $$ = $1; }
+                          | call                
+                          | constant            
                           ;
 
 call                      : ID '(' arguments ')' 
                           {
                             $$ = new node::Node($2, NT::CALL);
-                            node::Node *id = new node::Node($1, NT::ID);
-                            if ( $3 != nullptr ) {
+                            auto *id = new node::Node($1, NT::ID);
+                            if ($3 != nullptr) {
                               $$->addChild($3);
                             }
                           }
                           ;
 
-arguments                 : argumentList  { $$ = $1; }
+arguments                 : argumentList  
                           | %empty        { $$ = nullptr;}
                           ;
 
@@ -444,13 +493,13 @@ argumentList              : argumentList ',' expression
                             $1->setSibling($3);
                             $$ = $1;
                           }
-                          | expression  { $$ = $1; }
+                          | expression  
                           ;
 
                           
-constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARCONST, VT::CHAR); }  
-                          | NUMCONST    { $$ = new node::Node($1, NT::NUMCONST, VT::INT); }   
-                          | STRINGCONST { $$ = new node::Node($1, NT::STRINGCONST, VT::STRING); }  
-                          | BOOLCONST   { $$ = new node::Node($1, NT::BOOLCONST, VT::BOOL); }  
+constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARACTER, VT::CHAR); }  
+                          | NUMCONST    { $$ = new node::Node($1, NT::NUMBER, VT::INT); }   
+                          | STRINGCONST { $$ = new node::Node($1, NT::STRING, VT::STRING); }  
+                          | BOOLCONST   { $$ = new node::Node($1, NT::BOOLEAN, VT::BOOL); }  
                           ;                    
 %%

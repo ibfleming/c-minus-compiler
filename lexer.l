@@ -51,8 +51,9 @@ BOOLEAN         "True"|"true"|"False"|"false"
 "++"            { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::INC_OP); return INC; }
 "not"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::NOT_OP); return NOT; }      
 "?"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::QUES_OP); return QUES; }
+"{"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::LBRACE); return CMPD_OPEN; }
+"}"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::RBRACE); return CMPD_CLOSE; }
 "return"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::RETURN); return RETURN; }
-"{"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::LBRACE); return LBRACE; }
 [\[\],;:{}()]   { return yytext[0]; }
 {BOOLEAN}       { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::BOOL_CONST); return BOOLCONST; }
 {IDENTIFIER}    { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::ID_CONST); return ID; }
