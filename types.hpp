@@ -70,6 +70,7 @@ enum class TokenType {
     // RETURN
     RETURN,
     // UNKNOWN
+    LBRACE,
     UNKNOWN,
 };
 
@@ -84,6 +85,8 @@ enum class VarType {
     CHAR,
     STRING,
     BOOL,
+    STATIC,
+    VOID,
     UNKNOWN,
 };
 
@@ -93,11 +96,16 @@ enum class VarType {
  */
 enum class NodeType {
     FUNCTION,
-    CONSTANT,
+    BOOLCONST,
+    CHARCONST,
+    NUMCONST,
+    STRINGCONST,
     CALL,
     ID,
     ARRAY,
-    UNARY,
+    QUES_UNARY,
+    CHSIGN_UNARY,
+    SIZEOF_UNARY,
     OPERATOR,
     NOT,
     AND,

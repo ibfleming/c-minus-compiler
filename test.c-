@@ -1,11 +1,14 @@
-int arr[2];
+// C-F24 touch all the tokens (code is not necessarily semantically correct)
+int fahrenheit:451;
 
-int main() {}
+int carbon() { return 6; }
 
-int dog() {}
+fred(int a, b; char c, d[]; bool e, f[]) {
+    for x := 1 to 10 by 3 do {
+        while x>3 do 
+        {
+        }
+    }
+}
 
-int bruh() {}
-
-int cat() {}
-
-int a;
+main() {}

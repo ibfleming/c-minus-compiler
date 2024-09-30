@@ -13,17 +13,16 @@ void processToken(Token& token);
 void lexicalPrint(const Token& token);
 
 class Token {
-private:
-    types::TokenType type_;    // Name of the token class (ID, ASGN, SUB, IF, FOR, etc.)
-    types::TokenValue value_;  // Value of the token (int, char, string) after processing
-    int strLength_;     // Length of the processed STRINGCONST (only used for STRINGCONST)
 
-    std::string token_; // Original token (lexeme) that was read by lexer
-    int length_;        // Length of the token (lexeme)
-    int line_;          // Line number where the token was found
+private:
+    types::TokenType type_;         // Name of the token class (ID, ASGN, SUB, IF, FOR, etc.)
+    types::TokenValue value_;       // Value of the token (int, char, string) after processing
+    int strLength_;                 // Length of the processed STRINGCONST (only used for STRINGCONST   
+    std::string token_;             // Original token (lexeme) that was read by lexer
+    int length_;                    // Length of the token (lexeme)
+    int line_;                      // Line number where the token was found
 
 public:
-
     Token(const std::string& token, int line, int length, types::TokenType type) 
     : type_(type),
       strLength_(0),

@@ -22,5 +22,5 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *msg) {
-   return;
+   std::cout << msg << yylineno << std::endl;
 }

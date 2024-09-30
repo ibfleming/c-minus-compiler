@@ -30,7 +30,7 @@ AND OR EQL NEQ LESS LEQ GREATER GEQ
 ASGN ADDASGN SUBASGN MULASGN DIVASGN
 ADD SUB MUL DIV MOD 
 DEC INC NOT QUES 
-RETURN '{'
+RETURN LBRACE '[' '('
 
 // Non-terminals
 %type <node> 
@@ -50,8 +50,8 @@ program                   : declarationList { node::root = $1; }
 
 declarationList           : declarationList declaration
                           {
+                            $1->setSibling($2);
                             $$ = $1;
-                            $$->setSibling($2);
                           }
                           | declaration   { $$ = $1; }
                           ;
@@ -65,11 +65,7 @@ variableDeclaration       : typeSpecifier variableDeclarationList ';'
                             auto *temp = $2;
                             while (temp != nullptr) {
                               temp->setVarType($1->getVarType());
-                              if( temp->getSibling() != nullptr ) {
-                                temp = temp->getSibling();
-                              } else {
-                                temp = nullptr;
-                              }
+                              temp = temp->getSibling();
                             }
                             $$ = $2;
                           }
@@ -80,25 +76,17 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                             auto *temp = $3;
                             while( temp != nullptr ) {
                               temp->setVarType($2->getVarType());
-                              if( temp->getSibling() != nullptr ) {
                                 temp = temp->getSibling();
-                              } else {
-                                temp = nullptr;
-                              }
                             }
                             $$ = $3;
                             $$->setNodeType(NT::STATIC_VARIABLE);
                           }
                           | typeSpecifier variableDeclarationList ';'
                           {
-                            auto *temp = $2;
+                            node::Node *temp = $2;
                             while (temp != nullptr) {
                               temp->setVarType($1->getVarType());
-                              if( temp->getSibling() != nullptr ) {
-                                temp = temp->getSibling();
-                              } else {
-                                temp = nullptr;
-                              }
+                              temp = temp->getSibling();
                             }
                             $$ = $2;
                           }
@@ -106,8 +94,8 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
 
 variableDeclarationList   : variableDeclarationList ',' variableDeclarationInit
                           {
+                            $1->setSibling($3);
                             $$ = $1;
-                            $$->setSibling($3);
                           }
                           | variableDeclarationInit   { $$ = $1; }
                           ;
@@ -115,8 +103,8 @@ variableDeclarationList   : variableDeclarationList ',' variableDeclarationInit
 variableDeclarationInit   : variableDeclarationId   { $$ = $1; } 
                           | variableDeclarationId ':' simpleExpression
                           {
+                            $1->addChild($3);
                             $$ = $1;
-                            $$->addChild($3);
                           }
                           ;
 
@@ -139,21 +127,22 @@ functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatemen
                           {
                             $$ = new node::Node($2, NT::FUNCTION);
                             $$->setVarType($1->getVarType());
-                            if ($4 != nullptr) {
+                            if( $4 != nullptr ) {
                               $$->addChild($4);
                             }
-                            if ($6 != nullptr) {
-                              $$->addChild($6);
+                            if( $6 != nullptr ) { // if maybe be optional
+                              $$->addChild($6, 1);
                             }
                           }
                           | ID '(' parameters ')' compoundStatement
                           {
                             $$ = new node::Node($1, NT::FUNCTION);
-                            if ($3 != nullptr) {
+                            $$->setVarType(VT::VOID);
+                            if( $3 != nullptr ) {
                               $$->addChild($3);
                             }
-                            if ($5 != nullptr) {
-                              $$->addChild($5);
+                            if( $5 != nullptr ) { // if maybe be optional
+                              $$->addChild($5, 1);
                             }
                           }
                           ;
@@ -164,22 +153,18 @@ parameters                : parameterList   { $$ = $1; }
 
 parameterList             : parameterList ';' parameterTypeList
                           {
+                            $1->setSibling($3);
                             $$ = $1;
-                            $$->setSibling($3);
                           }
                           | parameterTypeList   { $$ = $1; }
                           ;
 
 parameterTypeList         : typeSpecifier parameterIdList
                           {
-                            auto *temp = $2;
+                            node::Node *temp = $2;
                             while (temp != nullptr) {
                               temp->setVarType($1->getVarType());
-                              if( temp->getSibling() != nullptr ) {
-                                temp = temp->getSibling();
-                              } else {
-                                temp = nullptr;
-                              }
+                              temp = temp->getSibling();
                             }
                             $$ = $2;
                           }
@@ -187,8 +172,8 @@ parameterTypeList         : typeSpecifier parameterIdList
 
 parameterIdList           : parameterIdList ',' parameterId
                           {
-                            $$ = $1;
                             $1->setSibling($3);
+                            $$ = $1;
                           }
                           | parameterId   { $$ = $1; }
                           ;
@@ -215,21 +200,21 @@ expressionStatement       : expression ';'        { $$ = $1; }
                           | ';'                   { $$ = nullptr; }
                           ;
 
-compoundStatement         : '{' localDeclarations statementList '}'
+compoundStatement         : LBRACE localDeclarations statementList '}'
                           {
                             $$ = new node::Node($1, NT::COMPOUND);
-                            if ($2 != nullptr) {
+                            if( $2 != nullptr ) {
                               $$->addChild($2);
                             }
-                            if ($3 != nullptr) {
-                              $$->addChild($3);
+                            if( $3 != nullptr ) {
+                              $$->addChild($3, 1);
                             }
                           }
                           ;
 
 localDeclarations         : localDeclarations scopedVariableDeclaration
                           {
-                            if ($1 != nullptr) {
+                            if ( $1 != nullptr ) {
                               $1->setSibling($2);
                               $$ = $1;
                             } else {
@@ -241,7 +226,7 @@ localDeclarations         : localDeclarations scopedVariableDeclaration
 
 statementList             : statementList statement
                           {
-                            if ($1 != nullptr) {
+                            if ( $1 != nullptr ) {
                               $1->setSibling($2);
                               $$ = $1;
                             } else {
@@ -251,21 +236,21 @@ statementList             : statementList statement
                           | %empty   { $$ = nullptr; }
                           ;
 
-selectStatement           : ifStatement ';'   { $$ = $1; }
+selectStatement           : ifStatement   { $$ = $1; }
                           ;
 
 ifStatement               : IF simpleExpression THEN statement
                           {
                             $$ = new node::Node($1, NT::IF);
                             $$->addChild($2);
-                            $$->addChild($4);
+                            $$->addChild($4, 1);
                           }
-                          | IF simpleExpression THEN statement ELSE ifStatement
+                          | IF simpleExpression THEN statement ELSE statement
                           {
                             $$ = new node::Node($1, NT::IF);
                             $$->addChild($2);
-                            $$->addChild($4);
-                            $$->addChild($6);
+                            $$->addChild($4, 1);
+                            $$->addChild($6, 2);
                           }
                           ;
 
@@ -273,26 +258,29 @@ iterationStatement        : WHILE simpleExpression DO statement
                           {
                             $$ = new node::Node($1, NT::WHILE);
                             $$->addChild($2);
-                            $$->addChild($4);
+                            $$->addChild($4, 1);
                           }
                           | FOR ID ASGN iterationRange DO statement
                           {
                             $$ = new node::Node($1, NT::FOR);
                             $$->addChild(new node::Node($2, NT::VARIABLE, VT::INT));
-                            $$->addChild($4);
-                            $$->addChild($6);
+                            $$->addChild($4, 1);
+                            $$->addChild($6, 2);
                           }
                           ;
 
 iterationRange            : simpleExpression TO simpleExpression 
                           {
                             $$ = new node::Node($2, NT::RANGE);
-                            $$->addChild($1); $$->addChild($3);
+                            $$->addChild($1);
+                            $$->addChild($3, 1);
                           }
                           | simpleExpression TO simpleExpression BY simpleExpression
                           {
                             $$ = new node::Node($2, NT::RANGE);
-                            $$->addChild($1); $$->addChild($3); $$->addChild($5);
+                            $$->addChild($1); 
+                            $$->addChild($3, 1); 
+                            $$->addChild($5, 2);
                           }
                           ;
 
@@ -312,7 +300,8 @@ breakStatement            : BREAK ';'   { $$ = new node::Node($1, NT::BREAK); }
 
 expression                : mutable assignmentOperator expression
                           {
-                            $2->addChild($1); $2->addChild($3);
+                            $2->addChild($1);
+                            $2->addChild($3, 1);
                             $$ = $2;
                           }
                           | mutable INC        
@@ -338,7 +327,8 @@ assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT
 simpleExpression          : simpleExpression OR andExpression
                           {
                             $$ = new node::Node($2, NT::OR);
-                            $$->addChild($1); $$->addChild($3);
+                            $$->addChild($1);
+                            $$->addChild($3, 1);
                           }
                           | andExpression   { $$ = $1; }
                           ;
@@ -346,7 +336,8 @@ simpleExpression          : simpleExpression OR andExpression
 andExpression             : andExpression AND unaryRelationalExpression
                           {
                             $$ = new node::Node($2, NT::AND);
-                            $$->addChild($1); $$->addChild($3);
+                            $$->addChild($1);
+                            $$->addChild($3, 1);
                           }
                           | unaryRelationalExpression   { $$ = $1; }
                           ;
@@ -361,7 +352,8 @@ unaryRelationalExpression : NOT unaryRelationalExpression
 
 relationalExpression      : sumExpression relationalOperator sumExpression
                           {
-                            $2->addChild($1); $2->addChild($3);
+                            $2->addChild($1);
+                            $2->addChild($3, 1);
                             $$ = $2;
                           }
                           | sumExpression   { $$ = $1; }
@@ -377,7 +369,8 @@ relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR); }
 
 sumExpression             : sumExpression sumOperator mulExpression 
                           {
-                            $2->addChild($1); $2->addChild($3);
+                            $2->addChild($1);
+                            $2->addChild($3, 1);
                             $$ = $2;
                           }
                           | mulExpression   { $$ = $1; }
@@ -389,7 +382,8 @@ sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR); }
 
 mulExpression             : mulExpression mulOperator unaryExpression 
                           {
-                            $2->addChild($1); $2->addChild($3);
+                            $2->addChild($1); 
+                            $2->addChild($3, 1);
                             $$ = $2; 
                           }
                           | unaryExpression   { $$ = $1; }
@@ -402,14 +396,15 @@ mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR);
 
 unaryExpression           : unaryOperator unaryExpression 
                           { 
-                            $$->addChild($1); $$->addChild($2); 
+                            $1->addChild($2);
+                            $$ = $1;
                           }
                           | factor      { $$ = $1; }
                           ;
 
-unaryOperator             : SUB         { $$ = new node::Node($1, NT::UNARY); }
-                          | MUL         { $$ = new node::Node($1, NT::UNARY); }
-                          | QUES        { $$ = new node::Node($1, NT::UNARY); }
+unaryOperator             : SUB         { $$ = new node::Node($1, NT::CHSIGN_UNARY); }
+                          | MUL         { $$ = new node::Node($1, NT::SIZEOF_UNARY); }
+                          | QUES        { $$ = new node::Node($1, NT::QUES_UNARY); }
                           ; 
 
 factor                    : mutable     { $$ = $1; }
@@ -418,8 +413,10 @@ factor                    : mutable     { $$ = $1; }
 mutable                   : ID  { $$ = new node::Node($1, NT::ID); }
                           | ID '[' expression ']' 
                           {
-                            $$ = new node::Node($1, NT::ARRAY);
-                            $$->addChild($3);
+                            $$ = new node::Node($2, NT::ARRAY);
+                            node::Node *id = new node::Node($1, NT::ID);
+                            $$->addChild(id);
+                            $$->addChild($3, 1);
                           }
                           ;
 
@@ -430,7 +427,8 @@ immutable                 : '(' expression ')'  { $$ = $2; }
 
 call                      : ID '(' arguments ')' 
                           {
-                            $$ = new node::Node($1, NT::CALL);
+                            $$ = new node::Node($2, NT::CALL);
+                            node::Node *id = new node::Node($1, NT::ID);
                             if ( $3 != nullptr ) {
                               $$->addChild($3);
                             }
@@ -443,20 +441,16 @@ arguments                 : argumentList  { $$ = $1; }
 
 argumentList              : argumentList ',' expression 
                           { 
-                            if ($1 != nullptr) {
-                              $1->setSibling($3);
-                              $$ = $1;
-                            }
-                            else {
-                              $$ = $3;
-                            }
+                            $1->setSibling($3);
+                            $$ = $1;
                           }
                           | expression  { $$ = $1; }
                           ;
 
-                          | CHARCONST   { $$ = new node::Node($1, NT::CONSTANT, VT::CHAR); }  
-constant                  : NUMCONST    { $$ = new node::Node($1, NT::CONSTANT, VT::INT); }   
-                          | STRINGCONST { $$ = new node::Node($1, NT::CONSTANT, VT::STRING); }  
-                          | BOOLCONST   { $$ = new node::Node($1, NT::CONSTANT, VT::BOOL); }  
+                          
+constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARCONST, VT::CHAR); }  
+                          | NUMCONST    { $$ = new node::Node($1, NT::NUMCONST, VT::INT); }   
+                          | STRINGCONST { $$ = new node::Node($1, NT::STRINGCONST, VT::STRING); }  
+                          | BOOLCONST   { $$ = new node::Node($1, NT::BOOLCONST, VT::BOOL); }  
                           ;                    
 %%

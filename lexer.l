@@ -52,6 +52,7 @@ BOOLEAN         "True"|"true"|"False"|"false"
 "not"           { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::NOT_OP); return NOT; }      
 "?"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::QUES_OP); return QUES; }
 "return"        { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::RETURN); return RETURN; }
+"{"             { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::LBRACE); return LBRACE; }
 [\[\],;:{}()]   { return yytext[0]; }
 {BOOLEAN}       { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::BOOL_CONST); return BOOLCONST; }
 {IDENTIFIER}    { yylval.token = new Token(std::string(yytext), yylineno, yyleng, types::TokenType::ID_CONST); return ID; }

@@ -5,6 +5,7 @@
 
 namespace utils {
     void printTree();
+    std::string printIndent(int times);
 } // namespace utils
 
 #endif // UTILS_HPP

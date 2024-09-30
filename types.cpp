@@ -52,27 +52,32 @@ std::string tknTypeToStr(TokenType type) {
 std::string nodeTypeToStr(NodeType type) {
     switch (type) {
         case NodeType::FUNCTION:            return "Func";
-        case NodeType::CONSTANT:            return "Const";
+        case NodeType::CHARCONST:           return "Const";
+        case NodeType::BOOLCONST:           return "Const";
+        case NodeType::NUMCONST:            return "Const";
+        case NodeType::STRINGCONST:         return "Const";
         case NodeType::CALL:                return "Call";
         case NodeType::ID:                  return "Id";
-        case NodeType::ARRAY:               return "[";
-        case NodeType::UNARY:               return "UNARY";
+        case NodeType::ARRAY:               return "Op: [";
+        case NodeType::QUES_UNARY:          return "Op: ?";
+        case NodeType::CHSIGN_UNARY:        return "Op: chsign";
+        case NodeType::SIZEOF_UNARY:        return "Op: sizeof";
         case NodeType::OPERATOR:            return "Op";
-        case NodeType::NOT:                 return "NOT";
-        case NodeType::AND:                 return "AND";
-        case NodeType::OR:                  return "OR";
+        case NodeType::NOT:                 return "Op: not";
+        case NodeType::AND:                 return "Op: and";
+        case NodeType::OR:                  return "Op: or";
         case NodeType::ASSIGNMENT:          return "Assign";
-        case NodeType::BREAK:               return "BREAK";
+        case NodeType::BREAK:               return "Break";
         case NodeType::RANGE:               return "Range";
-        case NodeType::FOR:                 return "FOR";
-        case NodeType::WHILE:               return "WHILE";
+        case NodeType::FOR:                 return "For";
+        case NodeType::WHILE:               return "While";
         case NodeType::VARIABLE:            return "Var";
         case NodeType::VARIABLE_ARRAY:      return "Var"; // Var Array...
-        case NodeType::IF:                  return "IF";
+        case NodeType::IF:                  return "If";
         case NodeType::COMPOUND:            return "Compound";
         case NodeType::PARAMETER:           return "Parm";
-        case NodeType::PARAMETER_ARRAY:     return "PARAMETER_ARRAY";
-        case NodeType::STATIC_VARIABLE:     return "STATIC_VARIABLE";
+        case NodeType::PARAMETER_ARRAY:     return "Parm";
+        case NodeType::STATIC_VARIABLE:     return "Var";
         case NodeType::RETURN:              return "Return";
         case NodeType::UNKNOWN:             return "UNKNOWN";
         default:                            return "INVALID_NODE_TYPE";
@@ -85,6 +90,8 @@ std::string varTypeToStr(VarType type) {
         case VarType::CHAR:     return "CHAR";
         case VarType::STRING:   return "STRING";
         case VarType::BOOL:     return "BOOL";
+        case VarType::STATIC:   return "STATIC";
+        case VarType::VOID:     return "VOID";
         default:                return "UNKNOWN";
     }
 }
