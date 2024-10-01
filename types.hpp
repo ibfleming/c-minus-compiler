@@ -115,7 +115,6 @@ enum class VarType {
     CHAR,
     STRING,
     BOOL,
-    STATIC,
     VOID,
     UNKNOWN
 };
@@ -132,13 +131,13 @@ enum class NodeType {
     CHARACTER,
     NUMBER,
     STRING,
-    ARRAY,
 
     // EXPRESSIONS
 
     FUNCTION,
     CALL,
     ID,
+    ID_ARRAY,
     QUES_UNARY,
     CHSIGN_UNARY,
     SIZEOF_UNARY,
@@ -162,7 +161,8 @@ enum class NodeType {
     VARIABLE_ARRAY,
     PARAMETER,
     PARAMETER_ARRAY,
-    STATIC_VARIABLE,
+    VARIABLE_STATIC,
+    VARIABLE_STATIC_ARRAY,
 
     // ASSIGNMENT
 

@@ -88,17 +88,23 @@ namespace node {
 
             case NT::FUNCTION:
             case NT::PARAMETER:
-            case NT::PARAMETER_ARRAY:
             case NT::VARIABLE:
+            case NT::VARIABLE_STATIC:
+                cout << types::nodeTypeToStr(nodeType_) << getString();
+                if( !utils::PRINT_TYPES ) { cout << " "; }
+                return;
+
+            case NT::PARAMETER_ARRAY:
             case NT::VARIABLE_ARRAY:
-            case NT::STATIC_VARIABLE:
-                cout << types::nodeTypeToStr(nodeType_) << getString() << " ";
+            case NT::VARIABLE_STATIC_ARRAY:
+                cout << types::nodeTypeToStr(nodeType_) << getString();
+                if( !utils::PRINT_TYPES ) { cout << " "; }
                 return;
 
             // Print these nodes expect for their stored value.
 
             case NT::COMPOUND:
-            case NT::ARRAY:
+            case NT::ID_ARRAY:
             case NT::CHSIGN_UNARY:
             case NT::RETURN:
             case NT::FOR:
@@ -122,11 +128,34 @@ namespace node {
         }
     }
 
+    void Node::printType() {
+        switch (nodeType_) {
+
+            case NT::COMPOUND:
+            case NT::WHILE:
+                return;
+
+            case NT::VARIABLE_ARRAY:
+            case NT::PARAMETER_ARRAY:
+            case NT::VARIABLE_STATIC_ARRAY:
+                cout << " is array of type ";
+                cout << types::varTypeToStr(varType_);
+                return;
+
+            default:
+                cout << " of type ";
+                cout << types::varTypeToStr(varType_);
+                return;
+
+        }
+    }
+
     void Node::printNode(int depth = 0) {
         if (siblingLocation_ != 0) {
             cout << utils::printIndent(depth) << "Sibling: " << siblingLocation_ << "  ";
         }
         printValue();
+        if( utils::PRINT_TYPES ) { printType(); }
         cout << " [line: " << line_ << "]";
         cout << endl;
         std::flush(cout);

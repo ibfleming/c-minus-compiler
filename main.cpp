@@ -1,11 +1,13 @@
 #include "utils.hpp"
+#include "semantic.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include <cstdlib>
 #include <iostream>
 
-#define argDebug true
+#define ARG_DEBUG false
 
+extern int yydebug;
 extern FILE *yyin;
 
 int main(int argc, char **argv) {
@@ -13,7 +15,7 @@ int main(int argc, char **argv) {
 
    bool printAST = false;
 
-   #if argDebug
+   #if ARG_DEBUG
    std::cout << "ARGUMENTS(" << argc << "): ";
    for( size_t i = 0; i < argc; i++) {
       std::cout << argv[i] << " ";
@@ -36,11 +38,34 @@ int main(int argc, char **argv) {
       for( size_t i = 0; i < argc; i++) {
          if (argv[i][0] == '-') { // check if the argument is a flag
             switch (argv[i][1]) {
+               case 'd': // debug the lexer
+                  #if ARG_DEBUG
+                  std::cout << "YYDEBUG" << std::endl;
+                  #endif
+                  yydebug = 1;
+                  break;
+               case 'D': // symbol table debug
+                  #if ARG_DEBUG
+                  std::cout << "SYMBOL TABLE" << std::endl;
+                  #endif
+                  break;
+               case 'h': // print the help menu
+                  #if ARG_DEBUG
+                  std::cout << "HELP" << std::endl;
+                  #endif
+                  utils::printHelpMenu();
+                  break;
                case 'p': // print the AST
-                  printAST = true;
-                  #if argDebug
+                  #if ARG_DEBUG
                   std::cout << "PRINT AST" << std::endl;
                   #endif
+                  printAST = true;
+                  break;
+               case 'P': // print the AST w/ types
+                  #if ARG_DEBUG
+                  std::cout << "PRINT AST TYPES" << std::endl;
+                  #endif
+                  printAST = utils::PRINT_TYPES = true;
                   break;
                default:
                   std::cerr << "Error: Invalid argument '" << argv[i] << "'" << std::endl;

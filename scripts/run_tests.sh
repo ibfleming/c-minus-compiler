@@ -17,8 +17,10 @@ for file in "$TEST_DIR"/*.c-; do
   # Get the filename without the extension
   filename="${file%.c-}"
 
+  args=""
+
   # Run the compiler on the .c- file and capture the output
-  output=$("./c-" "-p" "$file")
+  output=$("./c-" $args "$file")
 
   # Get the expected output from the corresponding .out file
   expected_output=$(< "$filename".out)

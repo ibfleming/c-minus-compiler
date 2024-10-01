@@ -9,9 +9,10 @@
  */
 namespace utils {
 
+    extern bool PRINT_TYPES; // Print the types of the AST nodes
+
     /**
     * @fn printTree
-    * @param root Pointer to the root node of the AST.
     * @brief Prints the AST to the console.
     * @return void
     */
@@ -32,6 +33,13 @@ namespace utils {
      * @return bool
      */
     bool checkFileExtension(std::string filename);
+
+    /**
+     * @fn printHelpMenu
+     * @brief Prints the help menu to the console.
+     * @return void
+     */
+    void printHelpMenu();
 
 } // namespace utils
 

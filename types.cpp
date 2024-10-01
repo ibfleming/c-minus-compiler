@@ -85,7 +85,8 @@ std::string nodeTypeToStr(NodeType type) {
 
         case NodeType::VARIABLE:
         case NodeType::VARIABLE_ARRAY:
-        case NodeType::STATIC_VARIABLE:
+        case NodeType::VARIABLE_STATIC:
+        case NodeType::VARIABLE_STATIC_ARRAY:
             return "Var: ";
 
         case NodeType::PARAMETER:
@@ -95,7 +96,7 @@ std::string nodeTypeToStr(NodeType type) {
         case NodeType::FUNCTION:            return "Func: ";
         case NodeType::CALL:                return "Call: ";
         case NodeType::ID:                  return "Id: ";
-        case NodeType::ARRAY:               return "Op: [";
+        case NodeType::ID_ARRAY:            return "Op: [";
         case NodeType::QUES_UNARY:          return "Op: ?";
         case NodeType::CHSIGN_UNARY:        return "Op: chsign";
         case NodeType::SIZEOF_UNARY:        return "Op: sizeof";
@@ -122,7 +123,6 @@ std::string varTypeToStr(VarType type) {
         case VarType::CHAR:     return "char";
         case VarType::STRING:   return "string";
         case VarType::BOOL:     return "bool";
-        case VarType::STATIC:   return "static";
         case VarType::VOID:     return "void";
         case VarType::UNKNOWN:  return "unknown";
         default:                return "Invalid Var Type";

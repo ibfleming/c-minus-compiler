@@ -1,7 +1,10 @@
 #include "utils.hpp"
 #include <iostream>
+#include <iomanip>
 
 namespace utils {
+
+bool PRINT_TYPES = false;
 
 void printTree() {
     node::printTree(node::root, 0);
@@ -21,6 +24,16 @@ bool checkFileExtension(std::string filename) {
         return false;
     }
     return true;
+}
+
+void printHelpMenu() {
+    std::cout << "usage: -c [options] [sourcefile]" << std::endl;
+    std::cout << "options:" << std::endl;
+    std::cout << "-d" << std::string(10, ' ') << "- turn on parser debugging" << std::endl;
+    std::cout << "-D" << std::string(10, ' ') << "- turn on symbol table debugging" << std::endl;
+    std::cout << "-h" << std::string(10, ' ') << "- print this usage message" << std::endl;
+    std::cout << "-p" << std::string(10, ' ') << "- print the abstract syntax tree" << std::endl;
+    std::cout << "-P" << std::string(10, ' ') << "- print the abstract syntax tree plus type information" << std::endl;
 }
 
 } // namespace utils

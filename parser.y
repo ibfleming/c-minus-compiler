@@ -10,15 +10,14 @@
     void yyerror(const char *msg);
 %}
 
+%debug
+%define parse.error verbose
+%locations
+
 %union{
   token::Token *token;
   node::Node *node;
 }
-
-%define parse.error verbose
-%locations
-
-%start program
 
 // Tokens
 %token <token>
@@ -45,6 +44,8 @@ breakStatement expression assignmentOperator simpleExpression andExpression
 unaryRelationalExpression relationalExpression relationalOperator sumExpression sumOperator 
 mulExpression mulOperator unaryExpression unaryOperator factor mutable immutable call 
 arguments argumentList constant
+
+%start program
 
 %% 
 
@@ -79,10 +80,15 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                             auto *temp = $3;
                             while (temp != nullptr) {
                               temp->setVarType($2->getVarType());
-                                temp = temp->getSibling();
+                              if( temp->getNodeType() == NT::VARIABLE) {
+                                temp->setNodeType(NT::VARIABLE_STATIC);
+                              }
+                              if( temp->getNodeType() == NT::VARIABLE_ARRAY) {
+                                temp->setNodeType(NT::VARIABLE_STATIC_ARRAY); 
+                              }
+                              temp = temp->getSibling();
                             }
                             $$ = $3;
-                            $$->setNodeType(NT::STATIC_VARIABLE);
                           }
                           | typeSpecifier variableDeclarationList ';'
                           {
@@ -292,7 +298,7 @@ matchedIterationStatement : WHILE simpleExpression DO matchedStatements
                           | FOR ID ASGN iterationRange DO matchedStatements
                           {
                             $$ = new node::Node($1, NT::FOR);
-                            $$->addChild(new node::Node($2, NT::VARIABLE, VT::INT));
+                            $$->addChild(new node::Node($2, NT::VARIABLE));
                             $$->addChild($4, 1);
                             if ($6 != nullptr) {
                               $$->addChild($6, 2);
@@ -310,7 +316,7 @@ unmatchedIterationStatement : WHILE simpleExpression DO unmatchedStatements
                             | FOR ID ASGN iterationRange DO unmatchedStatements
                             {
                               $$ = new node::Node($1, NT::FOR);
-                              $$->addChild(new node::Node($2, NT::VARIABLE, VT::INT));
+                              $$->addChild(new node::Node($2, NT::VARIABLE));
                               $$->addChild($4, 1);
                               if ($6 != nullptr) {
                                 $$->addChild($6, 2);
@@ -349,33 +355,36 @@ breakStatement            : BREAK ';'   { $$ = new node::Node($1, NT::BREAK); }
 
 expression                : mutable assignmentOperator expression
                           {
+                            $1->setIsInitialized(true);
                             $2->addChild($1);
                             $2->addChild($3, 1);
                             $$ = $2;
                           }
                           | mutable INC        
                           { 
-                            $$ = new node::Node($2, NT::ASSIGNMENT); 
+                            $1->setIsInitialized(true);
+                            $$ = new node::Node($2, NT::ASSIGNMENT, VT::INT);
                             $$->addChild($1);
                           }
                           | mutable DEC        
                           { 
-                            $$ = new node::Node($2, NT::ASSIGNMENT); 
+                            $1->setIsInitialized(true);
+                            $$ = new node::Node($2, NT::ASSIGNMENT, VT::INT);
                             $$->addChild($1);
                           }
                           | simpleExpression   
                           ; 
 
 assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT); }
-                          | ADDASGN     { $$ = new node::Node($1, NT::ASSIGNMENT); }
-                          | SUBASGN     { $$ = new node::Node($1, NT::ASSIGNMENT); }
-                          | MULASGN     { $$ = new node::Node($1, NT::ASSIGNMENT); }
-                          | DIVASGN     { $$ = new node::Node($1, NT::ASSIGNMENT); }
+                          | ADDASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
+                          | SUBASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
+                          | MULASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
+                          | DIVASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
                           ;
 
 simpleExpression          : simpleExpression OR andExpression
                           {
-                            $$ = new node::Node($2, NT::OR);
+                            $$ = new node::Node($2, NT::OR, VT::BOOL);
                             $$->addChild($1);
                             $$->addChild($3, 1);
                           }
@@ -384,7 +393,7 @@ simpleExpression          : simpleExpression OR andExpression
 
 andExpression             : andExpression AND unaryRelationalExpression
                           {
-                            $$ = new node::Node($2, NT::AND);
+                            $$ = new node::Node($2, NT::AND, VT::BOOL);
                             $$->addChild($1);
                             $$->addChild($3, 1);
                           }
@@ -393,7 +402,7 @@ andExpression             : andExpression AND unaryRelationalExpression
 
 unaryRelationalExpression : NOT unaryRelationalExpression
                           {
-                            $$ = new node::Node($1, NT::NOT);
+                            $$ = new node::Node($1, NT::NOT, VT::BOOL);
                             $$->addChild($2);
                           }
                           | relationalExpression       
@@ -408,12 +417,12 @@ relationalExpression      : sumExpression relationalOperator sumExpression
                           | sumExpression   
                           ;
 
-relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR); }
-                          | LEQ       { $$ = new node::Node($1, NT::OPERATOR); }
-                          | GREATER   { $$ = new node::Node($1, NT::OPERATOR); }
-                          | GEQ       { $$ = new node::Node($1, NT::OPERATOR); }
-                          | EQL       { $$ = new node::Node($1, NT::OPERATOR); }
-                          | NEQ       { $$ = new node::Node($1, NT::OPERATOR); }
+relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+                          | LEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+                          | GREATER   { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+                          | GEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+                          | EQL       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+                          | NEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
                           ;
 
 sumExpression             : sumExpression sumOperator mulExpression 
@@ -425,8 +434,8 @@ sumExpression             : sumExpression sumOperator mulExpression
                           | mulExpression   
                           ;
 
-sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR); }
-                          | SUB      { $$ = new node::Node($1, NT::OPERATOR); }
+sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
+                          | SUB      { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
                           ;
 
 mulExpression             : mulExpression mulOperator unaryExpression 
@@ -438,9 +447,9 @@ mulExpression             : mulExpression mulOperator unaryExpression
                           | unaryExpression   
                           ;
 
-mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR); }
-                          | DIV         { $$ = new node::Node($1, NT::OPERATOR); }
-                          | MOD         { $$ = new node::Node($1, NT::OPERATOR); }
+mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
+                          | DIV         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
+                          | MOD         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
                           ;
 
 unaryExpression           : unaryOperator unaryExpression 
@@ -451,9 +460,9 @@ unaryExpression           : unaryOperator unaryExpression
                           | factor      
                           ;
 
-unaryOperator             : SUB         { $$ = new node::Node($1, NT::CHSIGN_UNARY); }
-                          | MUL         { $$ = new node::Node($1, NT::SIZEOF_UNARY); }
-                          | QUES        { $$ = new node::Node($1, NT::QUES_UNARY); }
+unaryOperator             : SUB         { $$ = new node::Node($1, NT::CHSIGN_UNARY, VT::INT); }
+                          | MUL         { $$ = new node::Node($1, NT::SIZEOF_UNARY, VT::INT); }
+                          | QUES        { $$ = new node::Node($1, NT::QUES_UNARY, VT::INT); }
                           ; 
 
 factor                    : mutable     
@@ -462,7 +471,7 @@ factor                    : mutable
 mutable                   : ID  { $$ = new node::Node($1, NT::ID); }
                           | ID '[' expression ']' 
                           {
-                            $$ = new node::Node($2, NT::ARRAY);
+                            $$ = new node::Node($2, NT::ID_ARRAY);
                             auto *id = new node::Node($1, NT::ID);
                             $$->addChild(id);
                             $$->addChild($3, 1);
