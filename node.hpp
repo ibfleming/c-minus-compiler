@@ -5,9 +5,24 @@
 #include "utils.hpp"
 #include <vector>
 
+/**
+ * @namespace node
+ * @brief Contains the Node class and related functions.
+ */
 namespace node {
 
+class Node;   // forward declaration
+
+extern Node *root;
+
+void printTree(Node *root, int depth);
+
+/**
+ * @class Node
+ * @brief Represents a node in the Abstract Syntax Tree (AST).
+ */
 class Node {
+
 private:
     std::vector<node::Node*> children_;
     int childLocation_;
@@ -15,9 +30,9 @@ private:
     int siblingLocation_;
     types::NodeType nodeType_;   // FUNCTION, VAR, etc.
     types::VarType varType_;     // INT, CHAR, BOOL, STATIC, UNKNOWN
-    types::TokenType tokenType_; // ID, NUMCONST, CHARCONST, STRINGCONST, BOOLCONST, etc.
     types::TokenValue value_;    // value of the token (int, char, string) after processing
     int line_;
+
 public:
     /**
      * @fn Node
@@ -29,7 +44,6 @@ public:
     {
         line_ = token->getLine();
         value_ = token->getValue();
-        tokenType_ = token->getType();
     }
 
     /**
@@ -43,14 +57,12 @@ public:
     {
         line_ = token->getLine();
         value_ = token->getValue();
-        tokenType_ = token->getType();
     }
 
     // Getters
 
     types::NodeType getNodeType() const { return nodeType_; }
     types::VarType getVarType() const { return varType_; }
-    types::TokenType getTokenType() const { return tokenType_; }
     std::vector<node::Node*> getChildren() const { return children_; }
     Node* getSibling() const { return sibling_; }
     int getLine() const { return line_; }
@@ -70,7 +82,6 @@ public:
     void setVarType(types::VarType varType) { varType_ = varType; }
     void setSibLoc(int loc) { siblingLocation_ = loc; }
     void setChildLoc(int loc) { childLocation_ = loc; }
-
     void addChild(Node* child) { children_.push_back(child); }
     void addChild(Node* child, int loc) { children_.push_back(child); child->setChildLoc(loc); }
     
@@ -83,9 +94,6 @@ public:
 
     void setSibling(Node* sibling);
 };
-
-extern Node *root;
-void printTree(Node *root, int depth);
 
 } // namespace node
 

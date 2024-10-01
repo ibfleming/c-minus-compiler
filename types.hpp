@@ -4,6 +4,10 @@
 #include <string>
 #include <variant>
 
+/**
+ * @namespace types
+ * @brief Contains the various types used in the compiler.
+ */
 namespace types {
 
 /**

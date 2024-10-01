@@ -3,6 +3,10 @@
 
 #include "node.hpp"
 
+/**
+ * @namespace utils
+ * @brief Contains utility functions for the compiler.
+ */
 namespace utils {
 
     /**
@@ -17,7 +21,7 @@ namespace utils {
      * @fn printIndent
      * @param times The number of times to print the indent.
      * @brief Prints an indent to the console for the AST.
-     * @return std::string
+     * @return string
      */
     std::string printIndent(int times);
 

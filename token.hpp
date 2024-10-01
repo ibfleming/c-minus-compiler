@@ -14,6 +14,30 @@ namespace token {
 class Token;    // forward declaration
 
 /**
+ * @fn processCharConst
+ * @param token The character token to process.
+ * @return char
+ * @brief Processes the character token and returns the character.
+ */
+char processCharConst(Token& token);
+
+/**
+ * @fn processBoolConst
+ * @param token The boolean token to process.
+ * @return int
+ * @brief Processes the boolean token and returns the integer value.
+ */
+int processBoolConst(const std::string& token);
+
+/**
+ * @fn processStringConst
+ * @param token The string token to process.
+ * @return string
+ * @brief Processes the string token and returns the string.
+ */
+std::string processStringConst(Token& token);
+
+/**
  * @fn processToken
  * @param token The token to process.
  * @return void
