@@ -1,0 +1,10 @@
+// C-F24
+main()
+{
+    while true do {
+        666;
+        break;
+        777;
+        break;
+    }
+}

@@ -25,6 +25,14 @@ namespace utils {
      */
     std::string printIndent(int times);
 
+    /**
+     * @fn checkFileExtension
+     * @param filename The name of the file to check.
+     * @brief Checks if the file has a valid extension.
+     * @return bool
+     */
+    bool checkFileExtension(std::string filename);
+
 } // namespace utils
 
 #endif // UTILS_HPP

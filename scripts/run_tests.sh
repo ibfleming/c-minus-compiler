@@ -18,7 +18,7 @@ for file in "$TEST_DIR"/*.c-; do
   filename="${file%.c-}"
 
   # Run the compiler on the .c- file and capture the output
-  output=$("./c-" "$file")
+  output=$("./c-" "-p" "$file")
 
   # Get the expected output from the corresponding .out file
   expected_output=$(< "$filename".out)

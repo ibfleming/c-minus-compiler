@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <iostream>
 
 namespace utils {
 
@@ -12,6 +13,14 @@ std::string printIndent(int times) {
         result += ".   ";
     }
     return result;
+}
+
+bool checkFileExtension(std::string filename) {
+    if (filename.find(".c-") == std::string::npos) { // check valid file type e.g. program.c-
+        std::cerr << "Error: File name must contain '.c-'" << std::endl;
+        return false;
+    }
+    return true;
 }
 
 } // namespace utils

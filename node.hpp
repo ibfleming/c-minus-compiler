@@ -13,8 +13,16 @@ namespace node {
 
 class Node;   // forward declaration
 
-extern Node *root;
+extern Node *root;   // Root of the AST
 
+/**
+ *  * @fn printTree
+ *  * @param root Pointer to the root node of the AST.
+ *  * @param depth The depth of the node in the AST.
+ *  * @brief Prints the AST to the console. Recursive.
+ *  * @return void
+ * 
+ */
 void printTree(Node *root, int depth);
 
 /**
@@ -24,13 +32,13 @@ void printTree(Node *root, int depth);
 class Node {
 
 private:
-    std::vector<node::Node*> children_;
-    int childLocation_;
-    Node* sibling_;
-    int siblingLocation_;
-    types::NodeType nodeType_;   // FUNCTION, VAR, etc.
-    types::VarType varType_;     // INT, CHAR, BOOL, STATIC, UNKNOWN
-    types::TokenValue value_;    // value of the token (int, char, string) after processing
+    std::vector<node::Node*> children_;     // children of the node
+    int childLocation_;                     // location of the child in the parent's children vector
+    Node* sibling_;                         // sibling of the node
+    int siblingLocation_;                   // location of the sibling in the parent's children vector
+    types::NodeType nodeType_;              // FUNCTION, VAR, etc.
+    types::VarType varType_;                // INT, CHAR, BOOL, STATIC, UNKNOWN
+    types::TokenValue value_;               // value of the token (int, char, string) after processing
     int line_;
 
 public:
@@ -61,38 +69,73 @@ public:
 
     // Getters
 
+    std::vector<node::Node*> getChildren() const { return children_; }
+    int getChildLoc() const { return childLocation_; }
+    Node* getSibling() const { return sibling_; }
+    int getSibLoc() const { return siblingLocation_; }
     types::NodeType getNodeType() const { return nodeType_; }
     types::VarType getVarType() const { return varType_; }
-    std::vector<node::Node*> getChildren() const { return children_; }
-    Node* getSibling() const { return sibling_; }
-    int getLine() const { return line_; }
-    int getSibLoc() const { return siblingLocation_; }
-    int getChildLoc() const { return childLocation_; }
-
-    // TokenValue Getters (int, char, string)
-
-    int getInt() const;
-    char getChar() const;
-    std::string getString() const;
-    int getBool() const;
+    int getLine() const { return line_; }    
 
     // Setters
 
-    void setNodeType(types::NodeType nodeType) { nodeType_ = nodeType; }
-    void setVarType(types::VarType varType) { varType_ = varType; }
-    void setSibLoc(int loc) { siblingLocation_ = loc; }
-    void setChildLoc(int loc) { childLocation_ = loc; }
     void addChild(Node* child) { children_.push_back(child); }
     void addChild(Node* child, int loc) { children_.push_back(child); child->setChildLoc(loc); }
+    void setChildLoc(int loc) { childLocation_ = loc; }
+    void setSibLoc(int loc) { siblingLocation_ = loc; }
+    void setNodeType(types::NodeType nodeType) { nodeType_ = nodeType; }
+    void setVarType(types::VarType varType) { varType_ = varType; }
     
-    // Print Functions
+    /**
+     * @fn setSibling
+     * @param sibling The sibling to set.
+     * @brief Sets the sibling of the node.
+     */
+    void setSibling(Node* sibling);
 
+    // TokenValue Getters (int, char, string)
+
+    /**
+     * @fn getInt
+     * @brief Returns integer variant of the value.
+     * @return int
+     */
+    int getInt() const;
+
+    /**
+     * @fn getChar
+     * @brief Returns character variant of the value.
+     * @return char
+     */
+    char getChar() const;
+
+    /**
+     * @fn getString
+     * @brief Returns string variant of the value.
+     * @return std::string
+     */
+    std::string getString() const;
+
+    /**
+     * @fn getBool
+     * @brief Returns boolean variant of the value.
+     * @return int
+     */
+    int getBool() const;
+
+    /**
+     * @fn printValue
+     * @brief Prints the value of the node to the console (for the AST).
+     */
     void printValue();
+
+    /**
+     * @fn printNode
+     * @param depth The depth of the node in the AST.
+     * @brief Prints the node to the console (for the AST).
+     */
     void printNode(int depth);
 
-    // Functions
-
-    void setSibling(Node* sibling);
 };
 
 } // namespace node

@@ -2,20 +2,14 @@
 #include "types.hpp"
 #include <iostream>
 
-typedef types::NodeType NT;
+typedef types::NodeType NT;     // shorthand for NodeType
 
 using namespace std;
 
 namespace node {
 
-    // Root of the AST
     Node *root = nullptr;
 
-    /**
-     * @fn getInt
-     * @brief Returns integer variant of the value.
-     * @return int
-     */
     int Node::getInt() const {
         if (std::holds_alternative<int>(value_)) {
             return std::get<int>(value_);
@@ -23,11 +17,6 @@ namespace node {
         throw std::bad_variant_access();
     }
 
-    /**
-     * @fn getChar
-     * @brief Returns character variant of the value.
-     * @return char
-     */
     char Node::getChar() const {
         if (std::holds_alternative<char>(value_)) {
             return std::get<char>(value_);
@@ -35,11 +24,6 @@ namespace node {
         throw std::bad_variant_access();
     }
 
-    /**
-     * @fn getString
-     * @brief Returns string variant of the value.
-     * @return std::string
-     */
     std::string Node::getString() const {
         if (std::holds_alternative<std::string>(value_)) {
             return std::get<std::string>(value_);
@@ -47,11 +31,6 @@ namespace node {
         throw std::bad_variant_access();
     }
 
-    /**
-     * @fn getBool
-     * @brief Returns boolean variant of the value.
-     * @return int
-     */
     int Node::getBool() const {
         if (std::holds_alternative<int>(value_)) {
             return std::get<int>(value_);
@@ -59,15 +38,9 @@ namespace node {
         throw std::bad_variant_access();
     }
 
-    /**
-     * @fn setSibling
-     * @param sibling The sibling node to set.
-     * @brief Sets the sibling node of the current node.
-     * @return void
-     */
     void Node::setSibling(Node* sibling) {
         if( sibling_ == nullptr ) {
-            sibling_ = sibling; // Setting the sibling node of the current node
+            sibling_ = sibling;
             sibling_->setSibLoc(siblingLocation_ + 1);
 
             Node *current = sibling_->getSibling();
@@ -89,11 +62,6 @@ namespace node {
         } 
     }
 
-    /**
-     * @fn printValue
-     * @brief Prints the value of the node to the console.
-     * @return void
-     */
     void Node::printValue() {
         switch (nodeType_) {
 
@@ -116,7 +84,7 @@ namespace node {
                 cout << "\"" << getString() << "\"";
                 return;
 
-            // These nodes are no different from the rest other than having an extra space after them in the output.
+            // These nodes are no different from the rest other than having an extra space after them in the output. Sigh...
 
             case NT::FUNCTION:
             case NT::PARAMETER:
@@ -154,12 +122,6 @@ namespace node {
         }
     }
 
-    /**
-     * @fn printNode
-     * @param depth The depth of the node in the AST.
-     * @brief Prints the node to the console.
-     * @return void
-     */
     void Node::printNode(int depth = 0) {
         if (siblingLocation_ != 0) {
             cout << utils::printIndent(depth) << "Sibling: " << siblingLocation_ << "  ";
@@ -170,13 +132,6 @@ namespace node {
         std::flush(cout);
     }
 
-    /**
-     * @fn printTree
-     * @param root Pointer to the root node of the AST.
-     * @param depth The depth of the node in the AST.
-     * @brief Prints the AST to the console. Recursive.
-     * @return void
-     */
     void printTree(Node *root, int depth = 0) {
 
         if (root == nullptr) {
