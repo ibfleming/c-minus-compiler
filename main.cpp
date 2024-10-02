@@ -10,6 +10,8 @@
 extern int yydebug;
 extern FILE *yyin;
 
+typedef semantic::SemanticAnalyzer SA;
+
 int main(int argc, char **argv) {
    argc--; argv++; // skip the first argument
 
@@ -31,7 +33,6 @@ int main(int argc, char **argv) {
             return 0;
          }
       }
-      return 0;
    }
 
    if( argc > 1 ) { // more than one argument is passed, i.e. '-p file.c-'
@@ -85,6 +86,8 @@ int main(int argc, char **argv) {
    }
 
    yyparse();
+
+   SA *semanticAnalyzer = new SA(node::root); // Semantic analysis
 
    if (printAST) { utils::printTree(); }
 

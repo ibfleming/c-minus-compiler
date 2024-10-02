@@ -187,9 +187,16 @@ std::string tknTypeToStr(TokenType type);
 /**
  * @fn nodeTypeToStr
  * @param type The type of node to convert to a string.
- * @brief Converts node type to a printable string.
+ * @brief Converts node type to a printable string (for the AST).
  */
 std::string nodeTypeToStr(NodeType type);
+
+/**
+ * @fn pendaticNodeTypeToStr
+ * @param type The type of node to convert to a string.
+ * @brief Converts node type to a printable string (for the symbol table).
+ */
+std::string pendaticNodeTypeToStr(NodeType type);
 
 /**
  * @fn varTypeToStr

@@ -19,7 +19,7 @@ extern Node *root;   // Root of the AST
  * @fn printTree
  * @param root Pointer to the root node of the AST.
  * @param depth The depth of the node in the AST.
- * @brief Prints the AST to the console. Recursive.
+ * @brief Prints the AST to the console. Using DFS (recursive).
  * @return void
  */
 void printTree(Node *root, int depth);
@@ -114,6 +114,8 @@ public:
     /**
      * @fn getString
      * @brief Returns string variant of the value.
+     *  
+     * If no string is present, check if integer and if so return the integer as a string.
      * @return std::string
      */
     std::string getString() const;
@@ -145,6 +147,13 @@ public:
      * @brief Prints the node to the console (for the AST).
      */
     void printNode(int depth);
+
+    /**
+     * @fn pendanticPrint
+     * @brief Prints the node to the console for pendantic purposes.
+     * @brief This will print the 
+     */
+    void pendanticPrint();
 
 };
 

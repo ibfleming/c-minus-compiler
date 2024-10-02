@@ -8,37 +8,40 @@ using namespace std;
 
 namespace node {
 
-    Node *root = nullptr;
+Node *root = nullptr;
 
-    int Node::getInt() const {
+int Node::getInt() const {
         if (std::holds_alternative<int>(value_)) {
             return std::get<int>(value_);
         }
         throw std::bad_variant_access();
     }
 
-    char Node::getChar() const {
+char Node::getChar() const {
         if (std::holds_alternative<char>(value_)) {
             return std::get<char>(value_);
         }
         throw std::bad_variant_access();
     }
 
-    std::string Node::getString() const {
+std::string Node::getString() const {
         if (std::holds_alternative<std::string>(value_)) {
             return std::get<std::string>(value_);
+        }
+        if (std::holds_alternative<int>(value_)) {
+            return std::to_string(std::get<int>(value_));
         }
         throw std::bad_variant_access();
     }
 
-    int Node::getBool() const {
+int Node::getBool() const {
         if (std::holds_alternative<int>(value_)) {
             return std::get<int>(value_);
         }
         throw std::bad_variant_access();
     }
 
-    void Node::setSibling(Node* sibling) {
+void Node::setSibling(Node* sibling) {
         if( sibling_ == nullptr ) {
             sibling_ = sibling;
             sibling_->setSibLoc(siblingLocation_ + 1);
@@ -62,7 +65,7 @@ namespace node {
         } 
     }
 
-    void Node::printValue() {
+void Node::printValue() {
         switch (nodeType_) {
 
             // Print these specific CONSTANT nodes.
@@ -128,7 +131,7 @@ namespace node {
         }
     }
 
-    void Node::printType() {
+void Node::printType() {
         switch (nodeType_) {
 
             case NT::COMPOUND:
@@ -150,7 +153,7 @@ namespace node {
         }
     }
 
-    void Node::printNode(int depth = 0) {
+void Node::printNode(int depth = 0) {
         if (siblingLocation_ != 0) {
             cout << utils::printIndent(depth) << "Sibling: " << siblingLocation_ << "  ";
         }
@@ -161,7 +164,11 @@ namespace node {
         std::flush(cout);
     }
 
-    void printTree(Node *root, int depth = 0) {
+void Node::pendanticPrint() {
+    cout << types::pendaticNodeTypeToStr(nodeType_) << "(" << line_ << "): " << getString()  << endl;
+}
+
+void printTree(Node *root, int depth = 0) {
 
         if (root == nullptr) {
             return;
@@ -191,5 +198,6 @@ namespace node {
             current = current->getSibling();
         }
     }
+
 
 } // namespace node

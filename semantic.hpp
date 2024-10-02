@@ -7,10 +7,16 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 
+#include "node.hpp"
+#include <queue>
 #include <map>
+#include <algorithm>
 #include <iostream>
+#include <memory>
+#include <stack>
+#include <iomanip>
 
 /**
  * @namespace semantic
@@ -18,66 +24,142 @@
  */
 namespace semantic {
 
+class Scope;    // forward declaration
+
 class SymbolTable {
 
 private:
-    std::map<std::string, node::Node*> declarations_;  // Map of variable declarations, name -> node
-    bool debug_;
+    std::map<std::string, std::shared_ptr<node::Node>> symbols_;  // Map of variable declarations (symbols), name -> node
+    bool debug_;                                                  // Debug flag?
 
 public:
+    /**
+     * @fn SymbolTable
+     * @brief Constructor for the symbol table.
+     */
     SymbolTable(): debug_(false) {};
 
+    /**
+     * @fn getSymbols
+     * @brief Returns the symbols in the symbol table.
+     * @return std::map<std::string, node::Node*>
+     */
+    std::map<std::string, std::shared_ptr<node::Node>> getSymbols() { return symbols_; }
+
+    /**
+     * @fn setDebug
+     * @brief Sets the debug flag.
+     * @param debug The debug flag.
+     */
     void setDebug(bool debug) { debug_ = debug; }
 
-    bool insert(node::Node *node) {
-        std::string name = node->getString();
-        if (declarations_.find(name) == declarations_.end()) {
-            declarations_[name] = node;
-            #if PENDANTIC_DEBUG
-            std::cout << "Inserted: " << name << std::endl;
-            #endif
-            return true;
-        }
-        #if PEDANTIC_DEBUG
-        std::cout << "Error: " << name << " already declared." << std::endl;
-        #endif
-        return false;
-    }
+    /**
+     * @fn insertSymbol
+     * @brief Inserts a symbol into the symbol table.
+     * @param node The node (symbol) to insert.
+     * @return bool
+     */
+    bool insertSymbol(std::shared_ptr<node::Node> node);
 
-    node::Node* lookup(std::string name) {
-        if (declarations_.find(name) != declarations_.end()) {
-            #if PENDANTIC_DEBUG
-            std::cout << "Lookup: " << name << std::endl;
-            #endif
-            return declarations_[name];
-        }
-        #if PENDANTIC_DEBUG
-        std::cout << "Error: " << name << " not declared." << std::endl;
-        #endif
-        return nullptr;
-    }
+    /**
+     * @fn lookupSymbol
+     * @brief Looks up a symbol in the symbol table.
+     * @param name The name of the symbol to lookup.
+     * @return node::Node*
+     */
+    node::Node* lookupSymbol(const std::string name);
 
-    void enterScope();
-    void exitScope();
-
+    /**
+     * @fn printSymbols
+     * @brief Prints the symbols in the symbol table.
+     */
+    void printSymbols(Scope &scope);
 };
+
+class Scope {
+
+private:
+    SymbolTable *symbolTable_;  // Symbol table for the scope
+    node::Node  *parent_;       // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
+    std::string name_;           // Name of the scope
+
+public:
+    /**
+     * @fn Scope
+     * @brief Constructor for the scope.
+     * @param parent The parent node of the scope.
+     */
+    Scope(node::Node *parent) : parent_(parent), name_(types::pendaticNodeTypeToStr(parent->getNodeType())) {
+        symbolTable_ = new SymbolTable();
+    }
+    /**
+     * @fn Scope
+     * @brief Constructor for the scope.
+     * @param parent The parent node of the scope.
+     * @param name The name of the scope.
+     */
+    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name) {
+        symbolTable_ = new SymbolTable();
+    }
+
+    SymbolTable* getSymbolTable() { return symbolTable_; }
+    std::string getName() { return name_; }
+    void setDebug(bool debug) { symbolTable_->setDebug(debug); }
+    node::Node* getParent() { return parent_; }
+    bool insertSymbol(node::Node *node) { return symbolTable_->insertSymbol(std::shared_ptr<node::Node>(node)); }
+    node::Node* lookupSymbol(std::string name) { return symbolTable_->lookupSymbol(name); }
+    void printSymbolTable() { symbolTable_->printSymbols(*this); }
+};
+
 
 class SemanticAnalyzer {
 
 private:
-    node::Node *tree_;           // Root of the AST
-    SymbolTable *symbolTable_;  // Symbol table for the semantic analyzer
-    int warnings_;              // Number of warnings
-    int errors_;                // Number of errors
+    node::Node *tree_;                          // Root of the AST
+    Scope *globalScope_;                        // Global scope
+    std::stack<Scope*> scopes_;                 // Stack of scopes
+    int warnings_;                              // Number of warnings
+    int errors_;                                // Number of errors
 
 public:
-    SemanticAnalyzer(node::Node *tree) : tree_(tree), symbolTable_(new SymbolTable()), warnings_(0), errors_(0) {}
+    /**
+     * @fn SemanticAnalyzer
+     * @brief Constructor for the semantic analyzer.
+     * @param tree Root of the AST.
+     */
+    SemanticAnalyzer(node::Node *tree) 
+    : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0) {
+        // push the global scope onto the stack?
+        scopes_.push(globalScope_);
+        analyze();
+    }
 
     /**
-     * @fn getTable
-     * @brief Returns the symbol table.
+     * @fn traverseGlobals
+     * @brief Depth-first search traversal of the AST for global variables and functions.
+     * @param node The node to start the traversal from.
      */
-    SymbolTable* getTable() { return symbolTable_; }
+    void traverseGlobals(node::Node *node);
+
+    /**
+     * @fn bfsTraversal
+     * @brief Breadth-first search traversal of the AST.
+     * @param root The root of the AST.
+     */
+    void bfsTraversal(node::Node *root);
+
+    /**
+     * @fn analyze
+     * @brief Analyzes the AST.
+     */
+    void analyze();
+
+    /**
+     * @fn getGlobalScope
+     * @brief Returns the global scope.
+     * @return Scope*
+     */
+    Scope* getGlobalScope() { return globalScope_; }
 
     /**
      * @fn printWarnings

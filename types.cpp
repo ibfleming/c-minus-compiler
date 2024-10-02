@@ -77,8 +77,8 @@ std::string tknTypeToStr(TokenType type) {
 
 std::string nodeTypeToStr(NodeType type) {
     switch (type) {
-        case NodeType::CHARACTER:
         case NodeType::BOOLEAN:
+        case NodeType::CHARACTER:
         case NodeType::NUMBER:
         case NodeType::STRING:
             return "Const";
@@ -114,6 +114,42 @@ std::string nodeTypeToStr(NodeType type) {
         case NodeType::RETURN:              return "Return";
         case NodeType::UNKNOWN:             return "Unknown";
         default:                            return "Invalid Node Type";
+    }
+}
+
+std::string pendaticNodeTypeToStr(NodeType type) {
+    switch (type) {
+        case NodeType::BOOLEAN:                 return "BOOLEAN";
+        case NodeType::CHARACTER:               return "CHARACTER";
+        case NodeType::NUMBER:                  return "NUMBER";
+        case NodeType::STRING:                  return "STRING";
+        case NodeType::VARIABLE:                return "VARIABLE";
+        case NodeType::VARIABLE_ARRAY:          return "VARIABLE_ARRAY";
+        case NodeType::VARIABLE_STATIC:         return "VARIABLE_STATIC";
+        case NodeType::VARIABLE_STATIC_ARRAY:   return "VARIABLE_STATIC_ARRAY";
+        case NodeType::PARAMETER:               return "PARAMETER";
+        case NodeType::PARAMETER_ARRAY:         return "PARAMETER_ARRAY";
+        case NodeType::FUNCTION:                return "FUNCTION";
+        case NodeType::CALL:                    return "CALL";
+        case NodeType::ID:                      return "ID";
+        case NodeType::ID_ARRAY:                return "ID_ARRAY";
+        case NodeType::QUES_UNARY:              return "QUES_UNARY";
+        case NodeType::CHSIGN_UNARY:            return "CHSIGN_UNARY";
+        case NodeType::SIZEOF_UNARY:            return "SIZEOF_UNARY";
+        case NodeType::OPERATOR:                return "OPERATOR";
+        case NodeType::NOT:                     return "NOT";
+        case NodeType::AND:                     return "AND";
+        case NodeType::OR:                      return "OR";
+        case NodeType::ASSIGNMENT:              return "ASSIGNMENT";
+        case NodeType::BREAK:                   return "BREAK";
+        case NodeType::RANGE:                   return "RANGE";
+        case NodeType::FOR:                     return "FOR";
+        case NodeType::WHILE:                   return "WHILE";
+        case NodeType::IF:                      return "IF";
+        case NodeType::COMPOUND:                return "COMPOUND";
+        case NodeType::RETURN:                  return "RETURN";
+        case NodeType::UNKNOWN:                 return "UNKNOWN";
+        default:                                return "### INVALID ###";
     }
 }
 
