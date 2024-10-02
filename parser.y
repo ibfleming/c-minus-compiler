@@ -140,6 +140,7 @@ functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatemen
                               $$->addChild($4);
                             }
                             if ($6 != nullptr) {
+                              $6->setFunctionNode($$);
                               $$->addChild($6, 1);
                             }
                           }
@@ -151,6 +152,7 @@ functionDeclaration       : typeSpecifier ID '(' parameters ')' compoundStatemen
                               $$->addChild($3);
                             }
                             if ($5 != nullptr) {
+                              $5->setFunctionNode($$);
                               $$->addChild($5, 1);
                             }
                           }

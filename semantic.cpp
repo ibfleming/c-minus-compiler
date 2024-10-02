@@ -15,7 +15,7 @@ using namespace std;
 
 namespace semantic {
 
-bool SymbolTable::insertSymbol(shared_ptr<node::Node> node) {
+bool SymbolTable::insertSymbol(node::Node* node) {
     string name = node->getString();
     if (symbols_.find(name) == symbols_.end()) {
         symbols_[name] = node;
@@ -35,7 +35,7 @@ node::Node* SymbolTable::lookupSymbol(const string name) {
         #if PENDANTIC_DEBUG
         cout << "Lookup: " << name << endl;
         #endif
-        return symbols_[name].get();
+        return symbols_[name];
     }
     #if PENDANTIC_DEBUG
     cout << "Error: " << name << " not declared." << endl;
@@ -49,15 +49,12 @@ void SymbolTable::printSymbols(Scope &scope) {
     cout << "+" << string(SPACE, '-') << "+" << endl;
 
     for (auto const& [key, val] : symbols_) {
-
-        string line = to_string(val->getLine());
+        string line = " (" + to_string(val->getLine()) + ")   ";
         string nodeType = types::pendaticNodeTypeToStr(val->getNodeType());
         string varType = types::varTypeToStr(val->getVarType());
-
-        cout << "| " << setw(5) << left << "(" + line + ")";
-        cout << " " << nodeType;
-        cout << " => " << key << " : " << varType;
-        cout << string(SPACE - line.size() - nodeType.size() - key.size() - varType.size() - 10, ' ');
+        string data = line + nodeType + " => " + key + " : " + varType;
+        cout << "|";
+        cout << setw(SPACE) << left << data;
         cout << "|" << endl;
     }
     cout << "+" << string(SPACE, '-') << "+" << endl;
@@ -71,6 +68,20 @@ void SemanticAnalyzer::printWarnings() {
 void SemanticAnalyzer::printErrors() {
     cout << "Number of errors: " << errors_ << endl;
     flush(cout);
+}
+
+void SemanticAnalyzer::printScopes() {
+    stack<Scope*> tempScopes;
+    while (!scopes_.empty()) {
+        tempScopes.push(scopes_.top());
+        scopes_.pop();
+    }
+    while (!tempScopes.empty()) {
+        Scope* scope = tempScopes.top();
+        tempScopes.pop();
+        scope->printSymbolTable();
+        scopes_.push(scope);
+    }
 }
 
 /******************************************************************************
@@ -91,14 +102,74 @@ void SemanticAnalyzer::traverseGlobals(node::Node *node) {
         case NT::VARIABLE:
         case NT::VARIABLE_ARRAY:
         case NT::VARIABLE_STATIC:
-            node->pendanticPrint();
-            globalScope_->insertSymbol(node);
+            insertGlobalSymbol(node);
     }
 
     // Do not traverse into children as this access the local scopes
 
     if (node->getSibling() != nullptr) {
         traverseGlobals(node->getSibling());
+    }
+}
+
+void SemanticAnalyzer::traverseLocals(node::Node *node) {
+    if (node == nullptr) { return; }
+
+    switch (node->getNodeType()) {
+        case NT::FUNCTION:
+            {
+                //Scope *function = new Scope(node, node->getString());
+                //scopes_.push(function);
+                cout << "ENTER_FUNCTION" << "(" << node->getLine() << "): " << node->getString() << endl;  
+            }
+            break;
+        case NT::COMPOUND:
+            if (node->getFunctionNode() == nullptr) { // not the function's compound
+                //std::string name = "COMPOUND_" + to_string(compoundLevel_);
+                //Scope *compound = new Scope(node, name);
+                cout << "ENTER_COMPOUND" << "(" << node->getLine() << ")" << endl;
+            }
+            break;
+        default:
+            break;
+    }
+
+    for(node::Node *child : node->getChildren()) {
+        traverseLocals(child);
+    }
+
+    if (node->getSibling() != nullptr) {
+        /**
+         * Use case explanation:
+         * 
+         *  main()
+         *  { <-- function's body (compound)
+         *      { <-- compound 
+         *  
+         *      This code is covering this particular case
+         *      { <-- sibling to compoud 1 (compound 2)
+         *      }
+         *  }
+         * 
+         */
+        if (node->getSibling()->getNodeType() == NT::COMPOUND) {
+            node->setIsVisited(true);
+            cout << "LEAVE_COMPOUND" << "(" << node->getLine() << ")" << endl;
+        }
+        
+        traverseLocals(node->getSibling());
+    }
+
+    switch (node->getNodeType()) {
+        case NT::COMPOUND:
+            if (node->getFunctionNode() != nullptr) { 
+                cout << "LEAVE_FUNCTION(" << node->getFunctionNode()->getLine() << "): " << node->getFunctionNode()->getString() << endl;
+            } else if (node->getIsVisited() == false) {
+                cout << "LEAVE_COMPOUND" << "(" << node->getLine() << ")" << endl;
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -139,7 +210,10 @@ void SemanticAnalyzer::analyze() {
 
     // Traverse for Global Variables and Functions
     traverseGlobals(tree_);
-    globalScope_->printSymbolTable();
+
+    traverseLocals(tree_);
+
+    //printScopes();
 
 }
 

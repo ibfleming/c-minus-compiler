@@ -32,10 +32,12 @@ class Node {
 
 private:
     bool isInitialized_;                    // flag to check if the node is initialized (for VARS, etc.)
+    bool isVisited_;                        // flag to check if the node has been visited (for particular traversals) 
     std::vector<node::Node*> children_;     // children of the node
     int childLocation_;                     // location of the child in the parent's children vector
     Node* sibling_;                         // sibling of the node
     int siblingLocation_;                   // location of the sibling in the parent's children vector
+    Node* function_;                        // FUNCTION node for COMPOUNDS that are the function's body
     types::NodeType nodeType_;              // FUNCTION, VAR, etc.
     types::VarType varType_;                // INT, CHAR, BOOL, STATIC, UNKNOWN
     types::TokenValue value_;               // value of the token (int, char, string) after processing
@@ -48,7 +50,8 @@ public:
      * @param nodeType The type of node to create.
      */
     Node(token::Token *token, types::NodeType nodeType) 
-    : nodeType_(nodeType), varType_(types::VarType::UNKNOWN), siblingLocation_(0), childLocation_(0), sibling_(nullptr), isInitialized_(false) 
+    : nodeType_(nodeType), varType_(types::VarType::UNKNOWN), siblingLocation_(0), 
+      childLocation_(0), sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false)
     {
         line_ = token->getLine();
         value_ = token->getValue();
@@ -61,7 +64,8 @@ public:
      * @param varType The variable type of the node.
      */
     Node(token::Token *token, types::NodeType nodeType, types::VarType varType) 
-    : nodeType_(nodeType), varType_(varType), siblingLocation_(0), childLocation_(0), sibling_(nullptr), isInitialized_(false)
+    : nodeType_(nodeType), varType_(varType), siblingLocation_(0), childLocation_(0), 
+      sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false)
     {
         line_ = token->getLine();
         value_ = token->getValue();
@@ -70,6 +74,8 @@ public:
     // Getters
 
     bool getIsInitialized() const { return isInitialized_; }
+    bool getIsVisited() const { return isVisited_; }
+    Node* getFunctionNode() const { return function_; }
     std::vector<node::Node*> getChildren() const { return children_; }
     int getChildLoc() const { return childLocation_; }
     Node* getSibling() const { return sibling_; }
@@ -81,6 +87,8 @@ public:
     // Setters
 
     void setIsInitialized(bool isInitialized) { isInitialized_ = isInitialized; }
+    void setIsVisited(bool isVisited) { isVisited_ = isVisited; }
+    void setFunctionNode(Node* function) { function_ = function; }
     void addChild(Node* child) { children_.push_back(child); }
     void addChild(Node* child, int loc) { children_.push_back(child); child->setChildLoc(loc); }
     void setChildLoc(int loc) { childLocation_ = loc; }
