@@ -91,6 +91,9 @@ int main(int argc, char **argv) {
 
    if (printAST) { utils::printTree(); }
 
+   semanticAnalyzer->printWarnings();
+   semanticAnalyzer->printErrors();
+
    return 0;
 }
 

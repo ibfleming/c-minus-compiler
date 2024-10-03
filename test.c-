@@ -1,49 +1,29 @@
 // C-F24
-// C-F24
-int x;
-int y;
-int z;
-
-agamemnon()
-{
-    int a;
-    int b;
-    int x;
-
-    a:=666;
-    b:=666;
-    x:=666;
-    z:=666;
-
-    output(a);
-    output(b);
-    output(x);
-    output(y);
-    output(z);
-    outnl();
-    a:=1;
-    b:=2;
-    x:=3;
-    y:=4;
-    z:=5;
-}
+int a;
 
 main()
 {
+    int a;
+    int b;
+    int c;
+
+    int a;
+    int b;
+    int c;
+
     {
+        int a;
+        int b;
+        int c;
         {
-            {
+            int swag;
+            int bruh;
+            int sheesh;
 
-            }
-        }
-    }
+            int a;
+            int b;
+            int c;
 
-    {
-        {
-            {
-
-            }
         }
     }
 }
-

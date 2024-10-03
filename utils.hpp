@@ -2,6 +2,8 @@
 #define UTILS_HPP
 
 #include "node.hpp"
+#include <vector>
+#include <stack>
 
 /**
  * @namespace utils
@@ -40,6 +42,26 @@ namespace utils {
      * @return void
      */
     void printHelpMenu();
+
+    /**
+     * @fn stackToVector
+     * @param stack The stack to convert to a vector.
+     * @brief Converts a stack to a vector.
+     * @return std::vector<T>
+     * @tparam T The type of the stack.
+     * @note The stack is not modified. Definition is inside the header file to prevent compilation errors.
+     */
+    template <typename T>
+    std::vector<T> stackToVector(std::stack<T>& stack) {
+        std::vector<T> vector;
+        std::stack<T> tempStack = stack;
+        while (!tempStack.empty()) {
+            vector.push_back(tempStack.top());
+            tempStack.pop();
+        }
+        std::reverse(vector.begin(), vector.end());
+        return vector;
+    }
 
 } // namespace utils
 

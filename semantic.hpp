@@ -8,10 +8,12 @@
 #define SEMANTIC_HPP
 
 #define SPACE 48
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 
+#include "utils.hpp"
 #include "types.hpp"
 #include "node.hpp"
+#include "logger.hpp"
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -26,37 +28,47 @@ typedef types::NodeType NT;
  */
 namespace semantic {
 
-class Scope; // forward declaration
+class Scope;
 
 #pragma region SymbolTable
 
+/**
+ * @class SymbolTable
+ * @brief Represents a symbol table.
+ */
 class SymbolTable {
 
 private:
-    std::map<std::string, node::Node*> symbols_;    // Map of variable declarations (symbols), (name, node)
-    bool debug_;                                    // Debug flag?
-
+    // Map of variable declarations, (name => node)
+    std::map<std::string, node::Node*> symbols_;
 public:
     /**
      * @fn SymbolTable
      * @brief Constructor for the symbol table.
      */
-    SymbolTable(): debug_(false) {};
+    SymbolTable() = default;
+
+    /***********************************************
+    *  ACCESSORS
+    ***********************************************/
 
     /**
      * @fn getSymbols
      * @brief Returns the symbols in the symbol table.
      * @return std::map<std::string, node::Node*>
      */
-
     std::map<std::string, node::Node*> getSymbols() { return symbols_; }
 
     /**
-     * @fn setDebug
-     * @brief Sets the debug flag.
-     * @param debug The debug flag.
+     * @fn getSize
+     * @brief Returns the size of the symbol table.
+     * @return int
      */
-    void setDebug(bool debug) { debug_ = debug; }
+    int getSize() { return symbols_.size(); }
+
+    /***********************************************
+    *  SYMBOL MANAGEMENT
+    ***********************************************/
 
     /**
      * @fn insertSymbol
@@ -72,31 +84,33 @@ public:
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(const std::string name);
+    node::Node* lookupSymbol(const node::Node* sym);
 
-    /**
-     * @fn getSize
-     * @brief Returns the size of the symbol table.
-     * @return int
-     */
-    int getSize() { return symbols_.size(); }
+    /***********************************************
+    *  SYMBOL TABLE INFORMATION
+    ***********************************************/ 
 
     /**
      * @fn printSymbols
      * @brief Prints the symbols in the symbol table.
      */
     void printSymbols();
+
 };
 
 #pragma endregion SymbolTable
 
 #pragma region Scope
 
+/**
+ * @class Scope
+ * @brief Represents a scope in the program.
+ */
 class Scope {
 
 private:
     SymbolTable table_;     // Symbol table for the scope
-    node::Node  *parent_;   // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
+    node::Node *parent_;    // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
     std::string name_;      // Name of the scope
     int location_;          // Location of the scope relative to other scopes?
 
@@ -115,6 +129,10 @@ public:
      * @param name The name of the scope.
      */
     Scope(node::Node *parent, std::string name) : parent_(parent), name_(name), location_(-1) {}
+
+    /***********************************************
+    *  ACCESSORS
+    ***********************************************/
 
     /**
      * @fn getSymbols
@@ -137,13 +155,9 @@ public:
      */
     std::string getName() { return name_; }
 
-    /**
-     * @fn setDebug
-     * @brief Sets the debug flag for the symbol table.
-     * @param debug The debug flag.
-     * @return void
-     */
-    void setDebug(bool debug) { table_.setDebug(debug); }
+    /***********************************************
+    *  SYMBOL TABLE MANAGEMENT
+    ***********************************************/
 
     /**
      * @fn insertSymbol
@@ -159,7 +173,11 @@ public:
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(const std::string name) { return table_.lookupSymbol(name); }
+    node::Node* lookupSymbol(const node::Node* sym) { return table_.lookupSymbol(sym); }
+
+    /***********************************************
+    *  SCOPE INFORMATION
+    ***********************************************/
 
     /**
      * @fn printScope
@@ -167,22 +185,26 @@ public:
      * @return void
      */
     void printScope();
+
 };
 
 #pragma endregion Scope
 
-#pragma region SemanticAnalyzer
+#pragma region Analyzer
 
+/**
+ * @class SemanticAnalyzer
+ * @brief Analyzes the AST for semantic errors and warnings.
+ */
 class SemanticAnalyzer {
 
 private:
-    node::Node *tree_;                          // Root of the AST
-    Scope *globalScope_;                        // Global scope
-    Scope *currentScope_;                       // Current scope
-    std::stack<Scope*> scopes_;                 // Stack of scopes
-    int compoundLevel_;
-    int warnings_;                              // Number of warnings
-    int errors_;                                // Number of errors
+    node::Node *tree_;          // Root of the AST
+    Scope *globalScope_;        // Global scope
+    std::stack<Scope*> scopes_; // Stack of scopes
+    int compoundLevel_;         // Tracks the level of compounds in the scope stack
+    int warnings_;              // Number of warnings
+    int errors_;                // Number of errors
 
 public:
     /**
@@ -192,10 +214,127 @@ public:
      */
     SemanticAnalyzer(node::Node *tree) 
     : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0), compoundLevel_(0) {
-        // push the global scope onto the stack?
-        scopes_.push(globalScope_);
+        #if PENDANTIC_DEBUG
+        std::cout << "Analyzing the AST..." << std::endl;
+        #endif
         analyze();
     }
+
+    /***********************************************
+    *  SCOPE MANAGEMENT
+    ***********************************************/
+
+    #pragma region Scope_M
+
+    /**
+     * @fn enterScope
+     * @brief Enters a new scope, i.e. pushes a new scope onto the stack.
+     * @param scope The scope to enter.
+     */
+    void enterScope(Scope *scope);
+
+    /**
+     * @fn leaveScope
+     * @brief Leaves the current scope, i.e. pops the top scope on the stack.
+     */
+    void leaveScope();
+
+    /**
+     * @fn getCurrentScope
+     * @brief Gets the current scope, i.e. scope on the top of the stack.
+     * @return Scope*
+     */
+    Scope* getCurrentScope() { return scopes_.top(); }
+
+    /**
+     * @fn getGlobalScope
+     * @brief Returns the global scope.
+     * @return Scope*
+     */
+    Scope* getGlobalScope() { return globalScope_; }
+
+    /**
+     * @fn getScopeCount
+     * @brief Returns the number of scopes on the stack.
+     * @return int
+     */
+    int getScopeCount() { return scopes_.size(); }
+
+    /**
+     * @fn printScopes
+     * @brief Prints the stack of scopes in reverse order.
+     * @return void
+     */
+    void printScopes();
+
+    /**
+     * @fn printGlobal
+     * @brief Prints the global scope.
+     * @return void
+     */
+    void printGlobal() { globalScope_->printScope(); }
+
+    #pragma endregion Scope_M
+
+    /***********************************************
+    *  SYMBOL TABLE MANAGEMENT
+    ***********************************************/
+
+    #pragma region Table_M
+
+    /**
+     * @fn insertGlobalSymbol
+     * @brief Inserts a global symbol into the global scope.
+     * @param sym The symbol to insert.
+     */
+    void insertGlobalSymbol(node::Node *sym);
+
+    /**
+     * @fn insertLocalSymbol
+     * @brief Inserts a local symbol into the current scope.
+     * @param sym The symbol to insert
+     */
+    void insertLocalSymbol(node::Node *sym);
+
+    /**
+     * @fn lookupGlobalSymbol
+     * @brief Looks up a symbol in the global scope for analysis.
+     * @param sym The symbol to lookup.
+     * @return node::Node*
+     */
+    node::Node* lookupGlobalSymbol(const node::Node* sym);
+
+    /**
+     * @fn lookupLocalSymbol
+     * @brief Looks up a symbol in the current scopeo and other scopes if there are more on the stack for analysis.
+     * @param sym The symbol to lookup.
+     * @return node::Node*
+     */
+    node::Node* lookupLocalSymbol(const node::Node* sym);
+
+    /**
+     * @fn checkThroughScopes
+     * @brief Checks through the scopes on the stack for a symbol.
+     * @param sym The symbol to check for.
+     * @return node::Node*
+     */
+    node::Node* lookupAllScopes(node::Node* sym);
+
+    /**
+     * @fn checkForDeclaration
+     * @brief Checks for a declaration in the current scope of the given node, i.e. check symbol table.
+     * @param node The node to check.
+     * @return node::Node*
+     */
+    node::Node* checkForDeclaration(node::Node* node);
+
+    #pragma endregion Table_M
+
+    /***********************************************
+    *  TRAVERSAL & ANALYSIS
+    ***********************************************/
+
+    #pragma region Traversal_M
 
     /**
      * @fn traverseGlobals
@@ -212,59 +351,50 @@ public:
     void traverseLocals(node::Node *node);
 
     /**
-     * @fn bfsTraversal
-     * @brief Breadth-first search traversal of the AST.
-     * @param root The root of the AST.
-     */
-    void bfsTraversal(node::Node *root);
-
-    /**
      * @fn analyze
      * @brief Analyzes the AST.
      */
     void analyze();
 
+    #pragma endregion Traversal_M
+
+    /***********************************************
+    *  ERRORS/WARNINGS MANAGEMENT
+    ***********************************************/
+
+    #pragma region ErrWarns_M
+    
     /**
-     * @fn getGlobalScope
-     * @brief Returns the global scope.
-     * @return Scope*
+     * @fn incWarnings
+     * @brief Incremenet the warnings
+     * @return void
      */
-    Scope* getGlobalScope() { return globalScope_; }
+    void incWarnings() { warnings_++; }
+
+    /**
+     * @fn incErrors
+     * @brief Incremenet the warnings
+     * @return void
+     */
+    void incErrors() { errors_++; }
 
     /**
      * @fn printWarnings
      * @brief Prints the number of warnings.
      */
     void printWarnings();
-    
+
     /**
      * @fn printErrors
      * @brief Prints the number of errors.
      */
     void printErrors();
 
-    /**
-     * @fn insertGlobalSymbol
-     * @brief Inserts a global symbol into the global scope.
-     * @param node The node to insert.
-     */
-    void insertGlobalSymbol(node::Node *node) { globalScope_->insertSymbol(node); }
+    #pragma endregion ErrWarns_M
 
-    bool leaveScope(Scope *scope);
-
-    bool enterScope(Scope *scope);
-
-    Scope* getScope(std::string name);
-
-    /**
-     * @fn printScopes
-     * @brief Prints the stack of scopes in reverse order.
-     * @return void
-     */
-    void printScopes();
 };
 
-#pragma endregion SemanticAnalyzer
+#pragma endregion Analyzer
 
 } // namespace semantic
 
