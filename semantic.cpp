@@ -5,15 +5,12 @@
  *********************************************************************/
 
 #include "semantic.hpp"
-#include "types.hpp"
-
-#define SPACE 48
-
-typedef types::NodeType NT;
 
 using namespace std;
 
 namespace semantic {
+
+#pragma region SymbolTable
 
 bool SymbolTable::insertSymbol(node::Node* node) {
     string name = node->getString();
@@ -43,22 +40,39 @@ node::Node* SymbolTable::lookupSymbol(const string name) {
     return nullptr;
 }
 
-void SymbolTable::printSymbols(Scope &scope) {
+void SymbolTable::printSymbols() {}
+
+#pragma endregion SymbolTable
+
+#pragma region Scope
+
+void Scope::printScope() {
     cout << "+" << string(SPACE, '-') << "+" << endl;
-    cout << "| SCOPE: \"" << scope.getName() << "\"" << string(SPACE - 10 - scope.getName().size(), ' ') << "|" << endl;
+    cout << "| SCOPE: \"" << name_ << "\"" << string(SPACE - 10 - name_.size(), ' ') << "|" << endl;
     cout << "+" << string(SPACE, '-') << "+" << endl;
 
-    for (auto const& [key, val] : symbols_) {
-        string line = " (" + to_string(val->getLine()) + ")   ";
-        string nodeType = types::pendaticNodeTypeToStr(val->getNodeType());
-        string varType = types::varTypeToStr(val->getVarType());
-        string data = line + nodeType + " => " + key + " : " + varType;
+    if (getTable()->getSize() == 0) {
         cout << "|";
-        cout << setw(SPACE) << left << data;
+        cout << setw(SPACE) << left << " NO SYMBOLS.";
         cout << "|" << endl;
+    }
+    else {
+        for ( auto const& [key, val] : getTable()->getSymbols() ) {
+            string line = " (" + to_string(val->getLine()) + ")   ";
+            string nodeType = types::pendaticNodeTypeToStr(val->getNodeType());
+            string varType = types::varTypeToStr(val->getVarType());
+            string data = line + nodeType + " => " + key + " : " + varType;
+            cout << "|";
+            cout << setw(SPACE) << left << data;
+            cout << "|" << endl;
+        }
     }
     cout << "+" << string(SPACE, '-') << "+" << endl;
 }
+
+#pragma endregion Scope
+
+#pragma region SemanticAnalyzer
 
 void SemanticAnalyzer::printWarnings() {
     cout << "Number of warnings: " << warnings_ << endl;
@@ -71,18 +85,26 @@ void SemanticAnalyzer::printErrors() {
 }
 
 void SemanticAnalyzer::printScopes() {
-    stack<Scope*> tempScopes;
-    while (!scopes_.empty()) {
-        tempScopes.push(scopes_.top());
-        scopes_.pop();
+    std::vector<Scope*> scopes;
+    std::stack<Scope*> scopesTemp = scopes_;
+
+    while (!scopesTemp.empty()) {
+        Scope* currentScope = scopesTemp.top();
+        if (currentScope != nullptr) {
+            scopes.push_back(currentScope);
+        }
+        scopesTemp.pop();
     }
-    while (!tempScopes.empty()) {
-        Scope* scope = tempScopes.top();
-        tempScopes.pop();
-        scope->printSymbolTable();
-        scopes_.push(scope);
+    
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        (*it)->printScope();
     }
 }
+
+
+#pragma endregion SemanticAnalyzer
+
+#pragma region Traversal
 
 /******************************************************************************
  * Analyzing the AST for semantic errors and warnings.
@@ -118,62 +140,78 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
     switch (node->getNodeType()) {
         case NT::FUNCTION:
             {
-                //Scope *function = new Scope(node, node->getString());
-                //scopes_.push(function);
-                cout << "ENTER_FUNCTION" << "(" << node->getLine() << "): " << node->getString() << endl;  
+                cout << "(" << node->getLine() << ")" << " Enter Function: " << node->getString() << endl;
+                Scope *scope = new Scope(node, node->getString());
+                scopes_.push(scope);
             }
             break;
         case NT::COMPOUND:
-            if (node->getFunctionNode() == nullptr) { // not the function's compound
-                //std::string name = "COMPOUND_" + to_string(compoundLevel_);
-                //Scope *compound = new Scope(node, name);
-                cout << "ENTER_COMPOUND" << "(" << node->getLine() << ")" << endl;
+            if (node->getFunctionNode() == nullptr) {
+                cout << "(" << node->getLine() << ")" << " Enter Compound" << endl;
+                Scope *scope = new Scope(node);
+                scopes_.push(scope);
             }
             break;
         default:
             break;
     }
 
-    for(node::Node *child : node->getChildren()) {
+    // Traverse children nodes recursively first (inner blocks)
+    for (node::Node *child : node->getChildren()) {
         traverseLocals(child);
     }
 
+    // After children, check sibling node (for next block at the same level)
     if (node->getSibling() != nullptr) {
-        /**
-         * Use case explanation:
-         * 
-         *  main()
-         *  { <-- function's body (compound)
-         *      { <-- compound 
-         *  
-         *      This code is covering this particular case
-         *      { <-- sibling to compoud 1 (compound 2)
-         *      }
-         *  }
-         * 
-         */
-        if (node->getSibling()->getNodeType() == NT::COMPOUND) {
-            node->setIsVisited(true);
-            cout << "LEAVE_COMPOUND" << "(" << node->getLine() << ")" << endl;
-        }
-        
-        traverseLocals(node->getSibling());
-    }
 
-    switch (node->getNodeType()) {
-        case NT::COMPOUND:
-            if (node->getFunctionNode() != nullptr) { 
-                cout << "LEAVE_FUNCTION(" << node->getFunctionNode()->getLine() << "): " << node->getFunctionNode()->getString() << endl;
-            } else if (node->getIsVisited() == false) {
-                cout << "LEAVE_COMPOUND" << "(" << node->getLine() << ")" << endl;
-            }
-            break;
-        default:
-            break;
+        switch (node->getNodeType()) {
+            case NT::COMPOUND:
+                cout << "(" << node->getLine() << ")" << " Leave Compound" << endl;
+                break;
+            default:
+                break;
+        }
+
+        traverseLocals(node->getSibling());
+
+    }
+    else {
+
+        switch (node->getNodeType()) {
+            case NT::COMPOUND:
+                if (node->getFunctionNode() == nullptr) {
+                    cout << "(" << node->getLine() << ")" << " Leave Compound" << endl;
+                } else {
+                    cout << "(" << node->getFunctionNode()->getLine() << ")" << " Leave Function: ";
+                    cout << node->getFunctionNode()->getString() << endl;
+                }
+            default:
+                break;
+        }
     }
 }
 
-void SemanticAnalyzer::bfsTraversal(node::Node *root) {
+
+void SemanticAnalyzer::analyze() {
+
+    #if PENDANTIC_DEBUG
+    cout << "Analyzing the AST..." << endl;
+    #endif
+
+    // Traverse for Global Variables and Functions
+    traverseGlobals(tree_);
+    traverseLocals(tree_);
+
+/*  cout << endl << endl << endl;
+    cout << "ALL SCOPES" << endl;
+    printScopes(); */
+}
+
+#pragma endregion Traversal
+
+} // namespace semantic
+
+/* void SemanticAnalyzer::bfsTraversal(node::Node *root) {
     if (root == nullptr) { return; }
 
     queue<node::Node*> queue;
@@ -200,21 +238,20 @@ void SemanticAnalyzer::bfsTraversal(node::Node *root) {
             queue.push(node->getSibling());
         }
     }
-}
+} */
 
-void SemanticAnalyzer::analyze() {
+/*  
+    cout << "+" << string(SPACE, '-') << "+" << endl;
+    cout << "| SCOPE: \"" << scope.getName() << "\"" << string(SPACE - 10 - scope.getName().size(), ' ') << "|" << endl;
+    cout << "+" << string(SPACE, '-') << "+" << endl;
 
-    #if PENDANTIC_DEBUG
-    cout << "Analyzing the AST..." << endl;
-    #endif
-
-    // Traverse for Global Variables and Functions
-    traverseGlobals(tree_);
-
-    traverseLocals(tree_);
-
-    //printScopes();
-
-}
-
-} // namespace semantic
+    for (auto const& [key, val] : symbols_) {
+        string line = " (" + to_string(val->getLine()) + ")   ";
+        string nodeType = types::pendaticNodeTypeToStr(val->getNodeType());
+        string varType = types::varTypeToStr(val->getVarType());
+        string data = line + nodeType + " => " + key + " : " + varType;
+        cout << "|";
+        cout << setw(SPACE) << left << data;
+        cout << "|" << endl;
+    }
+    cout << "+" << string(SPACE, '-') << "+" << endl; */

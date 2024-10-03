@@ -7,16 +7,18 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
+#define SPACE 48
 #define PENDANTIC_DEBUG false
 
+#include "types.hpp"
 #include "node.hpp"
-#include <queue>
-#include <map>
 #include <algorithm>
 #include <iostream>
-#include <memory>
-#include <stack>
 #include <iomanip>
+#include <stack>
+#include <map>
+
+typedef types::NodeType NT;
 
 /**
  * @namespace semantic
@@ -24,13 +26,15 @@
  */
 namespace semantic {
 
-class Scope;    // forward declaration
+class Scope; // forward declaration
+
+#pragma region SymbolTable
 
 class SymbolTable {
 
 private:
-    std::map<std::string, node::Node*> symbols_;                  // Map of variable declarations (symbols), name -> node
-    bool debug_;                                                  // Debug flag?
+    std::map<std::string, node::Node*> symbols_;    // Map of variable declarations (symbols), (name, node)
+    bool debug_;                                    // Debug flag?
 
 public:
     /**
@@ -44,6 +48,7 @@ public:
      * @brief Returns the symbols in the symbol table.
      * @return std::map<std::string, node::Node*>
      */
+
     std::map<std::string, node::Node*> getSymbols() { return symbols_; }
 
     /**
@@ -70,18 +75,30 @@ public:
     node::Node* lookupSymbol(const std::string name);
 
     /**
+     * @fn getSize
+     * @brief Returns the size of the symbol table.
+     * @return int
+     */
+    int getSize() { return symbols_.size(); }
+
+    /**
      * @fn printSymbols
      * @brief Prints the symbols in the symbol table.
      */
-    void printSymbols(Scope &scope);
+    void printSymbols();
 };
+
+#pragma endregion SymbolTable
+
+#pragma region Scope
 
 class Scope {
 
 private:
-    SymbolTable symbolTable_;  // Symbol table for the scope
-    node::Node  *parent_;       // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
-    std::string name_;           // Name of the scope
+    SymbolTable table_;     // Symbol table for the scope
+    node::Node  *parent_;   // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
+    std::string name_;      // Name of the scope
+    int location_;          // Location of the scope relative to other scopes?
 
 public:
     /**
@@ -89,30 +106,79 @@ public:
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      */
-    Scope(node::Node *parent) : parent_(parent), name_(types::pendaticNodeTypeToStr(parent->getNodeType())) {}
+    Scope(node::Node *parent)
+     : parent_(parent), name_(types::pendaticNodeTypeToStr(parent->getNodeType())), location_(-1) {}
     /**
      * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      * @param name The name of the scope.
      */
-    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name) {}
+    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name), location_(-1) {}
 
-    SymbolTable* getSymbolTable() { return &symbolTable_; }
-    std::string getName() { return name_; }
-    void setDebug(bool debug) { symbolTable_.setDebug(debug); }
+    /**
+     * @fn getSymbols
+     * @brief Returns the symbol table of the scope.
+     * @return SymbolTable*
+     */
+    SymbolTable* getTable() { return &table_; }
+
+    /**
+     * @fn getParent
+     * @brief Returns the parent node of the scope.
+     * @return node::Node*
+     */
     node::Node* getParent() { return parent_; }
-    bool insertSymbol(node::Node *node) { return symbolTable_.insertSymbol(node); }
-    node::Node* lookupSymbol(std::string name) { return symbolTable_.lookupSymbol(name); }
-    void printSymbolTable() { symbolTable_.printSymbols(*this); }
+
+    /**
+     * @fn getName
+     * @brief Returns the name of the scope.
+     * @return std::string
+     */
+    std::string getName() { return name_; }
+
+    /**
+     * @fn setDebug
+     * @brief Sets the debug flag for the symbol table.
+     * @param debug The debug flag.
+     * @return void
+     */
+    void setDebug(bool debug) { table_.setDebug(debug); }
+
+    /**
+     * @fn insertSymbol
+     * @brief Inserts a symbol into the symbol table.
+     * @param node The node to insert.
+     * @return bool
+     */
+    bool insertSymbol(node::Node *node) { return table_.insertSymbol(node); }
+
+    /**
+     * @fn lookupSymbol
+     * @brief Looks up a symbol in the symbol table.
+     * @param name The name of the symbol to lookup.
+     * @return node::Node*
+     */
+    node::Node* lookupSymbol(const std::string name) { return table_.lookupSymbol(name); }
+
+    /**
+     * @fn printScope
+     * @brief Prints the scope and its contained symbols.
+     * @return void
+     */
+    void printScope();
 };
 
+#pragma endregion Scope
+
+#pragma region SemanticAnalyzer
 
 class SemanticAnalyzer {
 
 private:
     node::Node *tree_;                          // Root of the AST
     Scope *globalScope_;                        // Global scope
+    Scope *currentScope_;                       // Current scope
     std::stack<Scope*> scopes_;                 // Stack of scopes
     int compoundLevel_;
     int warnings_;                              // Number of warnings
@@ -197,6 +263,8 @@ public:
      */
     void printScopes();
 };
+
+#pragma endregion SemanticAnalyzer
 
 } // namespace semantic
 
