@@ -72,18 +72,45 @@ void Scope::printScope() {
     cout << "+" << string(SPACE, '-') << "+" << endl;
 }
 
+void Scope::checkUsedVariables(semantic::SemanticAnalyzer *analyzer) {
+    for ( auto const& [key, val] : getTable()->getSymbols() ) {
+        if (!val->getIsUsed()) {
+            logger::WARN_VariableNotUsed(analyzer, val);
+        }
+    }
+}
+
 #pragma endregion Scope
 
 #pragma region Analyzer
 
-void SemanticAnalyzer::printWarnings() {
-    cout << "Number of warnings: " << warnings_ << endl;
-    flush(cout);
+/***********************************************
+*  SCOPE MANAGEMENT
+***********************************************/
+
+void SemanticAnalyzer::enterScope(Scope *scope) {
+    scopes_.push(scope);
+    #if PENDANTIC_DEBUG
+    cout << "Entering Scope: " << scope->getName() << endl;
+    #endif
 }
 
-void SemanticAnalyzer::printErrors() {
-    cout << "Number of errors: " << errors_ << endl;
-    flush(cout);
+void SemanticAnalyzer::leaveScope() {
+    auto scope = scopes_.top();
+    checkForUse(scope);
+    scopes_.pop();
+    if (scope != nullptr) {
+        if( scope == globalScope_ ) {
+            #if PENDANTIC_DEBUG
+            cerr << "ERROR(SCOPE): Cannot leave the global scope." << endl;
+            #endif
+            return;
+        }
+        #if PENDANTIC_DEBUG
+        cout << "Leaving Scope: " << scope->getName() << endl;
+        scope->printScope();
+        #endif
+    }
 }
 
 void SemanticAnalyzer::printScopes() {
@@ -103,29 +130,9 @@ void SemanticAnalyzer::printScopes() {
     }
 }
 
-void SemanticAnalyzer::leaveScope() {
-    auto scope = scopes_.top();
-    scopes_.pop();
-    if (scope != nullptr) {
-        if( scope == globalScope_ ) {
-            #if PENDANTIC_DEBUG
-            cerr << "ERROR(SCOPE): Cannot leave the global scope." << endl;
-            #endif
-            return;
-        }
-        #if PENDANTIC_DEBUG
-        cout << "Leaving Scope: " << scope->getName() << endl;
-        scope->printScope();
-        #endif
-    }
-}
-
-void SemanticAnalyzer::enterScope(Scope *scope) {
-    scopes_.push(scope);
-    #if PENDANTIC_DEBUG
-    cout << "Entering Scope: " << scope->getName() << endl;
-    #endif
-}
+/***********************************************
+*  SYMBOL TABLE MANAGEMENT
+***********************************************/
 
 void SemanticAnalyzer::insertGlobalSymbol(node::Node *sym) {
     auto *decl = lookupGlobalSymbol(sym);
@@ -140,11 +147,8 @@ void SemanticAnalyzer::insertGlobalSymbol(node::Node *sym) {
 }
 
 void SemanticAnalyzer::insertLocalSymbol(node::Node *sym) {
-    auto *globalDecl = lookupGlobalSymbol(sym);
-    if (globalDecl != nullptr) { // look up in global scope
-        logger::ERROR_VariableAlreadyDeclared(this, sym, globalDecl);
-        return;        
-    } else if ( getScopeCount() > 1 ) { // currently in multiple scopes, iterate thru them
+    // According to the semantics of C-, do not just global scope here
+    if ( getScopeCount() > 1 ) { // currently in multiple scopes, iterate thru them
         auto *decl = lookupAllScopes(sym);
         if (decl != nullptr) {
             logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
@@ -178,14 +182,75 @@ node::Node* SemanticAnalyzer::lookupLocalSymbol(const node::Node* sym) {
 }
 
 node::Node* SemanticAnalyzer::lookupAllScopes(node::Node* sym) {
-    std::vector<Scope*> scope = utils::stackToVector(scopes_);
-    for( auto it = scope.rbegin(); it != scope.rend(); ++it ) {
-        auto decl = (*it)->lookupSymbol(sym);
-        if( decl != nullptr ) {
-            return decl;
+    auto scopes = utils::stackToVector(scopes_);
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        #if PENDANTIC_DEBUG
+        cout << (it == scopes.rbegin() ? "[Local] " : "[Scopes] ");
+        #endif
+        // Do not search through function scopes for duplicate variables
+        if ((*it)->getName().find("FUNCTION_") != string::npos) {
+            continue;
         }
-    } 
-    return nullptr;
+        if (auto decl = (*it)->lookupSymbol(sym)) {
+            return decl; // Return if symbol found
+        }
+    }
+    return nullptr; // Return null if symbol not found
+}
+
+void SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
+    #if PENDANTIC_DEBUG
+    cout << "[Check Var] ";
+    #endif
+
+    // (1) Check if the variable is being used as a function (all functions declared in global scope)
+    if (auto decl = lookupGlobalSymbol(sym)) {
+        if( decl->getNodeType() == types::NodeType::FUNCTION ) {
+            logger::ERROR_VariableAsFunction(this, sym);
+            return;
+        }
+    }
+
+    // (2) Lambda function to set the variable as used
+    auto setVarUsed = [](Scope* scope, node::Node* sym) {
+        auto decl = scope->lookupSymbol(sym);
+        if (decl) decl->setIsUsed(true);
+        return decl;
+    };
+
+    // (3) Check if the variable is declared in other scopes
+    if (getScopeCount() > 1) {
+        for (auto& scope : utils::stackToVector(scopes_)) {
+            #if PENDANTIC_DEBUG
+            cout << (&scope == &scopes_.top() ? "[Local] " : "[Scopes] ");
+            #endif
+            if (setVarUsed(scope, sym)) return;
+        }
+        logger::ERROR_VariableNotDeclared(this, sym);
+    }
+    // (4) Check if the variable is declared in the current local scope 
+    else if (auto decl = lookupLocalSymbol(sym)) {
+        decl->setIsUsed(true);
+    }
+    // (5) Default case, not found in any scope 
+    else {
+        logger::ERROR_VariableNotDeclared(this, sym);
+    }
+}
+
+void SemanticAnalyzer::checkCallDeclaration(node::Node* sym) {
+    #if PENDANTIC_DEBUG
+    cout << "[Check Call] ";
+    #endif
+
+    // (1) Check if the function is declared in the global scope as all functions are declared there
+    if (lookupGlobalSymbol(sym) != nullptr) {
+        sym->setIsUsed(true);
+        return;
+    }
+
+    // (2) Default case, not found in global scope so function is not declared
+    logger::ERROR_VariableNotDeclared(this, sym);
 }
 
 #pragma endregion Analyzer
@@ -210,6 +275,7 @@ void SemanticAnalyzer::traverseGlobals(node::Node *node) {
         case NT::VARIABLE:
         case NT::VARIABLE_ARRAY:
         case NT::VARIABLE_STATIC:
+        case NT::VARIABLE_STATIC_ARRAY:
             node->setIsVisited(true);
             insertGlobalSymbol(node);
     }
@@ -237,13 +303,18 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
         case NT::VARIABLE:
         case NT::VARIABLE_ARRAY:
         case NT::VARIABLE_STATIC:
+        case NT::VARIABLE_STATIC_ARRAY:
+        case NT::PARAMETER:
+        case NT::PARAMETER_ARRAY:
             if (!node->getIsVisited()) {
                 insertLocalSymbol(node);
             }
             break;
-        case NT::CALL:
         case NT::ID:
-            // Lookup if symbol is declared!
+            checkVariableDeclaration(node);
+            break;
+        case NT::CALL:
+            checkCallDeclaration(node);
             break;
         default:
             break;
@@ -275,6 +346,8 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
 void SemanticAnalyzer::analyze() {
     // Traverse for Global Variables and Functions
     traverseGlobals(tree_);
+    
+    // Check Linker?
 
     #if PENDANTIC_DEBUG
     printGlobal(); // will only print the global scope

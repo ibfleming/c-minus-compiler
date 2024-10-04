@@ -7,8 +7,8 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
+#define PENDANTIC_DEBUG false
 #define SPACE 48
-#define PENDANTIC_DEBUG true
 
 #include "utils.hpp"
 #include "types.hpp"
@@ -29,6 +29,7 @@ typedef types::NodeType NT;
 namespace semantic {
 
 class Scope;
+class SemanticAnalyzer;
 
 #pragma region SymbolTable
 
@@ -174,6 +175,13 @@ public:
      * @return node::Node*
      */
     node::Node* lookupSymbol(const node::Node* sym) { return table_.lookupSymbol(sym); }
+
+    /**
+     * @fn checkUsedVariables
+     * @brief Checks for unused variables in the scope.
+     * @return void
+     */
+    void checkUsedVariables(semantic::SemanticAnalyzer *analyzer);
 
     /***********************************************
     *  SCOPE INFORMATION
@@ -326,7 +334,21 @@ public:
      * @param node The node to check.
      * @return node::Node*
      */
-    node::Node* checkForDeclaration(node::Node* node);
+    void checkVariableDeclaration(node::Node* sym);
+
+    /**
+     * @fn checkCallDeclaration
+     * @brief Checks for the use of a function in the current scope.
+     * @param sym The function to check.
+     */
+    void checkCallDeclaration(node::Node* sym);
+
+    /**
+     * @fn checkForUse
+     * @brief Checks for the use of a variables in the current scope.
+     * @param scope The scope to check.
+     */
+    void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
 
     #pragma endregion Table_M
 
@@ -382,13 +404,18 @@ public:
      * @fn printWarnings
      * @brief Prints the number of warnings.
      */
-    void printWarnings();
+    void printWarnings() { 
+        std::cout << "Number of warnings: " << warnings_ << std::endl; 
+        std::flush(std::cout); }
 
     /**
      * @fn printErrors
      * @brief Prints the number of errors.
      */
-    void printErrors();
+    void printErrors() { 
+        std::cout << "Number of errors: " << errors_ << std::endl; 
+        std::flush(std::cout); 
+    }
 
     #pragma endregion ErrWarns_M
 

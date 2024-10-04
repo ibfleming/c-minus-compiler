@@ -21,6 +21,10 @@ namespace logger {
 
 void ERROR_VariableNotDeclared(SA *analyzer, node::Node *sym);
 void ERROR_VariableAlreadyDeclared(SA *analyzer, node::Node *sym, node::Node *decl);
+void ERROR_VariableAsFunction(SA *analyzer, node::Node *sym);
+void ERROR_Linker(SA *analyzer);
+
+void WARN_VariableNotUsed(SA *analyzer, node::Node *sym);
 
 } // namespace logger
 

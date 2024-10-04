@@ -33,6 +33,7 @@ class Node {
 private:
     bool isInitialized_;                    // flag to check if the node is initialized (for VARS, etc.)
     bool isVisited_;                        // flag to check if the node has been visited (for particular traversals) 
+    bool isUsed_;                           // flag to check if the node is used (for VARS, etc.)
     std::vector<node::Node*> children_;     // children of the node
     int childLocation_;                     // location of the child in the parent's children vector
     Node* sibling_;                         // sibling of the node
@@ -51,7 +52,7 @@ public:
      */
     Node(token::Token *token, types::NodeType nodeType) 
     : nodeType_(nodeType), varType_(types::VarType::UNKNOWN), siblingLocation_(0), 
-      childLocation_(0), sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false)
+      childLocation_(0), sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false), isUsed_(false)
     {
         line_ = token->getLine();
         value_ = token->getValue();
@@ -65,7 +66,7 @@ public:
      */
     Node(token::Token *token, types::NodeType nodeType, types::VarType varType) 
     : nodeType_(nodeType), varType_(varType), siblingLocation_(0), childLocation_(0), 
-      sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false)
+      sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false), isUsed_(false)
     {
         line_ = token->getLine();
         value_ = token->getValue();
@@ -75,6 +76,7 @@ public:
 
     bool getIsInitialized() const { return isInitialized_; }
     bool getIsVisited() const { return isVisited_; }
+    bool getIsUsed() const { return isUsed_; }
     Node* getFunctionNode() const { return function_; }
     std::vector<node::Node*> getChildren() const { return children_; }
     int getChildLoc() const { return childLocation_; }
@@ -88,6 +90,7 @@ public:
 
     void setIsInitialized(bool isInitialized) { isInitialized_ = isInitialized; }
     void setIsVisited(bool isVisited) { isVisited_ = isVisited; }
+    void setIsUsed(bool isUsed) { isUsed_ = isUsed; }
     void setFunctionNode(Node* function) { function_ = function; }
     void addChild(Node* child) { children_.push_back(child); }
     void addChild(Node* child, int loc) { children_.push_back(child); child->setChildLoc(loc); }

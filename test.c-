@@ -1,29 +1,12 @@
-// C-F24
-int a;
-
-main()
-{
-    int a;
-    int b;
-    int c;
-
-    int a;
-    int b;
-    int c;
-
-    {
-        int a;
-        int b;
-        int c;
-        {
-            int swag;
-            int bruh;
-            int sheesh;
-
-            int a;
-            int b;
-            int c;
-
-        }
-    }
+main(int x) {
+    int x;
 }
+
+main() {
+    int y;
+}
+
+proper main() linker has a symbol name of "main" and has exactly one child (that being it's compound)
+- get children vector size == 1
+- check node value == "main"
+- check node is Nodetype: FUNCTION
