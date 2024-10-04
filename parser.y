@@ -82,9 +82,11 @@ scopedVariableDeclaration : STATIC typeSpecifier variableDeclarationList ';'
                               temp->setVarType($2->getVarType());
                               if( temp->getNodeType() == NT::VARIABLE) {
                                 temp->setNodeType(NT::VARIABLE_STATIC);
+                                temp->setIsInitialized(true);
                               }
                               if( temp->getNodeType() == NT::VARIABLE_ARRAY) {
-                                temp->setNodeType(NT::VARIABLE_STATIC_ARRAY); 
+                                temp->setNodeType(NT::VARIABLE_STATIC_ARRAY);
+                                temp->setIsInitialized(true);
                               }
                               temp = temp->getSibling();
                             }

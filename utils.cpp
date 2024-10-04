@@ -36,4 +36,15 @@ void printHelpMenu() {
     std::cout << "-P" << std::string(10, ' ') << "- print the abstract syntax tree plus type information" << std::endl;
 }
 
+bool isArray(node::Node* node) {
+    switch(node->getNodeType()) {
+        case types::NodeType::VARIABLE_ARRAY:
+        case types::NodeType::VARIABLE_STATIC_ARRAY:
+        case types::NodeType::PARAMETER_ARRAY:
+            return true;
+    }
+    return false;
+}
+
+
 } // namespace utils

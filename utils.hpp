@@ -5,6 +5,10 @@
 #include <vector>
 #include <stack>
 
+namespace node {
+    class Node;
+}
+
 /**
  * @namespace utils
  * @brief Contains utility functions for the compiler.
@@ -62,6 +66,14 @@ namespace utils {
         std::reverse(vector.begin(), vector.end());
         return vector;
     }
+
+    /**
+     * @fn isArray
+     * @param node The node to check if it is an array.
+     * @brief Checks if the node is an array.
+     * @return bool
+     */
+    bool isArray(node::Node* node);
 
 } // namespace utils
 

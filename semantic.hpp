@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 #define SPACE 48
 
 #include "utils.hpp"
@@ -333,8 +333,9 @@ public:
      * @brief Checks for a declaration in the current scope of the given node, i.e. check symbol table.
      * @param node The node to check.
      * @return node::Node*
+     * @note Marks the found symbol as used and sets the searched node's var type.
      */
-    void checkVariableDeclaration(node::Node* sym);
+    node::Node* checkVariableDeclaration(node::Node* sym);
 
     /**
      * @fn checkCallDeclaration
@@ -349,6 +350,19 @@ public:
      * @param scope The scope to check.
      */
     void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
+
+    /**
+     * @fn checkLinker
+     * @brief Checks for the presence of a main function.
+     */
+    void checkLinker();
+
+    /**
+     * @fn processArrayIndex
+     * @brief Processes an array index node.
+     * @param sym The array index node to process.
+     */
+    void processArrayIndex(node::Node* sym);
 
     #pragma endregion Table_M
 

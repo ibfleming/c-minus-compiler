@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the directory and output file
-HW_DIR="hw2"
+HW_DIR="hw3"
 TEST_DIR="./tests/${HW_DIR}"
 OUTPUT_FILE="./results.txt"
 

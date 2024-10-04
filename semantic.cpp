@@ -198,24 +198,33 @@ node::Node* SemanticAnalyzer::lookupAllScopes(node::Node* sym) {
     return nullptr; // Return null if symbol not found
 }
 
-void SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
+node::Node* SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
     #if PENDANTIC_DEBUG
     cout << "[Check Var] ";
     #endif
 
     // (1) Check if the variable is being used as a function (all functions declared in global scope)
     if (auto decl = lookupGlobalSymbol(sym)) {
-        if( decl->getNodeType() == types::NodeType::FUNCTION ) {
+        if( decl->getNodeType() == NT::FUNCTION ) {
             logger::ERROR_VariableAsFunction(this, sym);
-            return;
+            return nullptr;
+        }
+        else {
+            decl->setIsUsed(true);
+            sym->setVarType(decl->getVarType());
+            return decl;
         }
     }
 
     // (2) Lambda function to set the variable as used
-    auto setVarUsed = [](Scope* scope, node::Node* sym) {
+    auto setVarUsed = [](Scope* scope, node::Node* sym) -> node::Node* {
         auto decl = scope->lookupSymbol(sym);
-        if (decl) decl->setIsUsed(true);
-        return decl;
+        if (decl) { 
+            decl->setIsUsed(true); 
+            sym->setVarType(decl->getVarType());
+            return decl;
+        }
+        return nullptr;
     };
 
     // (3) Check if the variable is declared in other scopes
@@ -224,18 +233,23 @@ void SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
             #if PENDANTIC_DEBUG
             cout << (&scope == &scopes_.top() ? "[Local] " : "[Scopes] ");
             #endif
-            if (setVarUsed(scope, sym)) return;
+            if (auto decl = setVarUsed(scope, sym)) return decl;
         }
         logger::ERROR_VariableNotDeclared(this, sym);
+        return nullptr;
     }
     // (4) Check if the variable is declared in the current local scope 
     else if (auto decl = lookupLocalSymbol(sym)) {
         decl->setIsUsed(true);
+        sym->setVarType(decl->getVarType());
+        return decl;
     }
     // (5) Default case, not found in any scope 
     else {
         logger::ERROR_VariableNotDeclared(this, sym);
+        return nullptr;
     }
+    return nullptr;
 }
 
 void SemanticAnalyzer::checkCallDeclaration(node::Node* sym) {
@@ -251,6 +265,64 @@ void SemanticAnalyzer::checkCallDeclaration(node::Node* sym) {
 
     // (2) Default case, not found in global scope so function is not declared
     logger::ERROR_VariableNotDeclared(this, sym);
+}
+
+void SemanticAnalyzer::checkLinker() {
+    auto decl = getGlobalScope()->getTable()->getSymbols();
+    bool isValidMain = false;
+    for (auto& symbol : decl) {
+        if (symbol.first == "main") {
+            auto node = symbol.second;
+            if (node->getChildren().size() == 1 && node->getVarType() == types::VarType::VOID) {
+                isValidMain = true;
+                break;
+            }
+        }
+    }
+    if (!isValidMain) {
+        logger::ERROR_Linker(this);
+    }
+}
+
+void SemanticAnalyzer::processArrayIndex(node::Node* sym) {
+    /*
+    sym = ID_ARRAY = '['
+
+    '[' -> ID, INDEX (NUMCONST)
+
+    (1) Access children of array and get the first child, ID
+    (2) check if ID is declared
+    (3) if so, get the node, and check if its an array
+    (4) if so, get the index node and check if its a number
+    (5) if so, check if the index is within the bounds of the array???
+    (6) set the var type of the sym to the var type of the found symbol for the ID
+    */
+
+    #if PENDANTIC_DEBUG
+    cout << "(Check Array Index)" << endl;
+    #endif
+
+    // (1)
+    auto id = sym->getChildren()[0];
+    auto index = sym->getChildren()[1];
+
+    if( id == nullptr || index == nullptr ) return;
+
+    /** 
+     * This particular ID in the AST must be marked as visited
+     * very well could be duplicate IDs in the AST after this one
+     * given how parsing ID_ARRAYS makes this behavior
+     * i.e.
+     * int c[3]; <-- declaration
+     * c[1];     <-- ID_ARRAY -- this function processes this! Marks the 'c' ID within as visited
+     * c;        <-- Just a regular ID of c[] and therefore will not be processed by this function
+     */
+    id->setIsVisited(true); index->setIsVisited(true);
+
+    // (2)
+    if (auto decl = checkVariableDeclaration(id)) {
+        sym->setVarType(decl->getVarType());
+    }
 }
 
 #pragma endregion Analyzer
@@ -277,6 +349,7 @@ void SemanticAnalyzer::traverseGlobals(node::Node *node) {
         case NT::VARIABLE_STATIC:
         case NT::VARIABLE_STATIC_ARRAY:
             node->setIsVisited(true);
+            node->setIsInitialized(true);
             insertGlobalSymbol(node);
     }
 
@@ -301,17 +374,29 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
             }
             break;
         case NT::VARIABLE:
-        case NT::VARIABLE_ARRAY:
         case NT::VARIABLE_STATIC:
-        case NT::VARIABLE_STATIC_ARRAY:
         case NT::PARAMETER:
-        case NT::PARAMETER_ARRAY:
             if (!node->getIsVisited()) {
                 insertLocalSymbol(node);
             }
             break;
+        case NT::VARIABLE_ARRAY:
+        case NT::VARIABLE_STATIC_ARRAY:
+        case NT::PARAMETER_ARRAY:
+            if (!node->getIsVisited()) {
+                #if PENDANTIC_DEBUG
+                cout << "[Check Array] ";
+                #endif
+                insertLocalSymbol(node);
+            }
+            break;
         case NT::ID:
-            checkVariableDeclaration(node);
+            if (!node->getIsVisited()) {
+                checkVariableDeclaration(node);
+            }
+            break;
+        case NT::ID_ARRAY:
+            processArrayIndex(node);
             break;
         case NT::CALL:
             checkCallDeclaration(node);
@@ -347,7 +432,7 @@ void SemanticAnalyzer::analyze() {
     // Traverse for Global Variables and Functions
     traverseGlobals(tree_);
     
-    // Check Linker?
+    checkLinker();
 
     #if PENDANTIC_DEBUG
     printGlobal(); // will only print the global scope
