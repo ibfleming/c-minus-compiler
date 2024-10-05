@@ -25,6 +25,7 @@ void ERROR_VariableAsFunction(SA *analyzer, node::Node *sym);
 void ERROR_Linker(SA *analyzer);
 
 void WARN_VariableNotUsed(SA *analyzer, node::Node *sym);
+void WARN_VariableNotInitialized(SA *analyzer, node::Node *sym);
 
 } // namespace logger
 

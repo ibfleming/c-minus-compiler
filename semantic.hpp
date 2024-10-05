@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG true
+#define PENDANTIC_DEBUG false
 #define SPACE 48
 
 #include "utils.hpp"
@@ -364,6 +364,20 @@ public:
      */
     void processArrayIndex(node::Node* sym);
 
+    /**
+     * @fn processAssignment
+     * @brief Processes an assignment node.
+     * @param sym The assignment node to process.
+     */
+    void processAssignment(node::Node *sym);
+
+    /**
+     * @fn processOperators
+     * @brief Processes an operator node.
+     * @param node The operator node to process.
+     */
+    void processOperators(node::Node *sym);
+
     #pragma endregion Table_M
 
     /***********************************************
@@ -371,6 +385,13 @@ public:
     ***********************************************/
 
     #pragma region Traversal_M
+
+    /**
+     * @fn processSemantics
+     * @brief Processes the semantics of the AST.
+     * @param node The node to process.
+     */
+    void processSemantics(node::Node *node);
 
     /**
      * @fn traverseGlobals

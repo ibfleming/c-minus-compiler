@@ -44,4 +44,9 @@ void WARN_VariableNotUsed(SA *analyzer, node::Node *sym) {
     analyzer->incWarnings();
 }
 
+void WARN_VariableNotInitialized(SA *analyzer, node::Node *sym) {
+    cerr << "WARNING(" << sym->getLine() << "): The variable '" << sym->getString() << "' may be uninitialized when used here." << endl;
+    analyzer->incWarnings();
 }
+
+} // namespace logger
