@@ -93,14 +93,14 @@ void Node::printValue() {
             case NT::PARAMETER:
             case NT::VARIABLE:
             case NT::VARIABLE_STATIC:
-                cout << types::nodeTypeToStr(nodeType_) << getString();
+                cout << types::treeNodeTypeToStr(nodeType_) << getString();
                 if( !utils::PRINT_TYPES ) { cout << " "; }
                 return;
 
             case NT::PARAMETER_ARRAY:
             case NT::VARIABLE_ARRAY:
             case NT::VARIABLE_STATIC_ARRAY:
-                cout << types::nodeTypeToStr(nodeType_) << getString();
+                cout << types::treeNodeTypeToStr(nodeType_) << getString();
                 if( !utils::PRINT_TYPES ) { cout << " "; }
                 return;
 
@@ -120,13 +120,13 @@ void Node::printValue() {
             case NT::AND:
             case NT::NOT:
             case NT::QUES_UNARY:
-                cout << types::nodeTypeToStr(nodeType_);
+                cout << types::treeNodeTypeToStr(nodeType_);
                 return;
 
             // By default, print the nodetype and the value.
 
             default:
-                cout << types::nodeTypeToStr(nodeType_) << getString();
+                cout << types::treeNodeTypeToStr(nodeType_) << getString();
                 return;
         }
     }
@@ -136,6 +136,10 @@ void Node::printType() {
 
             case NT::COMPOUND:
             case NT::WHILE:
+            case NT::IF:
+            case NT::FOR:
+            case NT::RANGE:
+            case NT::BREAK:
                 return;
 
             case NT::VARIABLE_ARRAY:
@@ -163,10 +167,6 @@ void Node::printNode(int depth = 0) {
         cout << endl;
         std::flush(cout);
     }
-
-void Node::pendanticPrint() {
-    cout << types::pendaticNodeTypeToStr(nodeType_) << "(" << line_ << "): " << getString()  << endl;
-}
 
 void printTree(Node *root, int depth = 0) {
 

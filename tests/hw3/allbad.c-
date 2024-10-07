@@ -41,7 +41,7 @@ bool cat()
 
    aa[2];
    ba[a] := b;
-   ca[aa[1]] := c;
+   ca[aa[1]] := c; 
    aa[aa];
    cat[3];
    cat(cat);

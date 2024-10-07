@@ -75,7 +75,7 @@ std::string tknTypeToStr(TokenType type) {
     }
 }
 
-std::string nodeTypeToStr(NodeType type) {
+std::string treeNodeTypeToStr(NodeType type) {
     switch (type) {
         case NodeType::BOOLEAN:
         case NodeType::CHARACTER:
@@ -117,7 +117,43 @@ std::string nodeTypeToStr(NodeType type) {
     }
 }
 
-std::string pendaticNodeTypeToStr(NodeType type) {
+std::string displayNodeTypeToStr(NodeType type) {
+    switch (type) {
+        case NodeType::BOOLEAN:                 return "boolean";
+        case NodeType::CHARACTER:               return "character";
+        case NodeType::NUMBER:                  return "number";
+        case NodeType::STRING:                  return "string";
+        case NodeType::VARIABLE:                return "variable";
+        case NodeType::VARIABLE_ARRAY:          return "variable array";
+        case NodeType::VARIABLE_STATIC:         return "variable static";
+        case NodeType::VARIABLE_STATIC_ARRAY:   return "variable static array";
+        case NodeType::PARAMETER:               return "parameter";
+        case NodeType::PARAMETER_ARRAY:         return "parameter array";
+        case NodeType::FUNCTION:                return "function";
+        case NodeType::CALL:                    return "call";
+        case NodeType::ID:                      return "identifier";
+        case NodeType::ID_ARRAY:                return "array identifer";
+        case NodeType::QUES_UNARY:              return "?";
+        case NodeType::CHSIGN_UNARY:            return "chsign";
+        case NodeType::SIZEOF_UNARY:            return "sizeof";
+        case NodeType::OPERATOR:                return "operator";
+        case NodeType::NOT:                     return "not";
+        case NodeType::AND:                     return "and";
+        case NodeType::OR:                      return "or";
+        case NodeType::ASSIGNMENT:              return "assignment";
+        case NodeType::BREAK:                   return "break";
+        case NodeType::RANGE:                   return "range";
+        case NodeType::FOR:                     return "for";
+        case NodeType::WHILE:                   return "while";
+        case NodeType::IF:                      return "if";
+        case NodeType::COMPOUND:                return "compound";
+        case NodeType::RETURN:                  return "return";
+        case NodeType::UNKNOWN:                 return "unknown";
+        default:                                return "invalid";
+    }
+}
+
+std::string literalNodeTypeStr(NodeType type) {
     switch (type) {
         case NodeType::BOOLEAN:                 return "BOOLEAN";
         case NodeType::CHARACTER:               return "CHARACTER";
@@ -149,7 +185,7 @@ std::string pendaticNodeTypeToStr(NodeType type) {
         case NodeType::COMPOUND:                return "COMPOUND";
         case NodeType::RETURN:                  return "RETURN";
         case NodeType::UNKNOWN:                 return "UNKNOWN";
-        default:                                return "### INVALID ###";
+        default:                                return "INVALID";
     }
 }
 
@@ -157,7 +193,7 @@ std::string varTypeToStr(VarType type) {
     switch (type) {
         case VarType::INT:      return "int";
         case VarType::CHAR:     return "char";
-        case VarType::STRING:   return "string";
+        case VarType::STRING:   return "char";
         case VarType::BOOL:     return "bool";
         case VarType::VOID:     return "void";
         case VarType::UNKNOWN:  return "unknown";

@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 #define SPACE 48
 
 #include "utils.hpp"
@@ -21,6 +21,9 @@
 #include <map>
 
 typedef types::NodeType NT;
+typedef types::VarType VT;
+typedef types::AssignmentType AT;
+typedef types::OperatorType OT;
 
 /**
  * @namespace semantic
@@ -122,7 +125,7 @@ public:
      * @param parent The parent node of the scope.
      */
     Scope(node::Node *parent)
-     : parent_(parent), name_(types::pendaticNodeTypeToStr(parent->getNodeType())), location_(-1) {}
+     : parent_(parent), name_(types::displayNodeTypeToStr(parent->getNodeType())), location_(-1) {}
     /**
      * @fn Scope
      * @brief Constructor for the scope.
@@ -223,7 +226,11 @@ public:
     SemanticAnalyzer(node::Node *tree) 
     : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0), compoundLevel_(0) {
         #if PENDANTIC_DEBUG
+        std::cout << std::endl;
+        std::cout << std::string(SPACE + 2, '=') << std::endl;
         std::cout << "Analyzing the AST..." << std::endl;
+        std::cout << std::string(SPACE + 2, '=') << std::endl;
+        std::cout << std::endl;
         #endif
         analyze();
     }
@@ -342,7 +349,7 @@ public:
      * @brief Checks for the use of a function in the current scope.
      * @param sym The function to check.
      */
-    void checkCallDeclaration(node::Node* sym);
+    node::Node* processCall(node::Node* sym);
 
     /**
      * @fn checkForUse
@@ -362,21 +369,32 @@ public:
      * @brief Processes an array index node.
      * @param sym The array index node to process.
      */
-    void processArrayIndex(node::Node* sym);
+    node::Node* processArrayIndex(node::Node* sym);
 
     /**
-     * @fn processAssignment
-     * @brief Processes an assignment node.
-     * @param sym The assignment node to process.
+     * @fn checkTypes
+     * @brief Checks if the operands of operators/assignments have matching types.
+     * @param op The operator/assignment node.
+     * @param lhs The left-hand side node.
+     * @param rhs The right-hand side node.
+     * @note The rhs can be null depending on the operation!
      */
-    void processAssignment(node::Node *sym);
+    void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
 
     /**
-     * @fn processOperators
-     * @brief Processes an operator node.
-     * @param node The operator node to process.
+     * @fn processOperation
+     * @brief Processes an operation node.
+     * @param operation The operation node to process.
+     * @note The operation node can be an assignment, unary, or binary operation.
      */
-    void processOperators(node::Node *sym);
+    void processOperation(node::Node *operation);
+
+    /**
+     * @fn processReturn
+     * @brief Processes a return node.
+     * @param return The return node to process.
+     */
+    void processReturn(node::Node *sym);
 
     #pragma endregion Table_M
 

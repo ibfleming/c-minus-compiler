@@ -40,6 +40,8 @@ private:
     int siblingLocation_;                   // location of the sibling in the parent's children vector
     Node* function_;                        // FUNCTION node for COMPOUNDS that are the function's body
     types::NodeType nodeType_;              // FUNCTION, VAR, etc.
+    types::OperatorType opType_;            // ADD, SUB, MUL, DIV, MOD, UNKNOWN
+    types::AssignmentType asgnType_;        // ASGN, ADDASGN, SUBASGN, MULASGN, DIVASGN, UNKNOWN
     types::VarType varType_;                // INT, CHAR, BOOL, STATIC, UNKNOWN
     types::TokenValue value_;               // value of the token (int, char, string) after processing
     int line_;                              // line number of the token
@@ -51,12 +53,21 @@ public:
      * @param nodeType The type of node to create.
      */
     Node(token::Token *token, types::NodeType nodeType) 
-    : nodeType_(nodeType), varType_(types::VarType::UNKNOWN), siblingLocation_(0), 
-      childLocation_(0), sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false), isUsed_(false)
-    {
-        line_ = token->getLine();
-        value_ = token->getValue();
-    }
+    : 
+    value_(token->getValue()),
+    line_(token->getLine()),
+    nodeType_(nodeType), 
+    opType_(types::OperatorType::UNKNOWN),
+    asgnType_(types::AssignmentType::UNKNOWN),
+    varType_(types::VarType::UNKNOWN),
+    sibling_(nullptr),
+    function_(nullptr), 
+    isInitialized_(false),
+    isVisited_(false),
+    isUsed_(false),
+    siblingLocation_(0), 
+    childLocation_(0) 
+    {}
 
     /**
      * @fn Node
@@ -65,12 +76,69 @@ public:
      * @param varType The variable type of the node.
      */
     Node(token::Token *token, types::NodeType nodeType, types::VarType varType) 
-    : nodeType_(nodeType), varType_(varType), siblingLocation_(0), childLocation_(0), 
-      sibling_(nullptr), isInitialized_(false), function_(nullptr), isVisited_(false), isUsed_(false)
-    {
-        line_ = token->getLine();
-        value_ = token->getValue();
-    }
+    : 
+    value_(token->getValue()),
+    line_(token->getLine()),
+    nodeType_(nodeType), 
+    opType_(types::OperatorType::UNKNOWN),
+    asgnType_(types::AssignmentType::UNKNOWN),
+    varType_(varType),
+    sibling_(nullptr),
+    function_(nullptr), 
+    isInitialized_(false),
+    isVisited_(false),
+    isUsed_(false),
+    siblingLocation_(0), 
+    childLocation_(0)
+    {}
+
+    /**
+     * @fn Node
+     * @param token The token to create a node from.
+     * @param nodeType The type of node to create.
+     * @param opType The operator type of the node.
+     * @param varType The variable type of the node.
+     */
+    Node(token::Token *token, types::NodeType nodeType, types::OperatorType opType, types::VarType varType) 
+    : 
+    value_(token->getValue()),
+    line_(token->getLine()),
+    nodeType_(nodeType), 
+    opType_(opType),
+    asgnType_(types::AssignmentType::UNKNOWN),
+    varType_(varType),
+    sibling_(nullptr),
+    function_(nullptr), 
+    isInitialized_(false),
+    isVisited_(false),
+    isUsed_(false),
+    siblingLocation_(0), 
+    childLocation_(0)
+    {}
+
+    /**
+     * @fn Node
+     * @param token The token to create a node from.
+     * @param nodeType The type of node to create.
+     * @param asgnType The assignment type of the node.
+     * @param varType The variable type of the node.
+     */
+    Node(token::Token *token, types::NodeType nodeType, types::AssignmentType asgnType, types::VarType varType) 
+    : 
+    value_(token->getValue()),
+    line_(token->getLine()),
+    nodeType_(nodeType), 
+    opType_(types::OperatorType::UNKNOWN),
+    asgnType_(asgnType),
+    varType_(varType),
+    sibling_(nullptr),
+    function_(nullptr), 
+    isInitialized_(false),
+    isVisited_(false),
+    isUsed_(false),
+    siblingLocation_(0), 
+    childLocation_(0)
+    {}
 
     // Getters
 
@@ -83,6 +151,8 @@ public:
     Node* getSibling() const { return sibling_; }
     int getSibLoc() const { return siblingLocation_; }
     types::NodeType getNodeType() const { return nodeType_; }
+    types::OperatorType getOpType() const { return opType_; }
+    types::AssignmentType getAsgnType() const { return asgnType_; }
     types::VarType getVarType() const { return varType_; }
     int getLine() const { return line_; }
 
@@ -97,6 +167,8 @@ public:
     void setChildLoc(int loc) { childLocation_ = loc; }
     void setSibLoc(int loc) { siblingLocation_ = loc; }
     void setNodeType(types::NodeType nodeType) { nodeType_ = nodeType; }
+    void setOpType(types::OperatorType opType) { opType_ = opType; }
+    void setAsgnType(types::AssignmentType asgnType) { asgnType_ = asgnType; }
     void setVarType(types::VarType varType) { varType_ = varType; }
     
     /**
@@ -158,13 +230,6 @@ public:
      * @brief Prints the node to the console (for the AST).
      */
     void printNode(int depth);
-
-    /**
-     * @fn pendanticPrint
-     * @brief Prints the node to the console for pendantic purposes.
-     * @brief This will print the 
-     */
-    void pendanticPrint();
 
 };
 

@@ -17,12 +17,12 @@ bool SymbolTable::insertSymbol(node::Node* node) {
     if (symbols_.find(name) == symbols_.end()) {
         symbols_[name] = node;
         #if PENDANTIC_DEBUG
-        cout << "Inserted symbol: " << name << endl;
+        cout << "Symbol Inserted: " << name << endl;
         #endif
         return true;
     }
     #if PENDANTIC_DEBUG
-    cout << "Symbol already exists: " << name << endl;
+    cout << "Symbol Exists Already: " << name << endl;
     #endif
     return false;
 }
@@ -31,13 +31,14 @@ node::Node* SymbolTable::lookupSymbol(const node::Node* sym) {
     for (auto const& item : symbols_) {
         if ( item.first == sym->getString() ) {
             #if PENDANTIC_DEBUG
-            cout << "Found symbol: " << sym->getString() << endl;
+            cout << "Symbol Found: \"" << sym->getString() << "\", "; 
+            cout << types::literalNodeTypeStr(item.second->getNodeType()) << endl;
             #endif
             return item.second;
         }
     }
     #if PENDANTIC_DEBUG
-    cout << "Symbol not found: " << sym->getString() << endl;
+    cout << "Symbol NOT Found: \"" << sym->getString() << "\"" << endl;
     #endif
     return nullptr;
 }
@@ -61,7 +62,7 @@ void Scope::printScope() {
     else {
         for ( auto const& [key, val] : getTable()->getSymbols() ) {
             //string line = " (" + to_string(val->getLine()) + ")   ";
-            string nodeType = types::pendaticNodeTypeToStr(val->getNodeType());
+            string nodeType = types::literalNodeTypeStr(val->getNodeType());
             string varType = types::varTypeToStr(val->getVarType());
             string data = " " + nodeType + " => " + key + " : " + varType;
             cout << "|";
@@ -91,7 +92,11 @@ void Scope::checkUsedVariables(semantic::SemanticAnalyzer *analyzer) {
 void SemanticAnalyzer::enterScope(Scope *scope) {
     scopes_.push(scope);
     #if PENDANTIC_DEBUG
-    cout << "Entering Scope: " << scope->getName() << endl;
+    cout << endl;
+    cout << string(SPACE + 2, '*') << endl;
+    cout << "(" << scope->getParent()->getLine() << ") ENTERING SCOPE: " << scope->getName() << endl;
+    cout << string(SPACE + 2, '*') << endl;
+    cout << endl;
     #endif
 }
 
@@ -107,8 +112,11 @@ void SemanticAnalyzer::leaveScope() {
             return;
         }
         #if PENDANTIC_DEBUG
-        cout << "Leaving Scope: " << scope->getName() << endl;
+        cout << endl;
+        cout << string(SPACE + 2, '#') << endl;
+        cout << "(" << scope->getParent()->getLine() << ") LEAVING SCOPE: " << scope->getName() << endl;
         scope->printScope();
+        cout << string(SPACE + 2, '#') << endl;
         #endif
     }
 }
@@ -135,6 +143,9 @@ void SemanticAnalyzer::printScopes() {
 ***********************************************/
 
 void SemanticAnalyzer::insertGlobalSymbol(node::Node *sym) {
+    #if PENDANTIC_DEBUG
+    cout << "[Symbol Insert]:" << endl;
+    #endif
     auto *decl = lookupGlobalSymbol(sym);
     if (decl != nullptr) {
         logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
@@ -147,6 +158,9 @@ void SemanticAnalyzer::insertGlobalSymbol(node::Node *sym) {
 }
 
 void SemanticAnalyzer::insertLocalSymbol(node::Node *sym) {
+    #if PENDANTIC_DEBUG
+    cout << "[Symbol Insert]:" << endl;
+    #endif
     // According to the semantics of C-, do not just global scope here
     if ( getScopeCount() > 1 ) { // currently in multiple scopes, iterate thru them
         auto *decl = lookupAllScopes(sym);
@@ -200,20 +214,17 @@ node::Node* SemanticAnalyzer::lookupAllScopes(node::Node* sym) {
 
 node::Node* SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
     #if PENDANTIC_DEBUG
-    cout << "[Check Var] ";
+    cout << "[Check Variable]:" << endl;
     #endif
 
     // (1) Check if the variable is being used as a function (all functions declared in global scope)
     if (auto decl = lookupGlobalSymbol(sym)) {
         if( decl->getNodeType() == NT::FUNCTION ) {
             logger::ERROR_VariableAsFunction(this, sym);
-            return nullptr;
         }
-        else {
-            decl->setIsUsed(true);
-            sym->setVarType(decl->getVarType());
-            return decl;
-        }
+        decl->setIsUsed(true);
+        sym->setVarType(decl->getVarType());
+        return decl;
     }
 
     // (2) Lambda function to set the variable as used
@@ -252,19 +263,24 @@ node::Node* SemanticAnalyzer::checkVariableDeclaration(node::Node* sym) {
     return nullptr;
 }
 
-void SemanticAnalyzer::checkCallDeclaration(node::Node* sym) {
+node::Node* SemanticAnalyzer::processCall(node::Node* sym) {
     #if PENDANTIC_DEBUG
-    cout << "(Process Call) ";
+    cout << "[Process Call]:" << endl;
     #endif
 
+    node::Node* decl = nullptr;
+
     // (1) Check if the function is declared in the global scope as all functions are declared there
-    if (lookupGlobalSymbol(sym) != nullptr) {
+    if (auto func = lookupGlobalSymbol(sym)) {
         sym->setIsUsed(true);
-        return;
+        sym->setVarType(func->getVarType());
+        decl = func;
     }
 
     // (2) Default case, not found in global scope so function is not declared
-    logger::ERROR_VariableNotDeclared(this, sym);
+    if(decl == nullptr) {
+        logger::ERROR_VariableNotDeclared(this, sym);
+    }
 
     for(auto child: sym->getChildren()) {
         if(child != nullptr) {
@@ -283,7 +299,7 @@ void SemanticAnalyzer::checkCallDeclaration(node::Node* sym) {
             }
         }
     }
-
+    return decl;
 }
 
 void SemanticAnalyzer::checkLinker() {
@@ -303,7 +319,7 @@ void SemanticAnalyzer::checkLinker() {
     }
 }
 
-void SemanticAnalyzer::processArrayIndex(node::Node* sym) {
+node::Node* SemanticAnalyzer::processArrayIndex(node::Node* sym) {
     /*
     sym = ID_ARRAY = '['
 
@@ -318,14 +334,14 @@ void SemanticAnalyzer::processArrayIndex(node::Node* sym) {
     */
 
     #if PENDANTIC_DEBUG
-    cout << "(Process Array Index)" << endl;
+    cout << "[Process Array]" << endl;
     #endif
 
     // (1)
     auto id = sym->getChildren()[0];
     auto index = sym->getChildren()[1];
 
-    if( id == nullptr || index == nullptr ) return;
+    if( id == nullptr || index == nullptr ) return nullptr;
 
     /** 
      * This particular ID in the AST must be marked as visited
@@ -338,110 +354,241 @@ void SemanticAnalyzer::processArrayIndex(node::Node* sym) {
      */
     id->setIsVisited(true); index->setIsVisited(true);
 
+    // ID[INDEX]
+
+    switch (index->getNodeType()) {
+        case NT::ID:
+            if (auto decl = checkVariableDeclaration(index)) {
+                if (decl->getVarType() != VT::INT) {
+                    logger::ERROR_ArrayIndexNotInt(this, id, index);
+                }
+                if (decl->getNodeType() == NT::VARIABLE_ARRAY) {
+                    logger::ERROR_ArrayIndexIsUnindexedArray(this, index);
+                }
+            }
+            break;
+        case NT::ID_ARRAY:
+            if (auto decl = processArrayIndex(index)) {
+                if (decl->getVarType() != VT::INT) {
+                    logger::ERROR_ArrayIndexNotInt(this, id, index);
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
     // (2)
     if (auto decl = checkVariableDeclaration(id)) {
-        sym->setVarType(decl->getVarType());
+        sym->setVarType(decl->getVarType()); // set the var type of the array to the var type of the ID
+
+        if( decl->getNodeType() != NT::VARIABLE_ARRAY && 
+            decl->getNodeType() != NT::PARAMETER_ARRAY && 
+            decl->getNodeType() != NT::VARIABLE_STATIC_ARRAY ) 
+        {
+            logger::ERROR_CannotIndexNonArray(this, id);
+        }
+
+        return decl;
+    }
+
+    return nullptr;
+}
+
+void SemanticAnalyzer::checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs) {
+    #if PENDANTIC_DEBUG
+    cout << "[Process Types - ";
+    #endif
+
+    /* In some cases the rhs is a nullptr! */
+
+    if ( lhs && rhs ) {
+        #if PENDANTIC_DEBUG
+        cout << "Binary]" << endl;
+        #endif
+
+        switch(op->getNodeType()) {
+            case NT::ASSIGNMENT: {
+                switch(op->getAsgnType()) {
+                    case AT::ASGN:
+                        op->setVarType(lhs->getVarType());
+                        if (lhs->getVarType() != rhs->getVarType()) {
+                            logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
+                        }
+                        return;
+                    case AT::ADDASGN:
+                    case AT::SUBASGN:
+                    case AT::MULASGN:
+                    case AT::DIVASGN:
+                        if (lhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
+                        }
+                        if (rhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
+            case NT::OPERATOR: {
+                switch(op->getOpType()) {
+                    case OT::ADD:
+                    case OT::SUB:
+                    case OT::MUL:
+                    case OT::DIV:
+                    case OT::MOD:
+                        if (lhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
+                        }
+                        if (rhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
+                        } 
+                        return;
+                    case OT::LESS:
+                    case OT::GREATER:
+                    case OT::LEQ:
+                    case OT::GEQ:
+                    case OT::EQL:
+                    case OT::NEQ:
+                        if (lhs->getVarType() != rhs->getVarType()) {
+                            logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
+                        }
+                        return;
+                    default:
+                        return;
+                }
+            }
+            case NT::AND:
+            case NT::OR:
+                if (lhs->getVarType() != VT::BOOL) {
+                    logger::ERROR_RequiresOperandBoolTypes(this, op, lhs, logger::OperandType::LHS);
+                }
+                return;
+            default:
+                return;
+        }
+    }
+    else if ( lhs ) { // Unary (++, --, chsign, -, sizeof, ques, not)
+        #if PENDANTIC_DEBUG
+        cout << "Unary]" << endl;
+        #endif
+        if( op->getVarType() != lhs->getVarType() ) {
+            logger::ERROR_UnaryRequiresOperandSameType(this, op, lhs);
+            return;
+        }
+    }
+    else {
+        throw runtime_error("ERROR: LHS OR RHS IS NULL! (in checkTypes())");
     }
 }
 
-void SemanticAnalyzer::processAssignment(node::Node *sym) {
+void SemanticAnalyzer::processReturn(node::Node *sym) {}
+
+void SemanticAnalyzer::processOperation(node::Node *operation) {
+
+    /**
+     * POTENTIAL NOTICE OF IMPORTANCE!
+     * 
+     * We should check the variable of the ID in higher scopes in comparison to the rhs 
+     * Rhs is more local
+     * 
+     */
+
     #if PENDANTIC_DEBUG
-    cout << "(Process Assignment) ";
+    cout << "[Process Operation: " << types::literalNodeTypeStr(operation->getNodeType()) << "] ";
     #endif
 
-    if (sym->getChildren().size() == 2) {
-        auto lhs = sym->getChildren()[0];
-        auto rhs = sym->getChildren()[1];
+    int children = operation->getChildren().size();
 
-        if (lhs == nullptr || rhs == nullptr) return;
+    if (children == 1) { // Unary (++, --, chsign, -, sizeof, ques, not)
+        auto operand = operation->getChildren()[0];
+
+        if( operand == nullptr ) throw runtime_error("ERROR: OPERAND IS NULL! (in processOperation())");
+
+        operand->setIsVisited(true);
+
+        switch (operand->getNodeType()) {
+            case NT::ID:
+                if (auto decl = checkVariableDeclaration(operand)) {
+                    if (!decl->getIsInitialized()) {
+                        decl->setIsInitialized(true);
+                        logger::WARN_VariableNotInitialized(this, operand);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        checkTypes(operation, operand, nullptr);
+    }
+
+    if (children == 2) { // Binary (most operators and assignments)
+        auto lhs = operation->getChildren()[0];
+        auto rhs = operation->getChildren()[1];
+
+        bool lhsNotDeclared = false;
+        bool rhsNotDeclared = false;
+
+        if( lhs == nullptr || rhs == nullptr ) throw runtime_error("ERROR: LHS OR RHS IS NULL! (in processOperation())");
 
         lhs->setIsVisited(true); rhs->setIsVisited(true);
         
-        if (auto decl = checkVariableDeclaration(lhs)) {
-            decl->setIsInitialized(true);
+        switch (lhs->getNodeType()) {
+            case NT::ID:
+                if (auto decl = checkVariableDeclaration(lhs)) {
+                    decl->setIsInitialized(true); // maybe only required for the := assignment
+                } else {
+                    lhsNotDeclared = true;
+                }
+                break;
+            case NT::ID_ARRAY:
+                if (auto decl = processArrayIndex(lhs)) {
+                    decl->setIsInitialized(true); // maybe only required for the := assignment
+                }
+                break;
+            case NT::CALL:
+                processCall(lhs);
+                break;
+            default:
+                break;
         }
 
-        switch(rhs->getNodeType()) {
+        switch (rhs->getNodeType()) { // definitely check if vars are initialized on RHS
             case NT::ID:
                 if (auto decl = checkVariableDeclaration(rhs)) {
                     if (!decl->getIsInitialized()) {
                         decl->setIsInitialized(true);
                         logger::WARN_VariableNotInitialized(this, rhs);
                     }
+                } else {
+                    rhsNotDeclared = true;
                 }
                 break;
-            case NT::OPERATOR:
-                #if PENDANTIC_DEBUG
-                cout << "-> ";
-                #endif
-                processOperators(rhs);
-                break;
-            default:
-                break;
-        }
-    }
-    else if (sym->getChildren().size() == 1) {  // ++, --
-        auto lhs = sym->getChildren()[0];
-
-        if (lhs == nullptr) return;
-
-        lhs->setIsVisited(true);
-
-        switch(lhs->getNodeType()) {
-            case NT::ID:
-                if (auto decl = checkVariableDeclaration(lhs)) {
+            case NT::ID_ARRAY:
+                if (auto decl = processArrayIndex(lhs)) {
                     if (!decl->getIsInitialized()) {
                         decl->setIsInitialized(true);
                         logger::WARN_VariableNotInitialized(this, lhs);
                     }
                 }
                 break;
+            case NT::CALL:
+                processCall(rhs);
+                break;
             default:
                 break;
         }
+
+        if (lhsNotDeclared || rhsNotDeclared) {
+            return;
+        }
+
+        checkTypes(operation, lhs, rhs);
     }
-}
 
-void SemanticAnalyzer::processOperators(node::Node *sym) {
-    #if PENDANTIC_DEBUG
-    cout << "(Process Operator) ";
-    #endif
-
-    if( sym->getChildren().size() == 2 ) {
-        auto lhs = sym->getChildren()[0];
-        auto rhs = sym->getChildren()[1];
-
-        if (lhs == nullptr || rhs == nullptr) return;
-
-        lhs->setIsVisited(true); rhs->setIsVisited(true);
-
-        switch(lhs->getNodeType()) {
-            case NT::ID:
-                if (auto decl = checkVariableDeclaration(lhs)) {
-                    if (!decl->getIsInitialized()) {
-                        decl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, lhs);
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        switch(rhs->getNodeType()) {
-            case NT::ID:
-                if (auto decl = checkVariableDeclaration(rhs)) {
-                    if (!decl->getIsInitialized()) {
-                        decl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, rhs);
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-    }
+    return;
 }
 
 #pragma endregion Analyzer
@@ -459,65 +606,84 @@ void SemanticAnalyzer::processOperators(node::Node *sym) {
  ******************************************************************************/
 
 void SemanticAnalyzer::processSemantics(node::Node *node) {
+
+    // SCOPES
     switch (node->getNodeType()) {
-        // SCOPES
         case NT::FUNCTION:
             enterScope(new Scope(node, "FUNCTION_" + node->getString()));
-            break;
+            return;
         case NT::COMPOUND:
             if (node->getFunctionNode() == nullptr) {
                 enterScope(new Scope(node, "COMPOUND_" + to_string(compoundLevel_))); 
                 compoundLevel_++;
             }
-            break;
-        // DECLARATIONS
-        case NT::VARIABLE:
-        case NT::VARIABLE_STATIC:
-        case NT::PARAMETER:
-            if (!node->getIsVisited()) {
-                insertLocalSymbol(node);
+            return;
+        case NT::FOR:
+            if (node->getFunctionNode() == nullptr) {
+                enterScope(new Scope(node, "FOR_" + to_string(compoundLevel_))); 
+                compoundLevel_++;
             }
+        default:
             break;
-        // DECLARATIONS (ARRAYS)
-        case NT::VARIABLE_ARRAY:
-        case NT::VARIABLE_STATIC_ARRAY:
-        case NT::PARAMETER_ARRAY:
-            if (!node->getIsVisited()) {
+    }
+
+    // OTHER NODES
+    if( !node->getIsVisited() ) {
+        switch(node->getNodeType()) {
+            // DECLARATIONS
+            case NT::VARIABLE:
+            case NT::VARIABLE_STATIC:
+            case NT::PARAMETER:
                 #if PENDANTIC_DEBUG
-                cout << "[Check Array] ";
+                cout << "(" << node->getLine() << ") " ;
                 #endif
                 insertLocalSymbol(node);
-            }
-            break;
-        // IDENTIFIERS/VARIABLES
-        case NT::ID:
-            if (!node->getIsVisited()) {
+                return;
+            // DECLARATIONS (ARRAYS)
+            case NT::VARIABLE_ARRAY:
+            case NT::VARIABLE_STATIC_ARRAY:
+            case NT::PARAMETER_ARRAY:
+                #if PENDANTIC_DEBUG
+                cout << "(" << node->getLine() << ") [Array] ";
+                #endif
+                insertLocalSymbol(node);
+                return;
+            // IDENTIFIERS/VARIABLES
+            case NT::ID:
                 if (auto decl = checkVariableDeclaration(node)) {
                     if (!decl->getIsInitialized()) {
                         decl->setIsInitialized(true);
                         logger::WARN_VariableNotInitialized(this, node);
                     }
                 }
-            }
-            break;
-        case NT::ID_ARRAY:
-            if (!node->getIsVisited()) {
-                processArrayIndex(node);
-            }
-            break;
-        case NT::CALL:
-            if (!node->getIsVisited()) {
-                checkCallDeclaration(node);
-            }
-            break;
-        // ASSIGNMENTS
-        case NT::ASSIGNMENT:
-        case NT::CHSIGN_UNARY:
-            processAssignment(node);
-            break;
-        // INC/DEC
-        default:
-            break;
+                return;
+            case NT::ID_ARRAY:
+                if (auto decl = processArrayIndex(node)) {
+                    if (!decl->getIsInitialized()) {
+                        decl->setIsInitialized(true);
+                        logger::WARN_VariableNotInitialized(this, node);
+                    }
+                }
+                return;
+            case NT::CALL:
+                processCall(node);
+                return;
+            case NT::ASSIGNMENT:
+            case NT::OPERATOR:
+            case NT::QUES_UNARY:
+            case NT::CHSIGN_UNARY:
+            case NT::NOT:
+            case NT::AND:
+            case NT::OR:
+                #if PENDANTIC_DEBUG
+                cout << "(" << node->getLine() << ") " ;
+                #endif
+                processOperation(node);
+                return;
+            case NT::SIZEOF_UNARY:
+            default:
+                return;
+        }
     }
 }
 
@@ -554,13 +720,13 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
 
     // After children, check sibling node (for next block at the same level)
     if (node->getSibling() != nullptr) {
-        if (node->getNodeType() == NT::COMPOUND) {
+        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
             compoundLevel_--; leaveScope();
         }
         traverseLocals(node->getSibling());
     }
     else {
-        if (node->getNodeType() == NT::COMPOUND) {
+        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
             if (node->getFunctionNode() == nullptr) { // regular compound
                 compoundLevel_--; leaveScope();
             } else { // function's body compound
@@ -581,6 +747,9 @@ void SemanticAnalyzer::analyze() {
     #endif
 
     traverseLocals(tree_);
+
+    printWarnings();
+    printErrors();
 }
 
 #pragma endregion Traversal

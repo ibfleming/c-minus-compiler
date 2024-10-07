@@ -178,6 +178,38 @@ enum class NodeType {
 };
 
 /**
+ * @enum OperatorType
+ * @brief Represents the various types of operators that can be encountered in the compiler.
+ */
+enum class OperatorType {
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    LESS,
+    LEQ,
+    GREATER,
+    GEQ,
+    EQL,
+    NEQ,
+    UNKNOWN
+};
+
+/**
+ * @enum AssignmentType
+ * @brief Represents the various types of assignments that can be encountered in the compiler.
+ */
+enum class AssignmentType {
+    ASGN,
+    ADDASGN,
+    SUBASGN,
+    MULASGN,
+    DIVASGN,
+    UNKNOWN
+};
+
+/**
  * @fn tknTypeToStr
  * @param type The type of token to convert to a string.
  * @brief Converts token type to a printable string.
@@ -185,18 +217,25 @@ enum class NodeType {
 std::string tknTypeToStr(TokenType type);
 
 /**
- * @fn nodeTypeToStr
+ * @fn treeNodeTypeToStr
  * @param type The type of node to convert to a string.
- * @brief Converts node type to a printable string (for the AST).
+ * @brief Converts node type to a printable string for the AST.
  */
-std::string nodeTypeToStr(NodeType type);
+std::string treeNodeTypeToStr(NodeType type);
 
 /**
- * @fn pendaticNodeTypeToStr
+ * @fn displayNodeTypeToStr
  * @param type The type of node to convert to a string.
- * @brief Converts node type to a printable string (for the symbol table).
+ * @brief Converts node type to a printable string for particular display purposes.
  */
-std::string pendaticNodeTypeToStr(NodeType type);
+std::string displayNodeTypeToStr(NodeType type);
+
+/**
+ * @fn literalNodeTypeStr
+ * @param type The type of node to convert to a string.
+ * @brief Converts node type to a printable string as the literal enum name.
+ */
+std::string literalNodeTypeStr(NodeType type);
 
 /**
  * @fn varTypeToStr

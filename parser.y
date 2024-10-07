@@ -7,6 +7,8 @@
     #include "lexer.hpp"
     #define NT types::NodeType
     #define VT types::VarType
+    #define OT types::OperatorType
+    #define AT types::AssignmentType
     void yyerror(const char *msg);
 %}
 
@@ -194,10 +196,12 @@ parameterIdList           : parameterIdList ',' parameterId
 parameterId               : ID           
                           { 
                             $$ = new node::Node($1, NT::PARAMETER);
+                            $$->setIsInitialized(true);
                           }
                           | ID '[' ']'   
                           {  
-                            $$ = new node::Node($1, NT::PARAMETER_ARRAY); 
+                            $$ = new node::Node($1, NT::PARAMETER_ARRAY);
+                            $$->setIsInitialized(true);
                           }
                           ;
 
@@ -302,7 +306,9 @@ matchedIterationStatement : WHILE simpleExpression DO matchedStatements
                           | FOR ID ASGN iterationRange DO matchedStatements
                           {
                             $$ = new node::Node($1, NT::FOR);
-                            $$->addChild(new node::Node($2, NT::VARIABLE));
+                            auto *id = new node::Node($2, NT::VARIABLE, VT::INT); // maybe don't set type here
+                            id->setIsInitialized(true); // maybe don't set init here
+                            $$->addChild(id);
                             $$->addChild($4, 1);
                             if ($6 != nullptr) {
                               $$->addChild($6, 2);
@@ -320,7 +326,9 @@ unmatchedIterationStatement : WHILE simpleExpression DO unmatchedStatements
                             | FOR ID ASGN iterationRange DO unmatchedStatements
                             {
                               $$ = new node::Node($1, NT::FOR);
-                              $$->addChild(new node::Node($2, NT::VARIABLE));
+                              auto *id = new node::Node($2, NT::VARIABLE, VT::INT); // maybe don't set type here
+                              id->setIsInitialized(true); // maybe don't set init here
+                              $$->addChild(id);
                               $$->addChild($4, 1);
                               if ($6 != nullptr) {
                                 $$->addChild($6, 2);
@@ -345,11 +353,11 @@ iterationRange            : simpleExpression TO simpleExpression
 
 returnStatement           : RETURN ';'   
                           { 
-                            $$ = new node::Node($1, NT::RETURN); 
+                            $$ = new node::Node($1, NT::RETURN, VT::VOID); 
                           }
                           | RETURN expression ';' 
                           {
-                            $$ = new node::Node($1, NT::RETURN);
+                            $$ = new node::Node($1, NT::RETURN, $2->getVarType());
                             $$->addChild($2);
                           }
                           ;
@@ -379,11 +387,11 @@ expression                : mutable assignmentOperator expression
                           | simpleExpression   
                           ; 
 
-assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT); }
-                          | ADDASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
-                          | SUBASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
-                          | MULASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
-                          | DIVASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, VT::INT); }
+assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT, AT::ASGN, VT::UNKNOWN); }
+                          | ADDASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::ADDASGN, VT::INT); }
+                          | SUBASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::SUBASGN, VT::INT); }
+                          | MULASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::MULASGN, VT::INT); }
+                          | DIVASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::DIVASGN, VT::INT); }
                           ;
 
 simpleExpression          : simpleExpression OR andExpression
@@ -421,12 +429,12 @@ relationalExpression      : sumExpression relationalOperator sumExpression
                           | sumExpression   
                           ;
 
-relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
-                          | LEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
-                          | GREATER   { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
-                          | GEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
-                          | EQL       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
-                          | NEQ       { $$ = new node::Node($1, NT::OPERATOR, VT::BOOL); }
+relationalOperator        : LESS      { $$ = new node::Node($1, NT::OPERATOR, OT::LESS, VT::BOOL); }
+                          | LEQ       { $$ = new node::Node($1, NT::OPERATOR, OT::LEQ, VT::BOOL); }
+                          | GREATER   { $$ = new node::Node($1, NT::OPERATOR, OT::GREATER, VT::BOOL); }
+                          | GEQ       { $$ = new node::Node($1, NT::OPERATOR, OT::GEQ, VT::BOOL); }
+                          | EQL       { $$ = new node::Node($1, NT::OPERATOR, OT::EQL, VT::BOOL); }
+                          | NEQ       { $$ = new node::Node($1, NT::OPERATOR, OT::NEQ, VT::BOOL); }
                           ;
 
 sumExpression             : sumExpression sumOperator mulExpression 
@@ -438,8 +446,8 @@ sumExpression             : sumExpression sumOperator mulExpression
                           | mulExpression   
                           ;
 
-sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
-                          | SUB      { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
+sumOperator               : ADD      { $$ = new node::Node($1, NT::OPERATOR, OT::ADD, VT::INT); }
+                          | SUB      { $$ = new node::Node($1, NT::OPERATOR, OT::SUB, VT::INT); }
                           ;
 
 mulExpression             : mulExpression mulOperator unaryExpression 
@@ -451,9 +459,9 @@ mulExpression             : mulExpression mulOperator unaryExpression
                           | unaryExpression   
                           ;
 
-mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
-                          | DIV         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
-                          | MOD         { $$ = new node::Node($1, NT::OPERATOR, VT::INT); }
+mulOperator               : MUL         { $$ = new node::Node($1, NT::OPERATOR, OT::MUL, VT::INT); }
+                          | DIV         { $$ = new node::Node($1, NT::OPERATOR, OT::DIV, VT::INT); }
+                          | MOD         { $$ = new node::Node($1, NT::OPERATOR, OT::MOD, VT::INT); }
                           ;
 
 unaryExpression           : unaryOperator unaryExpression 

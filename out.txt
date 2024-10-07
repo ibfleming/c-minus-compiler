@@ -1,82 +1,60 @@
-ENTER_FUNCTION(3): ant
-ENTER_COMPOUND(11)
-ENTER_COMPOUND(18)
-ENTER_COMPOUND(28)
-LEAVE_FUNCTION(3): ant
-ENTER_FUNCTION(37): bat
-LEAVE_FUNCTION(37): bat
-ENTER_FUNCTION(57): g
-LEAVE_FUNCTION(57): g
-ENTER_FUNCTION(62): g
-LEAVE_FUNCTION(62): g
-ENTER_FUNCTION(63): ant
-LEAVE_FUNCTION(63): ant
-Var: g  [line: 2]
-Sibling: 1  Func: ant  [line: 3]
-.   Child: 0  Parm: x  [line: 3]
-.   Child: 1  Compound [line: 4]
-.   .   Child: 0  Var: a  [line: 5]
-.   .   Child: 1  Call: bat [line: 7]
-.   .   .   Child: 0  Const 3 [line: 7]
-.   .   Sibling: 1  Op: or [line: 8]
-.   .   .   Child: 0  Id: a [line: 8]
-.   .   .   Child: 1  Id: a [line: 8]
-.   .   Sibling: 2  Id: x [line: 9]
-.   .   Sibling: 3  Id: g [line: 10]
-.   .   Sibling: 4  Compound [line: 11]
-.   .   .   Child: 0  Var: c  [line: 12]
-.   .   .   Child: 1  Id: a [line: 13]
-.   .   .   Sibling: 1  Id: b [line: 14]
-.   .   .   Sibling: 2  Id: c [line: 15]
-.   .   .   Sibling: 3  Id: g [line: 16]
-.   .   .   Sibling: 4  Id: x [line: 17]
-.   .   .   Sibling: 5  Compound [line: 18]
-.   .   .   .   Child: 0  Var: IWouldNotEatItWithAGoat  [line: 19]
-.   .   .   .   Child: 1  Id: c [line: 20]
-.   .   .   .   Sibling: 1  Id: a [line: 21]
-.   .   Sibling: 5  Id: a [line: 24]
-.   .   Sibling: 6  Id: b [line: 25]
-.   .   Sibling: 7  Id: c [line: 26]
-.   .   Sibling: 8  Id: x [line: 27]
-.   .   Sibling: 9  Compound [line: 28]
-.   .   .   Child: 1  Id: a [line: 29]
-.   .   .   Sibling: 1  Id: b [line: 30]
-.   .   .   Sibling: 2  Id: c [line: 31]
-.   .   .   Sibling: 3  Id: x [line: 32]
-.   .   Sibling: 10  Id: x [line: 34]
-Sibling: 2  Func: bat  [line: 37]
-.   Child: 0  Parm: y  [line: 37]
-.   Child: 1  Compound [line: 38]
-.   .   Child: 0  Var: z  [line: 39]
-.   .   Sibling: 1  Var: bat  [line: 40]
-.   .   Child: 1  Id: x [line: 41]
-.   .   Sibling: 1  Call: ant [line: 42]
-.   .   .   Child: 0  Id: y [line: 42]
-.   .   Sibling: 2  Call: ant [line: 43]
-.   .   .   Child: 0  Id: g [line: 43]
-.   .   Sibling: 3  Call: ant [line: 44]
-.   .   .   Child: 0  Id: z [line: 44]
-.   .   Sibling: 4  Id: p [line: 45]
-.   .   Sibling: 5  Op: + [line: 46]
-.   .   .   Child: 0  Id: q [line: 46]
-.   .   .   Child: 1  Id: r [line: 46]
-.   .   Sibling: 6  Call: ant [line: 47]
-.   .   .   Child: 0  Id: s [line: 47]
-.   .   .   Sibling: 1  Id: t [line: 47]
-.   .   Sibling: 7  Assign: := [line: 48]
-.   .   .   Child: 0  Id: u [line: 48]
-.   .   .   Child: 1  Call: cow [line: 48]
-.   .   .   .   Child: 0  Id: v [line: 48]
-.   .   Sibling: 8  Id: abraxsis [line: 49]
-.   .   Sibling: 9  Id: a [line: 50]
-.   .   Sibling: 10  Id: z [line: 51]
-.   .   Sibling: 11  Id: g [line: 52]
-Sibling: 3  Var: g  [line: 55]
-Sibling: 4  Func: g  [line: 57]
-.   Child: 1  Compound [line: 58]
-.   .   Child: 1  Return [line: 59]
-.   .   .   Child: 0  Id: x [line: 59]
-Sibling: 5  Func: g  [line: 62]
-.   Child: 1  Compound [line: 62]
-Sibling: 6  Func: ant  [line: 63]
-.   Child: 1  Compound [line: 63]
+ERROR(110): Symbol 'mane' is already declared at line 91.
+ERROR(LINKER): A function named 'main()' must be defined.
+ERROR(7): ':=' requires operands of the same type but lhs is type bool and rhs is type int.
+ERROR(8): ':=' requires operands of the same type but lhs is type int and rhs is type bool.
+ERROR(9): ':=' requires operands of the same type but lhs is type int and rhs is type char.
+ERROR(11): '>' requires operands of the same type but lhs is type bool and rhs is type int.
+ERROR(12): '<' requires operands of the same type but lhs is type bool and rhs is type int.
+ERROR(13): '<=' requires operands of the same type but lhs is type bool and rhs is type int.
+ERROR(13): '>=' requires operands of the same type but lhs is type bool and rhs is type int.
+ERROR(14): '=' requires operands of the same type but lhs is type int and rhs is type bool.
+ERROR(15): Unary 'not' requires an operand of type bool but was given type int.
+ERROR(15): 'and' requires operands of type bool but lhs is of type int.
+ERROR(16): Unary 'not' requires an operand of type bool but was given type int.
+ERROR(16): 'or' requires operands of type bool but lhs is of type int.
+ERROR(17): ':=' requires operands of the same type but lhs is type int and rhs is type bool.
+ERROR(21): '+' requires operands of type int but lhs is of type bool.
+ERROR(22): '-' requires operands of type int but rhs is of type bool.
+ERROR(23): '*' requires operands of type int but lhs is of type bool.
+ERROR(24): '/' requires operands of type int but rhs is of type bool.
+ERROR(25): '%' requires operands of type int but lhs is of type bool.
+ERROR(27): '+=' requires operands of type int but lhs is of type bool.
+ERROR(28): '-=' requires operands of type int but lhs is of type bool.
+ERROR(29): '*=' requires operands of type int but lhs is of type bool.
+ERROR(30): '/=' requires operands of type int but lhs is of type bool.
+ERROR(32): Unary 'chsign' requires an operand of type int but was given type bool.
+ERROR(33): Unary 'not' requires an operand of type bool but was given type int.
+ERROR(34): Unary '?' requires an operand of type int but was given type bool.
+WARNING(42): Variable 'aa' may be uninitialized when used here.
+ERROR(43): Array 'ba' should be indexed by type int but got type char.
+WARNING(43): Variable 'b' may be uninitialized when used here.
+ERROR(43): ':=' requires operands of the same type but lhs is type char and rhs is type int.
+ERROR(44): Array 'ca' should be indexed by type int but got type bool.
+WARNING(44): Variable 'c' may be uninitialized when used here.
+ERROR(44): ':=' requires operands of the same type but lhs is type int and rhs is type bool.
+ERROR(45): Array 'aa' should be indexed by type int but got type bool.
+ERROR(45): Array index is the unindexed array 'aa'.
+ERROR(46): Cannot use function 'cat' as a variable.
+ERROR(46): Cannot index nonarray 'cat'.
+ERROR(47): Cannot use function 'cat' as a variable.
+ERROR(54): ':=' requires operands of the same type but lhs is type char and rhs is type int.
+ERROR(65): ':=' requires operands of the same type but lhs is type int and rhs is type char.
+WARNING(72): The variable 'i' seems not to be used.
+ERROR(79): Symbol 'a' is already declared at line 79.
+ERROR(81): Symbol 'a' is already declared at line 79.
+ERROR(82): Symbol 'b' is not declared.
+ERROR(85): Symbol 'c' is not declared.
+ERROR(85): Symbol 'c' is not declared.
+ERROR(86): Symbol 'c' is not declared.
+WARNING(86): Variable 'b' may be uninitialized when used here.
+WARNING(84): The variable 'a' seems not to be used.
+ERROR(96): Unary '?' requires an operand of type int but was given type char.
+ERROR(97): '/' requires operands of type int but lhs is of type char.
+ERROR(97): '/' requires operands of type int but rhs is of type char.
+ERROR(99): Symbol 'bbb' is not declared.
+ERROR(102): ':=' requires operands of the same type but lhs is type char and rhs is type bool.
+ERROR(105): '+' requires operands of type int but lhs is of type void.
+ERROR(105): '+' requires operands of type int but rhs is of type bool.
+ERROR(107): '+' requires operands of type int but lhs is of type char.
+Number of warnings: 6
+Number of errors: 52
