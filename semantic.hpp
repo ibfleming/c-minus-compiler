@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG true
+#define PENDANTIC_DEBUG false
 #define SPACE 48
 
 #include "utils.hpp"
@@ -125,7 +125,7 @@ public:
      * @param parent The parent node of the scope.
      */
     Scope(node::Node *parent)
-     : parent_(parent), name_(types::displayNodeTypeToStr(parent->getNodeType())), location_(-1) {}
+     : parent_(parent), name_(types::literalNodeTypeStr(parent->getNodeType())), location_(-1) {}
     /**
      * @fn Scope
      * @brief Constructor for the scope.
@@ -340,9 +340,19 @@ public:
      * @brief Checks for a declaration in the current scope of the given node, i.e. check symbol table.
      * @param node The node to check.
      * @return node::Node*
-     * @note Marks the found symbol as used and sets the searched node's var type.
+     * @note Marks the found symbol as used and sets the searched node's var type. Using stackToVectorReverse.
      */
     node::Node* checkVariableDeclaration(node::Node* sym);
+
+    /**
+     * @fn checkLHSVariableDeclaration
+     * @brief Checks for the variable declaration in the current/recent scopes -- only for RHS declarations.
+     * @param sym The RHS variable to check.
+     * @return node::Node*
+     * @note Is slightly different in logic from checkVariableDeclaration. Using stackToVectorInOrder.
+     * @note Primarily looks in the most recent scopes then going for the top-level scopes (i.e. globals/functions).
+     */
+    node::Node* checkRHSVariableDeclaration(node::Node* sym);
 
     /**
      * @fn checkCallDeclaration
@@ -377,17 +387,27 @@ public:
      * @param op The operator/assignment node.
      * @param lhs The left-hand side node.
      * @param rhs The right-hand side node.
+     * @param lhsDecl The declaration of the lhs.
+     * @param rhsDecl The declaration of the rhs. 
      * @note The rhs can be null depending on the operation!
      */
-    void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
+    void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs, node::Node *lhsDecl, node::Node* rhsDecl);
 
     /**
      * @fn processOperation
      * @brief Processes an operation node.
      * @param operation The operation node to process.
-     * @note The operation node can be an assignment, unary, or binary operation.
+     * @note The operation node can be an assignment, unary, or binary operation. Does not process ':=', special case.
      */
     void processOperation(node::Node *operation);
+
+    /**
+     * @fn processASGN
+     * @brief Processes an assignment node. (:=)
+     * @param asgn The assignment node to process.
+     * @note The assignment node is a binary operation and is a special case.
+     */
+    void processASGN(node::Node *asgn);
 
     /**
      * @fn processReturn

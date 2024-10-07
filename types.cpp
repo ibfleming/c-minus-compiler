@@ -117,42 +117,6 @@ std::string treeNodeTypeToStr(NodeType type) {
     }
 }
 
-std::string displayNodeTypeToStr(NodeType type) {
-    switch (type) {
-        case NodeType::BOOLEAN:                 return "boolean";
-        case NodeType::CHARACTER:               return "character";
-        case NodeType::NUMBER:                  return "number";
-        case NodeType::STRING:                  return "string";
-        case NodeType::VARIABLE:                return "variable";
-        case NodeType::VARIABLE_ARRAY:          return "variable array";
-        case NodeType::VARIABLE_STATIC:         return "variable static";
-        case NodeType::VARIABLE_STATIC_ARRAY:   return "variable static array";
-        case NodeType::PARAMETER:               return "parameter";
-        case NodeType::PARAMETER_ARRAY:         return "parameter array";
-        case NodeType::FUNCTION:                return "function";
-        case NodeType::CALL:                    return "call";
-        case NodeType::ID:                      return "identifier";
-        case NodeType::ID_ARRAY:                return "array identifer";
-        case NodeType::QUES_UNARY:              return "?";
-        case NodeType::CHSIGN_UNARY:            return "chsign";
-        case NodeType::SIZEOF_UNARY:            return "sizeof";
-        case NodeType::OPERATOR:                return "operator";
-        case NodeType::NOT:                     return "not";
-        case NodeType::AND:                     return "and";
-        case NodeType::OR:                      return "or";
-        case NodeType::ASSIGNMENT:              return "assignment";
-        case NodeType::BREAK:                   return "break";
-        case NodeType::RANGE:                   return "range";
-        case NodeType::FOR:                     return "for";
-        case NodeType::WHILE:                   return "while";
-        case NodeType::IF:                      return "if";
-        case NodeType::COMPOUND:                return "compound";
-        case NodeType::RETURN:                  return "return";
-        case NodeType::UNKNOWN:                 return "unknown";
-        default:                                return "invalid";
-    }
-}
-
 std::string literalNodeTypeStr(NodeType type) {
     switch (type) {
         case NodeType::BOOLEAN:                 return "BOOLEAN";

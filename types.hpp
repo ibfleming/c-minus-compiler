@@ -206,6 +206,8 @@ enum class AssignmentType {
     SUBASGN,
     MULASGN,
     DIVASGN,
+    INC,
+    DEC,
     UNKNOWN
 };
 
@@ -222,13 +224,6 @@ std::string tknTypeToStr(TokenType type);
  * @brief Converts node type to a printable string for the AST.
  */
 std::string treeNodeTypeToStr(NodeType type);
-
-/**
- * @fn displayNodeTypeToStr
- * @param type The type of node to convert to a string.
- * @brief Converts node type to a printable string for particular display purposes.
- */
-std::string displayNodeTypeToStr(NodeType type);
 
 /**
  * @fn literalNodeTypeStr

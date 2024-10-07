@@ -1,9 +1,0 @@
-dog(int i) {
-   if i=3 then {
-       int i;
-       i:=i;
-       return;
-   }
-}
-
-// WARNING(4): Variable 'i' may be uninitialized when used here.

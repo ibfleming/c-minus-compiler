@@ -375,13 +375,13 @@ expression                : mutable assignmentOperator expression
                           | mutable INC        
                           { 
                             $1->setIsInitialized(true);
-                            $$ = new node::Node($2, NT::ASSIGNMENT, VT::INT);
+                            $$ = new node::Node($2, NT::ASSIGNMENT, AT::INC, VT::INT);
                             $$->addChild($1);
                           }
                           | mutable DEC        
                           { 
                             $1->setIsInitialized(true);
-                            $$ = new node::Node($2, NT::ASSIGNMENT, VT::INT);
+                            $$ = new node::Node($2, NT::ASSIGNMENT, AT::DEC, VT::INT);
                             $$->addChild($1);
                           }
                           | simpleExpression   
@@ -520,7 +520,7 @@ argumentList              : argumentList ',' expression
                           
 constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARACTER, VT::CHAR); }  
                           | NUMCONST    { $$ = new node::Node($1, NT::NUMBER, VT::INT); }   
-                          | STRINGCONST { $$ = new node::Node($1, NT::STRING, VT::STRING); }  
+                          | STRINGCONST { $$ = new node::Node($1, NT::STRING, VT::CHAR); }  
                           | BOOLCONST   { $$ = new node::Node($1, NT::BOOLEAN, VT::BOOL); }  
                           ;                    
 %%
