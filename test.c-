@@ -1,0 +1,12 @@
+// C-F24
+int main()
+{
+    int x;
+    int y;
+    bool b;
+
+    while y>15 do if x<16 then
+    { while y<3 do if b then  34; } 
+    else while y>3 do 23;
+
+}

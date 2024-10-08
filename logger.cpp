@@ -193,6 +193,12 @@ std::string loggerNodeTypeToStr(node::Node *sym) {
         case NT::OPERATOR:
         {
             switch(sym->getOpType()) {
+                case OT::EQL:                return "=";
+                case OT::LESS:               return "<";
+                case OT::GREATER:            return ">";
+                case OT::LEQ:                return "<=";
+                case OT::GEQ:                return ">=";
+                case OT::NEQ:                return "><";
                 case OT::ADD:                return "+";
                 case OT::SUB:                return "-";
                 case OT::MUL:                return "*";

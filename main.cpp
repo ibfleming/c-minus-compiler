@@ -89,7 +89,24 @@ int main(int argc, char **argv) {
 
    SA *semanticAnalyzer = new SA(node::root); // Semantic analysis
 
-   if (printAST) { utils::printTree(); }
+   if (printAST) {
+      #if PENDANTIC_DEBUG
+      std::cout << std::endl;
+      std::cout << "Abstract Syntax Tree:" << std::endl;
+      std::cout << std::endl;
+      #endif  
+      utils::printTree(); 
+   }
+
+   #if PENDANTIC_DEBUG
+   std::cout << std::endl;
+   #endif
+
+   semanticAnalyzer->printWarnings();
+   semanticAnalyzer->printErrors();
+
+   fclose(yyin);
+   delete semanticAnalyzer;
 
    return 0;
 }

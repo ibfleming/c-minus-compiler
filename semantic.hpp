@@ -7,8 +7,8 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG true
-#define SPACE 48
+#define PENDANTIC_DEBUG false
+#define SPACE 64
 
 #include "utils.hpp"
 #include "types.hpp"
@@ -325,38 +325,12 @@ public:
      */
     node::Node* lookupAllScopes(node::Node* sym);
 
-    /**
-     * @fn checkForDeclaration
-     * @brief Checks for a declaration in the current scope of the given node, i.e. check symbol table.
-     * @param node The node to check.
-     * @return node::Node*
-     * @note Marks the found symbol as used and sets the searched node's var type. Using stackToVectorReverse.
-     */
-    node::Node* checkVariableDeclaration(node::Node* sym);
 
-    /**
-     * @fn checkLHSVariableDeclaration
-     * @brief Checks for the variable declaration in the current/recent scopes -- only for RHS declarations.
-     * @param sym The RHS variable to check.
-     * @return node::Node*
-     * @note Is slightly different in logic from checkVariableDeclaration. Using stackToVectorInOrder.
-     * @note Primarily looks in the most recent scopes then going for the top-level scopes (i.e. globals/functions).
-     */
-    node::Node* checkRHSVariableDeclaration(node::Node* sym);
+    #pragma region Semantic_M
 
-    /**
-     * @fn checkCallDeclaration
-     * @brief Checks for the use of a function in the current scope.
-     * @param sym The function to check.
-     */
-    node::Node* processCall(node::Node* sym);
-
-    /**
-     * @fn checkForUse
-     * @brief Checks for the use of a variables in the current scope.
-     * @param scope The scope to check.
-     */
-    void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
+    /***********************************************
+    *  SEMANTIC ANALYSIS FUNCTIONS
+    ***********************************************/
 
     /**
      * @fn checkLinker
@@ -365,12 +339,30 @@ public:
     void checkLinker();
 
     /**
-     * @fn processArrayIndex
-     * @brief Processes an array index node.
-     * @param sym The array index node to process.
+     * @fn checkForInitializer
+     * @brief Checks for the presence of an initializer in a variable declaration.
+     * @param var The variable to check.
      */
-    node::Node* processArrayIndex(node::Node* sym);
+    void checkForInitializer(node::Node *var);
 
+    /**
+     * @fn checkInitialization
+     * @brief Checks if a variable is initialized.
+     * @param id The identifier to check.
+     * @return node::Node*
+     * @note Will emit warnings and set init to true for the variable declaration.
+     */
+    node::Node* checkInitialization(node::Node *id);
+
+    /**
+     * @fn applyInitialization
+     * @brief Applies initialization to a variable declaration.
+     * @param id The identifier to apply initialization to.
+     * @return node::Node*
+     * @note Will only make the variable initialized. Intended for LHS in ASGN and other special cases.
+     */
+    node::Node* applyInitialization(node::Node *id);
+    
     /**
      * @fn checkTypes
      * @brief Checks if the operands of operators/assignments have matching types.
@@ -384,6 +376,43 @@ public:
     void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs, node::Node *lhsDecl, node::Node* rhsDecl);
 
     /**
+     * @fn checkForUse
+     * @brief Checks for the use of a variables in the current scope.
+     * @param scope The scope to check.
+     */
+    void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
+
+    /**
+     * @fn lookupDeclaration
+     * @brief Looks up a declaration in the current scope and other scopes if there are more on the stack.
+     * @param id The identifier to lookup.
+     * @return node::Node*
+     */
+    node::Node* lookupDeclaration(node::Node* id);
+
+    /**
+     * @fn processReturn
+     * @brief Processes a return node.
+     * @param ret The return node to process.
+     */
+    void processReturn(node::Node *ret);
+
+    /**
+     * @fn processArray
+     * @brief Processes an array  node.
+     * @param arr The array node to process.
+     * @param isLHSinASGN Is the array the left-hand side of an assignment?
+     */
+    node::Node* processArray(node::Node* arr, bool isLHSinASGN);
+
+    /**
+     * @fn processCall
+     * @brief Checks for the use of a function in the current scope.
+     * @param call The function to check.
+     */
+    node::Node* processCall(node::Node* call);
+
+    /**
      * @fn processAssignment
      * @brief Processes an assignment node. (:=)
      * @param asgn The assignment node to process.
@@ -392,21 +421,50 @@ public:
     void processAssignment(node::Node *asgn);
 
     /**
-     * @fn processReturn
-     * @brief Processes a return node.
-     * @param return The return node to process.
+     * @fn processIdentifier
+     * @brief Processes an identifier node.
+     * @param id The identifier node to process.
      */
-    void processReturn(node::Node *sym);
+    node::Node* processIdentifier(node::Node *id);
 
-    node::Node* lookupDeclaration(node::Node* id);
+    /**
+     * @fn processOperator
+     * @brief Processes an operator node.
+     * @param op The operator node to process.
+     * @param isLHSinASGN Is the operator the left-hand side of an assignment?
+     * @return node::Node*
+     */
+    node::Node* processOperator(node::Node *op, bool isLHSinASGN, bool useArray);
 
-    void processIdentifier(node::Node *id);
+    /**
+     * @fn processBinaryOperation
+     * @brief Processes a binary operation node.
+     * @param op The binary operation node to process.
+     */
+    void evaluateOPERATION(node::Node *op);
 
-    void processOperator(node::Node *operation);
-
-    void processBinaryOperation(node::Node *op);
-
+    /**
+     * @fn processUnaryOperation
+     * @brief Processes a unary operation node.
+     * @param op The unary operation node to process.
+     */
     void processUnaryOperation(node::Node *op);
+  
+    /**
+     * @fn processIf
+     * @brief Processes an if node.
+     * @param op The if node to process.
+     */
+    void processIf(node::Node *op);
+
+    /**
+     * @fn processWhile
+     * @brief Processes a while node.
+     * @param op The while node to process.
+     */
+    void processWhile(node::Node *op);
+
+    #pragma endregion Semantic_M
 
     #pragma endregion Table_M
 
