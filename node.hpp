@@ -35,6 +35,7 @@ private:
     bool isVisited_;                        // flag to check if the node has been visited (for particular traversals) 
     bool isUsed_;                           // flag to check if the node is used (for VARS, etc.)
     bool isArray_;                          // flag to check if the node is an array
+    Node* declaration_;                     // declaration node for the variable for ID/ID_ARRAY nodes
     std::vector<node::Node*> children_;     // children of the node
     int childLocation_;                     // location of the child in the parent's children vector
     Node* sibling_;                         // sibling of the node
@@ -63,6 +64,7 @@ public:
     varType_(types::VarType::UNKNOWN),
     sibling_(nullptr),
     function_(nullptr), 
+    declaration_(nullptr),
     isInitialized_(false),
     isVisited_(false),
     isUsed_(false),
@@ -96,6 +98,7 @@ public:
     varType_(varType),
     sibling_(nullptr),
     function_(nullptr), 
+    declaration_(nullptr),
     isInitialized_(false),
     isVisited_(false),
     isUsed_(false),
@@ -129,7 +132,8 @@ public:
     asgnType_(types::AssignmentType::UNKNOWN),
     varType_(varType),
     sibling_(nullptr),
-    function_(nullptr), 
+    function_(nullptr),
+    declaration_(nullptr), 
     isInitialized_(false),
     isVisited_(false),
     isUsed_(false),
@@ -164,6 +168,7 @@ public:
     varType_(varType),
     sibling_(nullptr),
     function_(nullptr), 
+    declaration_(nullptr),
     isInitialized_(false),
     isVisited_(false),
     isUsed_(false),
@@ -187,6 +192,7 @@ public:
     bool getIsVisited() const { return isVisited_; }
     bool getIsUsed() const { return isUsed_; }
     bool getIsArray() const { return isArray_; }
+    Node* getDeclaration() const { return declaration_; }
     Node* getFunctionNode() const { return function_; }
     std::vector<node::Node*> getChildren() const { return children_; }
     int getChildLoc() const { return childLocation_; }
@@ -203,6 +209,13 @@ public:
     void setIsInitialized(bool isInitialized) { isInitialized_ = isInitialized; }
     void setIsVisited(bool isVisited) { isVisited_ = isVisited; }
     void setIsUsed(bool isUsed) { isUsed_ = isUsed; }
+    void setDeclaration(Node* declaration) {
+        if (declaration != nullptr) { 
+            declaration_ = declaration;
+            declaration->setIsUsed(true); 
+            varType_ = declaration->getVarType();
+        }
+    }
     void setFunctionNode(Node* function) { function_ = function; }
     void addChild(Node* child) { children_.push_back(child); }
     void addChild(Node* child, int loc) { children_.push_back(child); child->setChildLoc(loc); }

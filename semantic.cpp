@@ -43,8 +43,6 @@ node::Node* SymbolTable::lookupSymbol(const node::Node* sym) {
     return nullptr;
 }
 
-void SymbolTable::printSymbols() {}
-
 #pragma endregion SymbolTable
 
 #pragma region Scope
@@ -199,7 +197,7 @@ node::Node* SemanticAnalyzer::lookupAllScopes(node::Node* sym) {
     auto scopes = utils::stackToVectorReverse(scopes_);
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         #if PENDANTIC_DEBUG
-        cout << (it == scopes.rbegin() ? "[Local] " : "[Scopes] ");
+        cout << (it == scopes.rbegin() ? "[Local] " : "[Scope] ");
         #endif
         // Do not search through function scopes for duplicate variables
         if ((*it)->getName().find("FUNCTION_") != string::npos) {
@@ -613,7 +611,7 @@ void SemanticAnalyzer::processReturn(node::Node *sym) {
     }
 }
 
-void SemanticAnalyzer::processASGN(node::Node *asgn) {
+void SemanticAnalyzer::processAssignment(node::Node *asgn) {
     #if PENDANTIC_DEBUG
     cout << "[Process ASGN] ";
     #endif
@@ -622,203 +620,326 @@ void SemanticAnalyzer::processASGN(node::Node *asgn) {
         auto lhs = asgn->getChildren()[0];
         auto rhs = asgn->getChildren()[1];
 
-        bool lhsNotDeclared = false;
-        bool rhsNotDeclared = false;
+        if (lhs == nullptr || rhs == nullptr) throw runtime_error("Error in processAssignment(): LHS or RHS is null.");
 
-        if (lhs == nullptr || rhs == nullptr) throw runtime_error("ERROR: LHS OR RHS IS NULL! (in processASGN())");
-
-        // (1) Mark as visited so they are not processed again
         lhs->setIsVisited(true); rhs->setIsVisited(true);
 
-        // (2) Right-hand side of the assignment
+        // Right-hand side of the assignment
         node::Node *rhsDecl = nullptr;
         switch (rhs->getNodeType()) {
-            case NT::ID:
-                if (rhsDecl = checkRHSVariableDeclaration(rhs)) {
+            case NT::ID: {
+                /* Check if the ID is declared already */
+                if (rhs->getDeclaration()) { 
+                    rhsDecl = rhs->getDeclaration();
                     if (!rhsDecl->getIsInitialized()) {
-                        rhsDecl->setIsInitialized(true);
                         logger::WARN_VariableNotInitialized(this, rhs);
-                    }
-                } else {
-                    rhsNotDeclared = true;
-                }
-                break;
-            case NT::ID_ARRAY:
-                if (rhsDecl = processArrayIndex(rhs)) {
-                    if (!rhsDecl->getIsInitialized()) {
                         rhsDecl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, rhs);
                     }
                 }
+               /* No declaration, requires a symbol look up */
+                else if ( rhsDecl = lookupDeclaration(rhs) ) {
+                    if (!rhsDecl->getIsInitialized()) {
+                        logger::WARN_VariableNotInitialized(this, rhs);
+                        rhsDecl->setIsInitialized(true);
+                    }
+                }
                 break;
-            case NT::CALL:
-                processCall(rhs);
+            }
+            case NT::OPERATOR: {
+                processOperator(rhs);
                 break;
-            case NT::ASSIGNMENT:
-                processASGN(rhs);
-                break;
+            }
             default:
                 break;
         }
 
-        // (3) Left-hand side of the assignment
+        // Left-hand side of the assignment
         node::Node *lhsDecl = nullptr;
         switch (lhs->getNodeType()) {
-            case NT::ID:
-                if (lhsDecl = checkVariableDeclaration(lhs)) {
+            case NT::ID: {
+                /* Check if the ID is declared already */
+                if (lhsDecl = lhs->getDeclaration()) { 
                     lhsDecl->setIsInitialized(true);
-                } else {
-                    lhsNotDeclared = true;
                 }
-                break;
-            case NT::ID_ARRAY:
-                if (lhsDecl = processArrayIndex(lhs)) {
+               /* No declaration, requires a symbol look up */
+                else if (lhsDecl = lookupDeclaration(lhs)) {
                     lhsDecl->setIsInitialized(true);
                 }
                 break;
-            case NT::CALL:
-                processCall(lhs);
-                break;
+            }
             default:
                 break;
         }
 
-        // (4) In the C- semantics, we do not want to check for types if the variables are not declared
-        if( lhsNotDeclared || rhsNotDeclared ) {
-            return;
+        if (lhsDecl) {
+            if (lhsDecl->getNodeType() == NT::FUNCTION) {
+                logger::ERROR_VariableAsFunction(this, lhs);
+            }
         }
 
-        // (5) Check the types of the assignment
-        checkTypes(asgn, lhs, rhs, lhsDecl, rhsDecl);
     }
 }
 
-void SemanticAnalyzer::processOperation(node::Node *operation) {
-
-    /**
-     * POTENTIAL NOTICE OF IMPORTANCE!
-     * 
-     * We should check the variable of the ID in higher scopes in comparison to the rhs 
-     * Rhs is more local
-     * 
-     */
-
-    // Assignment is a special case, :=
-    if( operation->getAsgnType() == AT::ASGN ) {
-        processASGN(operation);
-        return;
-    }
+node::Node* SemanticAnalyzer::lookupDeclaration(node::Node* id) {
+    if (id == nullptr) throw runtime_error("Error in getDeclaration(): 'id' is null.");
 
     #if PENDANTIC_DEBUG
-    cout << "[Process Operation: " << types::literalNodeTypeStr(operation->getNodeType()) << "] ";
+    cout << "[Get Declaration]:" << endl;
     #endif
 
-    int children = operation->getChildren().size();
+    id->setIsVisited(true);
 
-    if (children == 1) { // Unary (++, --, chsign, -, sizeof, ques, not)
-        auto operand = operation->getChildren()[0];
+    node::Node *decl = nullptr;
 
-        if( operand == nullptr ) throw runtime_error("ERROR: OPERAND IS NULL! (in processOperation())");
-
-        operand->setIsVisited(true);
-
-        node::Node *decl = nullptr;
-
-        switch (operand->getNodeType()) {
-            case NT::ID:
-                if (decl = checkVariableDeclaration(operand)) {
-                    if (!decl->getIsInitialized()) {
-                        decl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, operand);
-                    }
-                    if (operation->getNodeType() == NT::QUES_UNARY) {
-                        if( decl->getIsArray() ) {
-                            logger::ERROR_OperationCannotUseArrays(this, operation, operand);
-                        }
-                    }
-                    if (operation->getNodeType() == NT::SIZEOF_UNARY) { // Permit further processing if this is true
-                        if( !decl->getIsArray() ) { 
-                            logger::ERROR_OperationWorksOnlyOnArrays(this, operation, operand);
-                        }
-                        return;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        checkTypes(operation, operand, nullptr, decl, nullptr);
+    // (1) Search through all available scopes
+    if (getScopeCount() > 1) {
+        decl = lookupAllScopes(id);
     }
 
-    if (children == 2) { // Binary (most operators and assignments)
-        auto lhs = operation->getChildren()[0];
-        auto rhs = operation->getChildren()[1];
+    // (2) Else search through the current (local) scope
+    if (decl == nullptr) {
+        decl = lookupLocalSymbol(id);
+    }
 
-        bool lhsNotDeclared = false;
-        bool rhsNotDeclared = false;
+    // (3) Else search through the global scope
+    if (decl == nullptr) {
+        decl = lookupGlobalSymbol(id);
+    }
 
-        if( lhs == nullptr || rhs == nullptr ) throw runtime_error("ERROR: LHS OR RHS IS NULL! (in processOperation())");
+    // If no declaration was found in any scope, throw an error
+    if (decl == nullptr) {
+        logger::ERROR_VariableNotDeclared(this, id);
+        return nullptr;
+    }
+
+    id->setDeclaration(decl);
+    return decl;
+}
+
+void SemanticAnalyzer::processIdentifier(node::Node *id) {
+    if (id == nullptr) throw runtime_error("Error in processIdentifier(): 'id' is null.");
+
+    #if PENDANTIC_DEBUG
+    cout << "[Process ";
+    #endif
+
+    id->setIsVisited(true);
+
+    switch(id->getNodeType()) {
+        case NT::ID_ARRAY: {
+            #if PENDANTIC_DEBUG
+            cout << "ID Array] ";
+            #endif
+            break;
+        }
+        case NT::ID: {
+            #if PENDANTIC_DEBUG
+            cout << "ID] ";
+            #endif
+            if( auto decl = id->getDeclaration() ) {
+                if( !decl->getIsInitialized() ) {
+                    logger::WARN_VariableNotInitialized(this, id);
+                    decl->setIsInitialized(true);
+                }
+            }
+            else if (auto decl = lookupDeclaration(id)) {
+                if (!decl->getIsInitialized()) {
+                    logger::WARN_VariableNotInitialized(this, id);
+                    decl->setIsInitialized(true);
+                }
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void SemanticAnalyzer::processOperator(node::Node *op) {
+    #if PENDANTIC_DEBUG
+    cout << "[Process Operator] ";
+    #endif
+
+    op->setIsVisited(true);
+
+    if (op->getChildren().size() == 2) {
+        auto lhs = op->getChildren()[0];
+        auto rhs = op->getChildren()[1];
+
+        if (lhs == nullptr || rhs == nullptr) throw runtime_error("Error in processOperator(): LHS or RHS is null.");
 
         lhs->setIsVisited(true); rhs->setIsVisited(true);
-        
+
+        // Left-hand side of the assignment
         node::Node *lhsDecl = nullptr;
         switch (lhs->getNodeType()) {
-            case NT::ID:
-                if (lhsDecl = checkVariableDeclaration(lhs)) {
-                    lhsDecl->setIsInitialized(true); // maybe only required for the := assignment
-                } else {
-                    lhsNotDeclared = true;
+            case NT::ID: {
+                /* Check if the ID is declared already */
+                if (lhs->getDeclaration()) { 
+                    lhsDecl = lhs->getDeclaration();
+                    if (!lhsDecl->getIsInitialized()) {
+                        logger::WARN_VariableNotInitialized(this, lhs);
+                        lhsDecl->setIsInitialized(true);
+                    }
+                }
+               /* No declaration, requires a symbol look up */
+                else if ( lhsDecl = lookupDeclaration(lhs) ) {
+                    if (!lhsDecl->getIsInitialized()) {
+                        logger::WARN_VariableNotInitialized(this, lhs);
+                        lhsDecl->setIsInitialized(true);
+                    }
                 }
                 break;
-            case NT::ID_ARRAY:
-                if (lhsDecl = processArrayIndex(lhs)) {
-                    lhsDecl->setIsInitialized(true); // maybe only required for the := assignment
-                }
-                break;
-            case NT::CALL:
-                processCall(lhs);
-                break;
+            }
             default:
                 break;
         }
 
+        // Right-hand side of the assignment
         node::Node *rhsDecl = nullptr;
-        switch (rhs->getNodeType()) { // definitely check if vars are initialized on RHS
-            case NT::ID:
-                if (rhsDecl = checkVariableDeclaration(rhs)) {
+        switch (rhs->getNodeType()) {
+            case NT::ID: {
+                /* Check if the ID is declared already */
+                if (rhs->getDeclaration()) { 
+                    rhsDecl = rhs->getDeclaration();
                     if (!rhsDecl->getIsInitialized()) {
-                        rhsDecl->setIsInitialized(true);
                         logger::WARN_VariableNotInitialized(this, rhs);
-                    }
-                } else {
-                    rhsNotDeclared = true;
-                }
-                break;
-            case NT::ID_ARRAY:
-                if (rhsDecl = processArrayIndex(rhs)) {
-                    if (!rhsDecl->getIsInitialized()) {
                         rhsDecl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, rhs); // Perhaps don't do this?
+                    }
+                }
+               /* No declaration, requires a symbol look up */
+                else {
+                    if ( rhsDecl = lookupDeclaration(rhs) ) {
+                        if (!rhsDecl->getIsInitialized()) {
+                            logger::WARN_VariableNotInitialized(this, rhs);
+                            rhsDecl->setIsInitialized(true);
+                        }
                     }
                 }
                 break;
-            case NT::CALL:
-                processCall(rhs);
-                break;
+            }
             default:
                 break;
         }
+    }
+}
 
-        // In the C- semantics, we do not want to check for types if the variables are not declared
-        if (lhsNotDeclared || rhsNotDeclared) {
+void SemanticAnalyzer::processBinaryOperation(node::Node *op) {
+    if (op == nullptr) throw runtime_error("Error in processBinaryOperation(): 'op' is null.");
+
+    #if PENDANTIC_DEBUG
+    cout << "[Operation: Binary - " << types::literalNodeTypeStr(op->getNodeType()) << "] ";
+    #endif
+
+    op->setIsVisited(true);
+
+    switch (op->getNodeType()) {
+        case NT::OPERATOR: {
+            switch (op->getOpType()) {
+                /* EQUAL TYPES ONLY (LHS = RHS), ARRAYS */
+                case OT::EQL:
+                case OT::NEQ:
+                case OT::LESS:
+                case OT::LEQ:
+                case OT::GREATER:
+                case OT::GEQ: {
+                    return;
+                }
+                /* INT TYPES ONLY (LHS and RHS), NO ARRAYS */
+                case OT::ADD:
+                case OT::SUB:
+                case OT::MUL:
+                case OT::DIV:
+                case OT::MOD: {
+                    processOperator(op);
+                    return;
+                }
+            }
             return;
         }
-
-        checkTypes(operation, lhs, rhs, lhsDecl, rhsDecl);
+        case NT::ASSIGNMENT: {
+            switch (op->getAsgnType()) {
+                /* ASGN, EQUAL TYPES, ARRAYS, OP = TYPE OF LHS */
+                case AT::ASGN:
+                    processAssignment(op);
+                    return;
+                /* INT TYPES ONLY, NO ARRAYS */
+                case AT::ADDASGN:
+                case AT::SUBASGN:
+                case AT::MULASGN:
+                case AT::DIVASGN: {
+                    return;
+                }
+            }
+            return;
+        }
+        /* BOOL TYPES ONLY, NO ARRAYS */
+        case NT::AND:
+        case NT::OR: {
+            return;
+        }
+        default:
+            return;
     }
+}
 
-    return;
+void SemanticAnalyzer::processUnaryOperation(node::Node *op) {
+    if (op == nullptr) throw runtime_error("Error in processUnaryOperation(): 'op' is null.");
+
+    #if PENDANTIC_DEBUG
+    cout << "[Operation: Unary - " << types::literalNodeTypeStr(op->getNodeType()) << "] ";
+    #endif
+
+    op->setIsVisited(true);
+
+    auto operand = op->getChildren()[0];
+
+    if (operand == nullptr) throw runtime_error("Error in processUnaryOperation(): 'operand' is null.");
+
+    switch(op->getNodeType()) {
+        /* ARRAY OPERAND ONLY */
+        case NT::SIZEOF_UNARY:
+            return;
+        /* INT TYPES ONLY, NO ARRAY*/
+        case NT::CHSIGN_UNARY:
+        case NT::QUES_UNARY: {
+            if ( auto decl = operand->getDeclaration()) {
+                if( !decl->getIsInitialized() ) {
+                    logger::WARN_VariableNotInitialized(this, operand);
+                    decl->setIsInitialized(true);
+                }
+            }
+            else {
+                if ( auto decl = lookupDeclaration(operand) ) {
+                    if (!decl->getIsInitialized()) {
+                        logger::WARN_VariableNotInitialized(this, operand);
+                        decl->setIsInitialized(true);
+                    }
+                }
+            }
+            return;
+        }
+        /* INC/DEC, INT TYPES ONLY */
+        case NT::ASSIGNMENT: {
+            if ( auto decl = operand->getDeclaration()) {
+                if( !decl->getIsInitialized() ) {
+                    logger::WARN_VariableNotInitialized(this, operand);
+                    decl->setIsInitialized(true);
+                }
+            }
+            else {
+                if ( auto decl = lookupDeclaration(operand) ) {
+                    if (!decl->getIsInitialized()) {
+                        logger::WARN_VariableNotInitialized(this, operand);
+                        decl->setIsInitialized(true);
+                    }
+                }
+            }
+            return;
+        }
+        default:
+            return;
+    }
 }
 
 #pragma endregion Analyzer
@@ -853,70 +974,80 @@ void SemanticAnalyzer::processSemantics(node::Node *node) {
                 enterScope(new Scope(node, "FOR_" + to_string(compoundLevel_))); 
                 compoundLevel_++;
             }
+            return;
         default:
             break;
     }
 
-    // OTHER NODES
+    // STATEMENTS
     if( !node->getIsVisited() ) {
-        switch(node->getNodeType()) {
-            // DECLARATIONS
+        #if PENDANTIC_DEBUG
+        cout << "(" << node->getLine() << ") ";
+        #endif
+        switch (node->getNodeType()) {
+
+            /* DECLARATIONS */ 
             case NT::VARIABLE:
             case NT::VARIABLE_STATIC:
             case NT::PARAMETER:
-                #if PENDANTIC_DEBUG
-                cout << "(" << node->getLine() << ") " ;
-                #endif
                 insertLocalSymbol(node);
                 return;
-            // DECLARATIONS (ARRAYS)
+
+            /* DECLARATIONS (ARRAYS) */
             case NT::VARIABLE_ARRAY:
             case NT::VARIABLE_STATIC_ARRAY:
             case NT::PARAMETER_ARRAY:
-                #if PENDANTIC_DEBUG
-                cout << "(" << node->getLine() << ") [Array] ";
-                #endif
                 insertLocalSymbol(node);
                 return;
-            // IDENTIFIERS/VARIABLES
+
+            /* IDENTIFIERS/VARIABLES */
             case NT::ID:
-                if (auto decl = checkVariableDeclaration(node)) {
-                    if (!decl->getIsInitialized()) {
-                        decl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, node);
-                    }
-                }
-                return;
             case NT::ID_ARRAY:
-                if (auto decl = processArrayIndex(node)) {
-                    if (!decl->getIsInitialized()) {
-                        decl->setIsInitialized(true);
-                        logger::WARN_VariableNotInitialized(this, node);
-                    }
+                processIdentifier(node);
+                return;
+
+            /* ASSIGNMENTS */
+            case NT::ASSIGNMENT: {
+                switch (node->getAsgnType()) {
+                    case AT::ASGN:
+                    case AT::ADDASGN:
+                    case AT::SUBASGN:
+                    case AT::MULASGN:
+                    case AT::DIVASGN:
+                        processBinaryOperation(node);
+                        return;
+                    case AT::INC:
+                    case AT::DEC:
+                        processUnaryOperation(node);
+                        return;
+                    default:
+                        return;
                 }
                 return;
-            case NT::CALL:
-                processCall(node);
-                return;
-            case NT::ASSIGNMENT:
+            }
+
+            /* OPERATORS/AND/OR */
             case NT::OPERATOR:
-            case NT::QUES_UNARY:
-            case NT::CHSIGN_UNARY:
-            case NT::SIZEOF_UNARY:
-            case NT::NOT:
             case NT::AND:
-            case NT::OR:
-                #if PENDANTIC_DEBUG
-                cout << "(" << node->getLine() << ") " ;
-                #endif
-                processOperation(node);
+            case NT::OR: {
+                processBinaryOperation(node);
                 return;
-            case NT::RETURN:
-                processReturn(node);
+            }
+
+            /* UNARY OPERATIONS */
+            case NT::NOT:
+            case NT::SIZEOF_UNARY:
+            case NT::CHSIGN_UNARY:
+            case NT::QUES_UNARY: {
+                processUnaryOperation(node);
                 return;
+            }
+
+
             default:
                 return;
         }
+
     }
 }
 

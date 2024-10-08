@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 #define SPACE 48
 
 #include "utils.hpp"
@@ -89,16 +89,6 @@ public:
      * @return node::Node*
      */
     node::Node* lookupSymbol(const node::Node* sym);
-
-    /***********************************************
-    *  SYMBOL TABLE INFORMATION
-    ***********************************************/ 
-
-    /**
-     * @fn printSymbols
-     * @brief Prints the symbols in the symbol table.
-     */
-    void printSymbols();
 
 };
 
@@ -394,20 +384,12 @@ public:
     void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs, node::Node *lhsDecl, node::Node* rhsDecl);
 
     /**
-     * @fn processOperation
-     * @brief Processes an operation node.
-     * @param operation The operation node to process.
-     * @note The operation node can be an assignment, unary, or binary operation. Does not process ':=', special case.
-     */
-    void processOperation(node::Node *operation);
-
-    /**
-     * @fn processASGN
+     * @fn processAssignment
      * @brief Processes an assignment node. (:=)
      * @param asgn The assignment node to process.
      * @note The assignment node is a binary operation and is a special case.
      */
-    void processASGN(node::Node *asgn);
+    void processAssignment(node::Node *asgn);
 
     /**
      * @fn processReturn
@@ -415,6 +397,16 @@ public:
      * @param return The return node to process.
      */
     void processReturn(node::Node *sym);
+
+    node::Node* lookupDeclaration(node::Node* id);
+
+    void processIdentifier(node::Node *id);
+
+    void processOperator(node::Node *operation);
+
+    void processBinaryOperation(node::Node *op);
+
+    void processUnaryOperation(node::Node *op);
 
     #pragma endregion Table_M
 
