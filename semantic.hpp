@@ -424,8 +424,9 @@ public:
      * @fn processIdentifier
      * @brief Processes an identifier node.
      * @param id The identifier node to process.
+     * @param isLHSinASGN Is the identifier the left-hand side of an assignment?
      */
-    node::Node* processIdentifier(node::Node *id);
+    node::Node* processIdentifier(node::Node *id, bool isLHSinASGN);
 
     /**
      * @fn processOperator
@@ -441,7 +442,7 @@ public:
      * @brief Processes a binary operation node.
      * @param op The binary operation node to process.
      */
-    void evaluateOPERATION(node::Node *op);
+    void evaluateOperation(node::Node *op);
 
     /**
      * @fn processUnaryOperation
@@ -463,6 +464,8 @@ public:
      * @param op The while node to process.
      */
     void processWhile(node::Node *op);
+
+    void processBooleanBinaryOperators(node::Node *op);
 
     #pragma endregion Semantic_M
 
