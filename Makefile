@@ -1,7 +1,7 @@
 MAKEFLAGS += -j12
 
-CC = g++
-FLAGS = -O3 -std=c++23
+CC = clang++
+FLAGS = -O3 -std=c++2b -w
 FLEX = flex --header-file=lexer.hpp
 BISON = bison -d #-Wcounterexamples #-v
 

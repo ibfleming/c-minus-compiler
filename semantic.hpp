@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG false
+#define PENDANTIC_DEBUG true
 #define SPACE 64
 
 #include "utils.hpp"
@@ -222,6 +222,7 @@ public:
         std::cout << std::string(SPACE + 2, '=') << std::endl;
         std::cout << std::endl;
         #endif
+        enterGlobalScope();
         analyze();
     }
 
@@ -230,6 +231,13 @@ public:
     ***********************************************/
 
     #pragma region Scope_M
+
+    /**
+     * @fn enterGlobalScope
+     * @brief Enters the global scope.
+     * @return void
+     */
+    void enterGlobalScope();
 
     /**
      * @fn enterScope
@@ -288,43 +296,20 @@ public:
     #pragma region Table_M
 
     /**
-     * @fn insertGlobalSymbol
-     * @brief Inserts a global symbol into the global scope.
+     * @fn insertSymbol
+     * @brief Inserts a symbol into the current scope.
      * @param sym The symbol to insert.
+     * @return bool
      */
-    void insertGlobalSymbol(node::Node *sym);
+    bool insertSymbol(node::Node *sym);
 
     /**
-     * @fn insertLocalSymbol
-     * @brief Inserts a local symbol into the current scope.
-     * @param sym The symbol to insert
-     */
-    void insertLocalSymbol(node::Node *sym);
-
-    /**
-     * @fn lookupGlobalSymbol
-     * @brief Looks up a symbol in the global scope for analysis.
-     * @param sym The symbol to lookup.
+     * @fn lookupSymbol
+     * @brief Looks up a declaration in the current scope and other scopes if there are more on the stack.
+     * @param id The identifier to lookup.
      * @return node::Node*
      */
-    node::Node* lookupGlobalSymbol(const node::Node* sym);
-
-    /**
-     * @fn lookupLocalSymbol
-     * @brief Looks up a symbol in the current scopeo and other scopes if there are more on the stack for analysis.
-     * @param sym The symbol to lookup.
-     * @return node::Node*
-     */
-    node::Node* lookupLocalSymbol(const node::Node* sym);
-
-    /**
-     * @fn checkThroughScopes
-     * @brief Checks through the scopes on the stack for a symbol.
-     * @param sym The symbol to check for.
-     * @return node::Node*
-     */
-    node::Node* lookupAllScopes(node::Node* sym);
-
+    node::Node* lookupSymbol(node::Node* id);
 
     #pragma region Semantic_M
 
@@ -381,14 +366,6 @@ public:
      * @param scope The scope to check.
      */
     void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
-
-    /**
-     * @fn lookupDeclaration
-     * @brief Looks up a declaration in the current scope and other scopes if there are more on the stack.
-     * @param id The identifier to lookup.
-     * @return node::Node*
-     */
-    node::Node* lookupDeclaration(node::Node* id);
 
     /**
      * @fn processReturn
@@ -465,6 +442,12 @@ public:
      */
     void processWhile(node::Node *op);
 
+    /**
+     * @fn processBooleanBinaryOperators
+     * @brief Processes boolean binary operators.
+     * @param op The boolean binary operator node to process.
+     * @note The operators are AND and OR.
+     */
     void processBooleanBinaryOperators(node::Node *op);
 
     #pragma endregion Semantic_M
@@ -478,25 +461,18 @@ public:
     #pragma region Traversal_M
 
     /**
-     * @fn processSemantics
+     * @fn analyzeNode
      * @brief Processes the semantics of the AST.
      * @param node The node to process.
      */
-    void processSemantics(node::Node *node);
+    void analyzeNode(node::Node *node);
 
     /**
-     * @fn traverseGlobals
-     * @brief Depth-first search traversal of the AST for global variables and functions.
-     * @param node The node to start the traversal from.
-     */
-    void traverseGlobals(node::Node *node);
-
-    /**
-     * @fn traverseLocals
+     * @fn traverse
      * @brief Depth-first search traversal of the AST for local variables.
      * @param node The node to start the traversal from.
      */
-    void traverseLocals(node::Node *node);
+    void traverse(node::Node *node);
 
     /**
      * @fn analyze

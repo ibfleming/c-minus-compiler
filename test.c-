@@ -1,8 +1,19 @@
-// C-F24
-int main()
+dog(int i) {
+   if i=3 then {
+       int i;
+       i:=i;
+       return;
+   }
+}
+
+elk(int a, a)
 {
-    int i;
-    bool b;
-    
-    (b>i)  or  (i>i);
+   int a;
+   b := a;
+   {
+        int a, b;
+        c := c;
+        c := b;
+        b := b;
+   }
 }

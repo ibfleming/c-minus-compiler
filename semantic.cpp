@@ -17,12 +17,12 @@ bool SymbolTable::insertSymbol(node::Node* node) {
     if (symbols_.find(name) == symbols_.end()) {
         symbols_[name] = node;
         #if PENDANTIC_DEBUG
-        cout << "Symbol Inserted: " << name << endl;
+        cout << "\tInserted symbol \"" << name << "\"." << endl;
         #endif
         return true;
     }
     #if PENDANTIC_DEBUG
-    cout << "Symbol Exists Already: " << name << endl;
+    cout << "\tSymbol already exists \"" << name << "\"." << endl;
     #endif
     return false;
 }
@@ -31,14 +31,14 @@ node::Node* SymbolTable::lookupSymbol(const node::Node* sym) {
     for (auto const& item : symbols_) {
         if ( item.first == sym->getString() ) {
             #if PENDANTIC_DEBUG
-            cout << "Symbol Found: \"" << sym->getString() << "\" ("; 
+            cout << "\tSymbol Found: \"" << sym->getString() << "\" ("; 
             cout << types::literalNodeTypeStr(item.second->getNodeType()) << ")" << endl;
             #endif
             return item.second;
         }
     }
     #if PENDANTIC_DEBUG
-    cout << "Symbol NOT Found: \"" << sym->getString() << "\"" << endl;
+    cout << "\tSymbol \"" << sym->getString() << "\" not found!" << endl;
     #endif
     return nullptr;
 }
@@ -89,6 +89,15 @@ void Scope::checkUsedVariables(semantic::SemanticAnalyzer *analyzer) {
 *  SCOPE MANAGEMENT
 ***********************************************/
 
+void SemanticAnalyzer::enterGlobalScope() {
+    scopes_.push(globalScope_);
+    #if PENDANTIC_DEBUG
+    cout << string(SPACE + 2, '*') << endl;
+    cout << "(0) ENTERING SCOPE: GLOBAL" << endl;
+    cout << string(SPACE + 2, '*') << endl;
+    #endif
+}
+
 void SemanticAnalyzer::enterScope(Scope *scope) {
     scopes_.push(scope);
     #if PENDANTIC_DEBUG
@@ -102,12 +111,16 @@ void SemanticAnalyzer::enterScope(Scope *scope) {
 void SemanticAnalyzer::leaveScope() {
     auto scope = scopes_.top();
     checkForUse(scope);
-    scopes_.pop();
     if (scope != nullptr) {
         if( scope == globalScope_ ) {
             #if PENDANTIC_DEBUG
-            cerr << "ERROR(SCOPE): Cannot leave the global scope." << endl;
+            cout << endl;
+            cout << string(SPACE + 2, '#') << endl;
+            cout << "(0) LEAVING SCOPE: GLOBAL" << endl;
+            scope->printScope();
+            cout << string(SPACE + 2, '#') << endl;
             #endif
+            scopes_.pop();
             return;
         }
         #if PENDANTIC_DEBUG
@@ -117,6 +130,7 @@ void SemanticAnalyzer::leaveScope() {
         scope->printScope();
         cout << string(SPACE + 2, '#') << endl;
         #endif
+        scopes_.pop();
     }
 }
 
@@ -139,93 +153,101 @@ void SemanticAnalyzer::printScopes() {
 
 #pragma endregion ScopeManagement
 
-#pragma region SymbolInsert
-
 /***********************************************
-*  SYMBOL INSERTION
+*  SYMBOL TABLE MANAGEMENT
 ***********************************************/
 
-void SemanticAnalyzer::insertGlobalSymbol(node::Node *sym) {
+bool SemanticAnalyzer::insertSymbol(node::Node *sym) {
+    if (sym == nullptr) throw runtime_error("Error in insertSymbol(): 'sym' is null.");
+
     #if PENDANTIC_DEBUG
-    cout << "[Symbol Insert]:" << endl;
+    cout << "(INSERT SYMBOL)" << endl;
     #endif
-    auto *decl = lookupGlobalSymbol(sym);
-    if (decl != nullptr) {
-        logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
-        return;
-    }
-    #if PENDANTIC_DEBUG
-    cout << "[Global] ";
-    #endif
-    getGlobalScope()->insertSymbol(sym);
-}
 
-void SemanticAnalyzer::insertLocalSymbol(node::Node *sym) {
-    #if PENDANTIC_DEBUG
-    cout << "[Symbol Insert]:" << endl;
-    #endif
-    // According to the semantics of C-, do not just global scope here
-    if ( getScopeCount() > 1 ) { // currently in multiple scopes, iterate thru them
-        auto *decl = lookupAllScopes(sym);
-        if (decl != nullptr) {
-            logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
-            return;
-        }
-    } else { // only in the one scope so therefore just check here
-        auto *decl = lookupLocalSymbol(sym);
-        if (decl != nullptr) {
-            logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
-            return;
-        }
-    }
-    #if PENDANTIC_DEBUG
-    cout << "[Local] ";
-    #endif
-    getCurrentScope()->insertSymbol(sym);
-}
+    sym->setIsVisited(true);
 
-#pragma endregion SymbolInsert
-
-#pragma region SymbolLookup
-
-/***********************************************
-*  SYMBOL LOOKUP
-***********************************************/
-
-node::Node* SemanticAnalyzer::lookupGlobalSymbol(const node::Node* sym) {
-    #if PENDANTIC_DEBUG
-    cout << "[Global] ";
-    #endif
-    return getGlobalScope()->lookupSymbol(sym);
-}
-
-node::Node* SemanticAnalyzer::lookupLocalSymbol(const node::Node* sym) {
-    #if PENDANTIC_DEBUG
-    cout << "[Local] ";
-    #endif 
-    return getCurrentScope()->lookupSymbol(sym);
-}
-
-node::Node* SemanticAnalyzer::lookupAllScopes(node::Node* sym) {
-    auto scopes = utils::stackToVectorReverse(scopes_);
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+    if (getCurrentScope() == globalScope_) { // In global scope.
         #if PENDANTIC_DEBUG
-        cout << (it == scopes.rbegin() ? "[Local] " : "[Scope] ");
+        cout << "\t[Global Scope]:" << endl;
         #endif
-        /*         
-        // Do not search through function scopes for duplicate variables
-        if ((*it)->getName().find("FUNCTION_") != string::npos) {
-            continue;
-        } 
-        */
-        if (auto decl = (*it)->lookupSymbol(sym)) {
-            return decl; // Return if symbol found
+        sym->setIsUsed(true);
+        sym->setIsInitialized(true);
+        if (auto decl = getGlobalScope()->lookupSymbol(sym)) {
+            logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
+            return false;
         }
     }
-    return nullptr; // Return null if symbol not found
+    else if (getCurrentScope() != globalScope_) { // Not in global scope.
+        auto scopes = utils::stackToVectorReverse(scopes_);
+        for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+            if ((*it) == globalScope_ ) continue;   // Skip global scope
+            #if PENDANTIC_DEBUG
+            cout << ((*it) == getCurrentScope() ? "\t[Current Scope]:" : "\t[Other Scope]:") << endl;
+            #endif
+            if (auto decl = (*it)->lookupSymbol(sym)) {
+                logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
+                return false;
+            } else {
+                return (*it)->insertSymbol(sym);
+            }
+        }
+    }
+    return getCurrentScope()->insertSymbol(sym);
 }
 
-#pragma endregion SymbolLookup
+node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id) {
+    if (id == nullptr) throw runtime_error("Error in lookupSymbol(): 'id' is null.");
+
+    #if PENDANTIC_DEBUG
+    cout << "(LOOKUP DECLARATION)" << endl;
+    #endif
+
+    node::Node* decl = nullptr;
+
+    if (getCurrentScope() == globalScope_) { // In global scope.
+        #if PENDANTIC_DEBUG
+        cout << "\t[Global Scope]:" << endl;
+        #endif
+        if (decl = id->getDeclaration()) {
+            #if PENDANTIC_DEBUG
+            cout << "\tID has been declared." << endl;
+            #endif
+            return decl;
+        }
+        else if (decl = getGlobalScope()->lookupSymbol(id)) {
+            id->setDeclaration(decl);
+            return decl;
+        }
+    }
+    else if (getCurrentScope() != globalScope_) { // Not in global scope.
+        if (decl = id->getDeclaration()) {
+            #if PENDANTIC_DEBUG
+            cout << "\tID has been declared." << endl;
+            #endif
+            return decl;
+        }
+        else {
+            auto scopes = utils::stackToVectorReverse(scopes_);
+            for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+                #if PENDANTIC_DEBUG
+                if (*it == getGlobalScope()) {
+                    cout << "\t[Global Scope]:" << endl;
+                } else if (*it == getCurrentScope()) {
+                    cout << "\t[Current Scope]:" << endl;
+                } else {
+                    cout << "\t[Other Scope]:" << endl;
+                }
+                #endif
+                if (decl = (*it)->lookupSymbol(id)) {
+                    id->setDeclaration(decl);
+                    return decl;
+                }
+            }
+        }
+    }
+    logger::ERROR_VariableNotDeclared(this, id);
+    return nullptr;
+}
 
 /***********************************************
 *  SEMANTIC ANALYSIS FUNCTIONS
@@ -278,7 +300,7 @@ node::Node* SemanticAnalyzer::checkInitialization(node::Node *id) {
         return decl;
     }
     /* (2) No declaration, requires a symbol look up */
-    else if ( auto decl = lookupDeclaration(id) ) {
+    else if ( auto decl = lookupSymbol(id) ) {
         if (!decl->getIsInitialized()) {
             logger::WARN_VariableNotInitialized(this, id);
             decl->setIsInitialized(true);
@@ -301,7 +323,7 @@ node::Node* SemanticAnalyzer::applyInitialization(node::Node *id) {
         return decl;
     }
     /* (2) No declaration, requires a symbol look up */
-    else if ( auto decl = lookupDeclaration(id) ) {
+    else if ( auto decl = lookupSymbol(id) ) {
         if (!decl->getIsInitialized()) {
             decl->setIsInitialized(true);
         }
@@ -318,6 +340,36 @@ void SemanticAnalyzer::checkTypes(node::Node *op, node::Node *lhs, node::Node *r
     if (op == nullptr) throw runtime_error("Error in checkTypes(): 'op' is null.");
 
     switch (op->getNodeType()) {
+        case NT::ASSIGNMENT: {
+            switch (op->getAsgnType()) {
+                case AT::ADDASGN:
+                case AT::SUBASGN:
+                case AT::MULASGN:
+                case AT::DIVASGN: {
+                    if (lhsDecl) {
+                        if (lhsDecl->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
+                        }
+                    }
+                    else {
+                        if (lhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
+                        }
+                    }
+                    if (rhsDecl) {
+                        if (rhsDecl->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
+                        }
+                    }
+                    else {
+                        if (rhs->getVarType() != VT::INT) {
+                            logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
+                        }
+                    }
+                    return;
+                }
+            }
+        }
         case NT::OPERATOR: {
             switch (op->getOpType()) {
                 /* EQUAL TYPES ONLY (LHS = RHS), ARRAYS */
@@ -329,6 +381,12 @@ void SemanticAnalyzer::checkTypes(node::Node *op, node::Node *lhs, node::Node *r
                 case OT::GEQ: {
                     if (lhsDecl && rhsDecl) {
                         if (lhsDecl->getVarType() != rhsDecl->getVarType()) {
+                            logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
+                        }
+                    } else if (lhsDecl || rhsDecl) {
+                        auto decl = lhsDecl ? lhsDecl : rhsDecl;
+                        auto var = lhsDecl ? rhs : lhs;
+                        if (decl->getVarType() != var->getVarType()) {
                             logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
                         }
                     }
@@ -398,42 +456,6 @@ void SemanticAnalyzer::checkTypes(node::Node *op, node::Node *lhs, node::Node *r
     }
 }
 
-node::Node* SemanticAnalyzer::lookupDeclaration(node::Node* id) {
-    if (id == nullptr) throw runtime_error("Error in getDeclaration(): 'id' is null.");
-
-    #if PENDANTIC_DEBUG
-    cout << "[Get Declaration]" << endl;
-    #endif
-
-    id->setIsVisited(true);
-
-    node::Node *decl = nullptr;
-
-    // (1) Search through all available scopes
-    if (getScopeCount() > 1) {
-        decl = lookupAllScopes(id);
-    }
-
-    // (2) Else search through the current (local) scope
-    if (decl == nullptr) {
-        decl = lookupLocalSymbol(id);
-    }
-
-    // (3) Else search through the global scope
-    if (decl == nullptr) {
-        decl = lookupGlobalSymbol(id);
-    }
-
-    // If no declaration was found in any scope, throw an error
-    if (decl == nullptr) {
-        logger::ERROR_VariableNotDeclared(this, id);
-        return nullptr;
-    }
-
-    id->setDeclaration(decl);
-    return decl;
-}
-
 void SemanticAnalyzer::processReturn(node::Node *ret) {
     if (ret == nullptr) throw runtime_error("Error in processReturn(): 'ret' is null.");
 
@@ -490,7 +512,7 @@ node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool isLHSinASGN) {
          */
 
         // (1) Process Child 0 (the ID)
-        auto idDecl = lookupDeclaration(id);
+        auto idDecl = lookupSymbol(id);
 
         if (idDecl) { 
             // (2) Set the ID_ARRAY type to the ID if found
@@ -502,9 +524,7 @@ node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool isLHSinASGN) {
             }
 
             // (4) Error if the array declaration isn't actually an array
-            if (idDecl->getNodeType() != NT::VARIABLE_ARRAY && 
-                idDecl->getNodeType() != NT::PARAMETER_ARRAY && 
-                idDecl->getNodeType() != NT::VARIABLE_STATIC_ARRAY) 
+            if (!idDecl->getIsArray())
             {
                 logger::ERROR_CannotIndexNonArray(this, id);
             }
@@ -532,12 +552,10 @@ node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool isLHSinASGN) {
                 if (indexDecl) {
                     if (indexDecl->getVarType() != VT::INT) logger::ERROR_ArrayIndexNotInt(this, arr, index);
 
-                    if (indexDecl->getNodeType() == NT::VARIABLE_ARRAY || 
-                        indexDecl->getNodeType() == NT::PARAMETER_ARRAY || 
-                        indexDecl->getNodeType() == NT::VARIABLE_STATIC_ARRAY) 
-                    {
-                        logger::ERROR_ArrayIndexIsUnindexedArray(this, index);
+                    if (index->getNodeType() == NT::ID) {
+                        if (indexDecl->getIsArray()) logger::ERROR_ArrayIndexIsUnindexedArray(this, arr);
                     }
+
                 }
                 else {
                     if (index->getVarType() != VT::INT) logger::ERROR_ArrayIndexNotInt(this, arr, index);
@@ -586,7 +604,7 @@ node::Node* SemanticAnalyzer::processCall(node::Node* call) {
 
     call->setIsVisited(true);
 
-    node::Node* decl = lookupDeclaration(call);
+    node::Node* decl = lookupSymbol(call);
 
     // (1) Process the declaration of the function if found
     if (decl) {
@@ -602,7 +620,11 @@ node::Node* SemanticAnalyzer::processCall(node::Node* call) {
                 child->setIsVisited(true);
                 switch(child->getNodeType()) {
                     case NT::ID: {
-                        checkInitialization(child);
+                        if (auto id = checkInitialization(child)) {
+                            if (id->getNodeType() == NT::FUNCTION) {
+                                logger::ERROR_VariableAsFunction(this, child);
+                            }
+                        }
                         break;
                     }
                     case NT::ID_ARRAY: {
@@ -838,6 +860,7 @@ void SemanticAnalyzer::evaluateOperation(node::Node *op) {
                 case AT::SUBASGN:
                 case AT::MULASGN:
                 case AT::DIVASGN: {
+                    processOperator(op, true, false);
                     return;
                 }
                 case AT::INC:
@@ -1179,11 +1202,16 @@ void SemanticAnalyzer::processBooleanBinaryOperators(node::Node *op) {
  * DFS traversal for the semantic analysis.
  ******************************************************************************/
 
-void SemanticAnalyzer::processSemantics(node::Node *node) {
+void SemanticAnalyzer::analyzeNode(node::Node *node) {
 
     // SCOPES
     switch (node->getNodeType()) {
         case NT::FUNCTION:
+            #if PENDANTIC_DEBUG
+            cout << endl;
+            cout << "(" << node->getLine() << ") ";
+            #endif
+            insertSymbol(node);
             enterScope(new Scope(node, "FUNCTION_" + node->getString()));
             return;
         case NT::COMPOUND:
@@ -1224,7 +1252,7 @@ void SemanticAnalyzer::processSemantics(node::Node *node) {
             case NT::VARIABLE:
             case NT::VARIABLE_STATIC:
             case NT::PARAMETER:
-                insertLocalSymbol(node);
+                insertSymbol(node);
                 checkForInitializer(node);
                 return;
 
@@ -1232,7 +1260,7 @@ void SemanticAnalyzer::processSemantics(node::Node *node) {
             case NT::VARIABLE_ARRAY:
             case NT::VARIABLE_STATIC_ARRAY:
             case NT::PARAMETER_ARRAY:
-                insertLocalSymbol(node);
+                insertSymbol(node);
                 return;
 
             /* IDENTIFIERS/VARIABLES */
@@ -1271,46 +1299,14 @@ void SemanticAnalyzer::processSemantics(node::Node *node) {
     }
 }
 
-void SemanticAnalyzer::traverseGlobals(node::Node *node) {
+void SemanticAnalyzer::traverse(node::Node *node) {
     if (node == nullptr) { return; }
 
-    switch (node->getNodeType()) {
-        case NT::VARIABLE:
-        case NT::VARIABLE_STATIC:
-            #if PENDANTIC_DEBUG
-            cout << endl;
-            #endif
-            insertGlobalSymbol(node);
-            node->setIsVisited(true);
-            node->setIsInitialized(true);
-            checkForInitializer(node);
-            break;
-        case NT::FUNCTION:
-        case NT::VARIABLE_ARRAY:
-        case NT::VARIABLE_STATIC_ARRAY:
-            #if PENDANTIC_DEBUG
-            cout << endl;
-            #endif
-            insertGlobalSymbol(node);
-            node->setIsVisited(true);
-            node->setIsInitialized(true);
-    }
-
-    // Do not traverse into children as this access the local scopes
-
-    if (node->getSibling() != nullptr) {
-        traverseGlobals(node->getSibling());
-    }
-}
-
-void SemanticAnalyzer::traverseLocals(node::Node *node) {
-    if (node == nullptr) { return; }
-
-    processSemantics(node);
+    analyzeNode(node);
 
     // Traverse children nodes recursively first (inner blocks)
     for (node::Node *child : node->getChildren()) {
-        traverseLocals(child);
+        traverse(child);
     }
 
     // After children, check sibling node (for next block at the same level)
@@ -1318,7 +1314,7 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
         if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
             compoundLevel_--; leaveScope();
         }
-        traverseLocals(node->getSibling());
+        traverse(node->getSibling());
     }
     else {
         if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
@@ -1332,26 +1328,14 @@ void SemanticAnalyzer::traverseLocals(node::Node *node) {
 }
 
 void SemanticAnalyzer::analyze() {
+    // (1) Traverse the three
+    traverse(tree_);
 
-    #if PENDANTIC_DEBUG
-    cout << string(SPACE + 2, '*') << endl;
-    cout << "(0) START: GLOBAL SCOPE" << endl;
-    cout << string(SPACE + 2, '*') << endl;
-    #endif
-
-    // (1) Traverse Globals
-    traverseGlobals(tree_);
-    
-    #if PENDANTIC_DEBUG
-    if (getGlobalScope()->getTable()->getSize() > 0) cout << endl;
-    printGlobal();
-    #endif
-
-    // (2) Traverse Locals
-    traverseLocals(tree_);
-
-    // (3) Check Linker
+    // (2) Check Linker
     checkLinker();
+
+    // (3) Leave Global Scope
+    leaveScope();
 }
 
 #pragma endregion Traversal
