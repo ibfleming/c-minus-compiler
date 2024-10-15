@@ -307,9 +307,10 @@ public:
      * @fn lookupSymbol
      * @brief Looks up a declaration in the current scope and other scopes if there are more on the stack.
      * @param id The identifier to lookup.
+     * @param init If the symbol is being check for initialization or not, check it's lookup logic.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(node::Node* id, bool isLHSinASGN);
+    node::Node* lookupSymbol(node::Node* id, bool init = true);
 
     #pragma region Semantic_M
 
@@ -333,20 +334,10 @@ public:
     /**
      * @fn checkInitialization
      * @brief Checks if a variable is initialized.
-     * @param id The identifier to check.
-     * @return node::Node*
-     * @note Will emit warnings and set init to true for the variable declaration.
+     * @param decl The identifier to check.
+     * @note Only passed found declarations for variables, declarations for IDs
      */
-    node::Node* checkInitialization(node::Node *id);
-
-    /**
-     * @fn applyInitialization
-     * @brief Applies initialization to a variable declaration.
-     * @param id The identifier to apply initialization to.
-     * @return node::Node*
-     * @note Will only make the variable initialized. Intended for LHS in ASGN and other special cases.
-     */
-    node::Node* applyInitialization(node::Node *id, bool isLHSinASGN);
+    void checkInit(node::Node *decl);
     
     /**
      * @fn checkBinaryTypes
@@ -354,8 +345,6 @@ public:
      * @param op The operator/assignment node.
      * @param lhs The left-hand side node.
      * @param rhs The right-hand side node.
-     * @param lhsDecl The declaration of the lhs.
-     * @param rhsDecl The declaration of the rhs. 
      * @note The rhs can be null depending on the operation!
      */
     void checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
@@ -380,9 +369,10 @@ public:
      * @fn processArray
      * @brief Processes an array  node.
      * @param arr The array node to process.
-     * @param isLHSinASGN Is the array the left-hand side of an assignment?
+     * @param init Is the array suppose to be checked for initialization?
+     * @note true = check for initialization, false = apply initialization
      */
-    node::Node* processArray(node::Node* arr, bool isLHSinASGN);
+    node::Node* processArray(node::Node* arr, bool init = true);
 
     /**
      * @fn processCall
@@ -392,20 +382,14 @@ public:
     node::Node* processCall(node::Node* call);
 
     /**
-     * @fn processAssignment
-     * @brief Processes an assignment node. (:=)
-     * @param asgn The assignment node to process.
-     * @note The assignment node is a binary operation and is a special case.
-     */
-    void processAssignment(node::Node *asgn);
-
-    /**
      * @fn processIdentifier
      * @brief Processes an identifier node.
      * @param id The identifier node to process.
-     * @param isLHSinASGN Is the identifier the left-hand side of an assignment?
+     * @param init Is the identifier suppose to be checked for initialization?
+     * @note true = check for initialization, false = apply initialization
+     * @return node::Node* - The declaration of the identifier otherwise nullptr.
      */
-    node::Node* processIdentifier(node::Node *id, bool isLHSinASGN);
+    node::Node* processIdentifier(node::Node *id, bool init = true);
 
     /**
      * @fn processOperator
@@ -414,7 +398,7 @@ public:
      * @param isLHSinASGN Is the operator the left-hand side of an assignment?
      * @return node::Node*
      */
-    node::Node* processOperator(node::Node *op, bool isLHSinASGN);
+    node::Node* processOperator(node::Node *op);
 
     /**
      * @fn processBinaryOperation
@@ -450,7 +434,16 @@ public:
      * @param op The boolean binary operator node to process.
      * @note The operators are AND and OR.
      */
-    void processBooleanBinaryOperators(node::Node *op);
+    //void processBooleanBinaryOperators(node::Node *op);
+
+    ///
+
+    void processAssignment(node::Node *node);
+    void processBinaryOperator(node::Node *node);
+    void processUnaryOperator(node::Node *node);
+    void processBooleanBinaryOperator(node::Node *node);
+
+    ///
 
     #pragma endregion Semantic_M
 

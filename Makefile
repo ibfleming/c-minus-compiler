@@ -5,7 +5,7 @@ FLAGS = -O3 -std=c++2b -w
 FLEX = flex --header-file=lexer.hpp
 BISON = bison -d #-Wcounterexamples #-v
 
-SRCS = main.cpp lexer.cpp parser.cpp utils.cpp types.cpp semantic.cpp token.cpp node.cpp logger.cpp
+SRCS = main.cpp lexer.cpp parser.cpp utils.cpp types.cpp semantic.cpp semantic-helpers.cpp token.cpp node.cpp logger.cpp
 TARGET = c-
 
 $(TARGET): $(SRCS)

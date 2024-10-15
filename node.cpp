@@ -83,7 +83,7 @@ void Node::printValue() {
                 cout << getInt();
                 return;
             case NT::STRING:
-                cout << "Const ";
+                cout << "Const is array ";
                 cout << "\"" << getString() << "\"";
                 return;
 
@@ -140,6 +140,12 @@ void Node::printType() {
             case NT::FOR:
             case NT::RANGE:
             case NT::BREAK:
+            case NT::RETURN:
+                return;
+
+            case NT::FUNCTION:
+                cout << " returns type ";
+                cout << types::varTypeToStr(varType_);
                 return;
 
             case NT::VARIABLE_ARRAY:
