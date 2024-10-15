@@ -95,11 +95,11 @@ void ERROR_RequiresOperandBoolTypes(SA *analyzer, node::Node *op, node::Node *op
 void ERROR_RequiresOperandsAsArrayTypes(SA *analyzer, node::Node *op, node::Node *lhs, node::Node *rhs) {
     #if SEMANTIC_DEBUG
     if (lhs->getIsArray() && !rhs->getIsArray()) {
-        cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op) << "' requires boths operands be arrays but lhs is an array ";
+        cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op) << "' requires both operands be arrays or not but lhs is an array ";
         cout << "and rhs is not an array." << endl;
     }
     if (!lhs->getIsArray() && rhs->getIsArray()) {
-        cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op) << "' requires boths operands be arrays but lhs is not an array ";
+        cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op) << "' requires both operands be arrays or not but lhs is not an array ";
         cout << "and rhs is an array." << endl;
     }
     #endif

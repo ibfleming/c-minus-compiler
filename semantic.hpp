@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_HPP
 #define SEMANTIC_HPP
 
-#define PENDANTIC_DEBUG true
+#define PENDANTIC_DEBUG 0
 #define SPACE 64
 
 #include "utils.hpp"
@@ -309,7 +309,7 @@ public:
      * @param id The identifier to lookup.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(node::Node* id);
+    node::Node* lookupSymbol(node::Node* id, bool isLHSinASGN);
 
     #pragma region Semantic_M
 
@@ -346,10 +346,10 @@ public:
      * @return node::Node*
      * @note Will only make the variable initialized. Intended for LHS in ASGN and other special cases.
      */
-    node::Node* applyInitialization(node::Node *id);
+    node::Node* applyInitialization(node::Node *id, bool isLHSinASGN);
     
     /**
-     * @fn checkTypes
+     * @fn checkBinaryTypes
      * @brief Checks if the operands of operators/assignments have matching types.
      * @param op The operator/assignment node.
      * @param lhs The left-hand side node.
@@ -358,7 +358,9 @@ public:
      * @param rhsDecl The declaration of the rhs. 
      * @note The rhs can be null depending on the operation!
      */
-    void checkTypes(node::Node *op, node::Node *lhs, node::Node *rhs, node::Node *lhsDecl, node::Node* rhsDecl);
+    void checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
+
+    void checkUnaryTypes(node::Node *op, node::Node *operand);
 
     /**
      * @fn checkForUse
@@ -412,7 +414,7 @@ public:
      * @param isLHSinASGN Is the operator the left-hand side of an assignment?
      * @return node::Node*
      */
-    node::Node* processOperator(node::Node *op, bool isLHSinASGN, bool useArray);
+    node::Node* processOperator(node::Node *op, bool isLHSinASGN);
 
     /**
      * @fn processBinaryOperation

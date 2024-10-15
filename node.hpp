@@ -73,7 +73,8 @@ public:
     {
         if (nodeType == types::NodeType::VARIABLE_ARRAY || 
             nodeType == types::NodeType::PARAMETER_ARRAY || 
-            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY) 
+            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY ||
+            nodeType == types::NodeType::STRING) 
         {
             isArray_ = true;
         }
@@ -107,7 +108,8 @@ public:
     {
         if (nodeType == types::NodeType::VARIABLE_ARRAY || 
             nodeType == types::NodeType::PARAMETER_ARRAY || 
-            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY) 
+            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY ||
+            nodeType == types::NodeType::STRING) 
         {
             isArray_ = true;
         }
@@ -142,7 +144,8 @@ public:
     {
         if (nodeType == types::NodeType::VARIABLE_ARRAY || 
             nodeType == types::NodeType::PARAMETER_ARRAY || 
-            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY) 
+            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY ||
+            nodeType == types::NodeType::STRING) 
         {
             isArray_ = true;
         }
@@ -177,7 +180,8 @@ public:
     {
         if (nodeType == types::NodeType::VARIABLE_ARRAY || 
             nodeType == types::NodeType::PARAMETER_ARRAY || 
-            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY) 
+            nodeType == types::NodeType::VARIABLE_STATIC_ARRAY ||
+            nodeType == types::NodeType::STRING) 
         {
             isArray_ = true;
         }
@@ -209,10 +213,12 @@ public:
     void setIsInitialized(bool isInitialized) { isInitialized_ = isInitialized; }
     void setIsVisited(bool isVisited) { isVisited_ = isVisited; }
     void setIsUsed(bool isUsed) { isUsed_ = isUsed; }
+    void setIsArray(bool isArray) { isArray_ = isArray; }
     void setDeclaration(Node* declaration) {
         if (declaration != nullptr) { 
             declaration_ = declaration;
-            declaration->setIsUsed(true); 
+            declaration->setIsUsed(true);
+            isArray_ = declaration->getIsArray();
             varType_ = declaration->getVarType();
         }
     }
