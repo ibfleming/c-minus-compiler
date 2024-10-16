@@ -46,5 +46,9 @@ bool isArray(node::Node* node) {
     return false;
 }
 
+void printLine(node::Node *node) {
+    std::cout << std::endl;
+    std::cout << "(" << node->getLine() << ") ";
+}
 
 } // namespace utils

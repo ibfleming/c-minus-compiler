@@ -94,6 +94,8 @@ namespace utils {
      */
     bool isArray(node::Node* node);
 
+    void printLine(node::Node *node);
+
 } // namespace utils
 
 #endif // UTILS_HPP

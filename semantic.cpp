@@ -164,8 +164,6 @@ bool SemanticAnalyzer::insertSymbol(node::Node *sym) {
     cout << "(INSERT SYMBOL)" << endl;
     #endif
 
-    sym->setIsVisited(true);
-
     if (getCurrentScope() == globalScope_) { // In global scope.
         #if PENDANTIC_DEBUG
         cout << "\t[Global Scope]:" << endl;
@@ -229,8 +227,8 @@ node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id, bool init) {
         else {
             std::vector<semantic::Scope *, std::allocator<semantic::Scope *>> scopes;
 
-            scopes = utils::stackToVectorReverse(scopes_);
-            // scopes = utils::stackToVectorInOrder(scopes_);
+            if (init) { scopes = utils::stackToVectorReverse(scopes_); }
+            else { scopes = utils::stackToVectorInOrder(scopes_); }
 
             for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
                 #if PENDANTIC_DEBUG
@@ -302,15 +300,17 @@ void SemanticAnalyzer::checkInit(node::Node *decl) {
     }
 }
 
-void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs) {
+node::Node* SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs) {
     #if PENDANTIC_DEBUG
-    cout << "[Check Binary Types]" << endl;
+    cout << "\t(Check Binary Types)" << endl;
     #endif
 
     if (op == nullptr) throw runtime_error("Error in checkBinaryTypes(): 'op' is null.");
 
     auto lhsDecl = lhs->getDeclaration() != nullptr ? lhs->getDeclaration() : lhs;
     auto rhsDecl = rhs->getDeclaration() != nullptr ? rhs->getDeclaration() : rhs;
+
+    if (lhsDecl == nullptr || rhsDecl == nullptr) throw runtime_error("Error in checkBinaryTypes(): 'lhsDecl' or 'rhsDecl' is null.");
 
     // Check the node type of the operator to determine the type and semantic checking
     switch (op->getNodeType()) {
@@ -328,7 +328,7 @@ void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::N
                         }
                         if (lhsDecl->getNodeType() == NT::FUNCTION) { logger::ERROR_VariableAsFunction(this, lhs); }
                     }
-                   return;
+                   return op;
                 }
                 /* INT AND NON-ARRAY ONLY */
                 case AT::ADDASGN:
@@ -355,11 +355,11 @@ void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::N
                             logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
                         }
                     }
-                    return;
+                    return op;
                 }
-                return;
+                return op;
             }
-            return;
+            return op;
         }
         case NT::OPERATOR: {
             switch (op->getOpType()) {
@@ -379,7 +379,7 @@ void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::N
                             logger::ERROR_RequiresOperandsAsArrayTypes(this, op, lhsDecl, rhsDecl);
                         }
                     }
-                    return;
+                    return op;
                 }
 
                 /* INT AND NON-ARRAY ONLY */
@@ -399,18 +399,18 @@ void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::N
                         }
                         if (lhsDecl) 
                         {
-                            if (lhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, lhs); return; }
+                            if (lhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, lhs); return op; }
                         }
                         if (rhsDecl)
                         {
-                            if (rhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, rhs); return; } 
+                            if (rhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, rhs); return op; } 
                         }                     
                     }
-                    return;
+                    return op;
                 }
-                return;
+                return op;
             }
-            return;
+            return op;
         }
 
         /* BOOL AND NON-ARRAY ONLY */
@@ -419,30 +419,32 @@ void SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::N
             if (lhsDecl || rhsDecl) {
                 if (lhsDecl) 
                 {
-                    if (lhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, lhs); return; }
+                    if (lhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, lhs); return op; }
                     if (lhsDecl->getVarType() != VT::BOOL) logger::ERROR_RequiresOperandBoolTypes(this, op, lhs, logger::OperandType::LHS);
                 }
                 if (rhsDecl)
                 {
-                    if (rhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, rhs); return; }
+                    if (rhsDecl->getIsArray()) { logger::ERROR_OperationCannotUseArrays(this, op, rhs); return op; }
                     if (rhsDecl->getVarType() != VT::BOOL) logger::ERROR_RequiresOperandBoolTypes(this, op, rhs, logger::OperandType::RHS);
                 }
             }
-            return;
+            return op;
         }
         default:
-            return;
+            return op;
     }
 }
 
-void SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand) {
+node::Node* SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand) {
     #if PENDANTIC_DEBUG
-    cout << "[Check Unary Types]" << endl;
+    cout << "\t(Check Unary Types)" << endl;
     #endif
 
     if (op == nullptr) throw runtime_error("Error in checlUnaryTypes(): 'op' is null.");
 
     auto operandDecl = operand->getDeclaration() != nullptr ? operand->getDeclaration() : operand;
+
+    if (operandDecl == nullptr) throw runtime_error("Error in checkUnaryTypes(): 'operandDecl' is null.");
 
     switch(op->getNodeType()) {
         case NT::QUES_UNARY: {
@@ -452,13 +454,13 @@ void SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand) {
             if (operandDecl->getIsArray()) {
                 logger::ERROR_OperationCannotUseArrays(this, op, operand);
             }
-            return;
+            return op;
         }
         case NT::SIZEOF_UNARY: {
             if (!operandDecl->getIsArray()) {
                 logger::ERROR_OperationWorksOnlyOnArrays(this, op, operand);
             }
-            return;
+            return op;
         }
         case NT::CHSIGN_UNARY: {
             if (operandDecl->getVarType() != VT::INT) {
@@ -467,7 +469,7 @@ void SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand) {
             if (operandDecl->getIsArray()) {
                 logger::ERROR_OperationCannotUseArrays(this, op, operand);
             }
-            return;
+            return op;
         }
         case NT::NOT: {
             if (operandDecl->getVarType() != VT::BOOL) {
@@ -476,17 +478,18 @@ void SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand) {
             if (operandDecl->getIsArray()) {
                 logger::ERROR_OperationCannotUseArrays(this, op, operand);
             }
-            return;
+            return op;
         }
         case NT::ASSIGNMENT: {
             if (operandDecl->getIsArray()) {
                 logger::ERROR_OperationCannotUseArrays(this, op, operand);
             }
-            return;
+            return op;
         }
         default:
-            return;
+            return op;
     }
+    return op;
 }
 
 void SemanticAnalyzer::processReturn(node::Node *ret) {
@@ -495,8 +498,6 @@ void SemanticAnalyzer::processReturn(node::Node *ret) {
     #if PENDANTIC_DEBUG
     cout << "[Process Return]"  << endl;
     #endif
-
-    ret->setIsVisited(true);
 
     if (ret->getChildren().size() == 1) {
         auto child = ret->getChildren()[0];
@@ -519,7 +520,7 @@ void SemanticAnalyzer::processReturn(node::Node *ret) {
                 break;
             }
             case NT::OPERATOR:
-                processOperator(child);
+                processBinaryOperator(child);
                 break;
             default:
                 break;
@@ -527,119 +528,15 @@ void SemanticAnalyzer::processReturn(node::Node *ret) {
     }
 }
 
-node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool init) {
-    if (arr == nullptr) throw runtime_error("Error in processArray(): 'arr' is null.");
-
-    #if PENDANTIC_DEBUG
-    cout << "[Process Array]" << endl;
-    #endif
-
-    arr->setIsVisited(true);
-
-    if (arr->getChildren().size() == 2) {
-
-        auto id = arr->getChildren()[0];
-        auto index = arr->getChildren()[1];
-
-        if (id == nullptr || index == nullptr) throw runtime_error("Error in processArray(): 'id' or 'index' is null.");
-
-        id->setIsVisited(true); index->setIsVisited(true);
-
-        /**
-         *  Processing Child 0: ID
-         */
-
-        // (1) Process Child 0 (the ID)
-        auto arrDecl = processIdentifier(id, init);
-
-        if (arrDecl) { 
-            // (2) Set the ID_ARRAY type to the ID if found
-            arr->setVarType(arrDecl->getVarType());  
-
-            // (3) Error if the array declaration is a function
-            if (arrDecl->getNodeType() == NT::FUNCTION) {
-                logger::ERROR_VariableAsFunction(this, id);
-            }
-
-            // (5) Error if the array declaration isn't actually an array
-            if (!arrDecl->getIsArray())
-            {
-                logger::ERROR_CannotIndexNonArray(this, id);
-            }
-        }
-        // (6) Array Declarataion is not found so there error to this
-        else {
-            logger::ERROR_CannotIndexNonArray(this, id);
-        }
-
-        /**
-         *  Processing Child 1: Index
-         */
-
-        node::Node *indexDecl = nullptr;
-        switch (index->getNodeType()) {
-            case NT::ID:
-            case NT::ID_ARRAY: {
-
-                indexDecl = processIdentifier(index, init);
-
-                if (indexDecl) {
-                    if (indexDecl->getVarType() != VT::INT) logger::ERROR_ArrayIndexNotInt(this, arr, index);
-
-                    if (index->getNodeType() == NT::ID) {
-                        if (indexDecl->getIsArray()) logger::ERROR_ArrayIndexIsUnindexedArray(this, index);
-                    }
-
-                }
-                else {
-                    if (index->getVarType() != VT::INT) logger::ERROR_ArrayIndexNotInt(this, arr, index);
-                }
-                break;
-            }
-            case NT::CALL: {
-                processCall(index);
-                break;
-            }
-            case NT::OPERATOR: {
-                processOperator(index); // Might need to return the node here...
-                break;
-            }
-            case NT::ASSIGNMENT: {
-                switch(index->getAsgnType()) {
-                    case AT::ASGN:
-                        processAssignment(index);
-                        break;
-                    case AT::INC:
-                    case AT::DEC:
-                        processUnaryOperation(index);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        if(indexDecl == nullptr) {
-            if (index->getVarType() != VT::INT) logger::ERROR_ArrayIndexNotInt(this, arr, index);
-        }
-
-        // Last: return the ID declaration
-        return arrDecl;
-    }
-    return nullptr;
-}
-
-node::Node* SemanticAnalyzer::processCall(node::Node* call) {
+node::Node* SemanticAnalyzer::processCall(node::Node* call, bool init) {
     if (call == nullptr) throw runtime_error("Error in processCall(): 'call' is null.");
 
     #if PENDANTIC_DEBUG
     cout << "[Process Call]" << endl;
     #endif
 
-    call->setIsVisited(true);
-
     // (1) Process the call symbol and see if it's a function declaration
-    node::Node* decl = processIdentifier(call, false);
+    node::Node* decl = lookupSymbol(call, init);
 
     // (2) Process the declaration of the function if found
     if (decl) {
@@ -658,87 +555,8 @@ node::Node* SemanticAnalyzer::processCall(node::Node* call) {
             arg = arg->getSibling();
         }
     }
-
     return decl;
 }
-
-/* void SemanticAnalyzer::processAssignment(node::Node *asgn) {
-    #if PENDANTIC_DEBUG
-    cout << "[Process ASGN]" << endl;
-    #endif
-
-    if (asgn->getChildren().size() == 2) {
-        auto lhs = asgn->getChildren()[0];
-        auto rhs = asgn->getChildren()[1];
-
-        if (lhs == nullptr || rhs == nullptr) throw runtime_error("Error in processAssignment(): LHS or RHS is null.");
-
-        lhs->setIsVisited(true); rhs->setIsVisited(true);
-
-        // Left-hand side of the assignment
-        node::Node *lhsDecl = nullptr;
-        #if PENDANTIC_DEBUG
-        cout << "{LHS}" << endl;
-        #endif
-        switch (lhs->getNodeType()) {
-            case NT::ID: {
-                if (lhsDecl = lookupSymbol(lhs)) {}
-                break;
-            }
-            case NT::ID_ARRAY: {
-                if (lhsDecl = processArray(lhs)) {}
-                break;
-            }
-            default:
-                break;
-        }
-
-        // Right-hand side of the assignment
-        node::Node *rhsDecl = nullptr;
-        #if PENDANTIC_DEBUG
-        cout << "{RHS}" << endl;
-        #endif
-        switch (rhs->getNodeType()) {
-            case NT::ID:
-            case NT::ID_ARRAY: {
-                if (rhsDecl = processIdentifier(rhs)) {}                
-                break;
-            }
-            case NT::OPERATOR: {
-                processOperator(rhs);
-                break;
-            }
-            case NT::ASSIGNMENT: {
-                evaluateOperation(rhs);
-                break;
-            }
-            case NT::CALL: {
-                if (rhsDecl = processCall(rhs)) {}
-                break;
-            }
-            case NT::STRING:
-                #if PEDANTIC_DEBUG
-                cout << "\tCONSTANT: String" << endl;
-                #endif
-                break;
-            default:
-                break;
-        }
-
-        if (lhsDecl == nullptr) {
-            if (rhsDecl) lhs->setVarType(rhsDecl->getVarType());
-        }
-
-        // Set the type of the assignment to the type of the LHS as per the semantics for ASGN
-        if(lhsDecl) { 
-            asgn->setVarType(lhsDecl->getVarType());
-            lhsDecl->setIsInitialized(true);
-        }
-        else asgn->setVarType(lhs->getVarType());
-
-        checkBinaryTypes(asgn, lhs, rhs);
-    }
-} */
 
 node::Node* SemanticAnalyzer::processIdentifier(node::Node *id, bool init) {
     if (id == nullptr) throw runtime_error("Error in processIdentifier(): 'id' is null.");
@@ -761,6 +579,7 @@ node::Node* SemanticAnalyzer::processIdentifier(node::Node *id, bool init) {
                         logger::WARN_VariableNotInitialized(this, id);
                         decl->setIsInitialized(true); 
                     }
+                    isDeclarationFunctionAsVariable(id, decl);
                 }
                 else { 
                     // (5) Set the variable as initialized
@@ -781,192 +600,13 @@ node::Node* SemanticAnalyzer::processIdentifier(node::Node *id, bool init) {
             #if PENDANTIC_DEBUG
             cout << "[Process ID Call - \"" << id->getString() << "\"] -> ";
             #endif
-            // (2) Lookup the function 
-            return lookupSymbol(id, init);
-        }
+            // (2) Lookup the function
+            return processCall(id, init);
+        }       
         default:
             return nullptr;
     }
     return nullptr;
-}
-
-node::Node* SemanticAnalyzer::processOperator(node::Node *op) {
-    #if PENDANTIC_DEBUG
-    cout << "[Process Operator]" << endl;
-    #endif
-
-    op->setIsVisited(true);
-
-    if (op->getChildren().size() == 2) {
-        auto lhs = op->getChildren()[0];
-        auto rhs = op->getChildren()[1];
-
-        if (lhs == nullptr || rhs == nullptr) throw runtime_error("Error in processOperator(): LHS or RHS is null.");
-
-        lhs->setIsVisited(true); rhs->setIsVisited(true);
-
-        // Left-hand side of the assignment
-        node::Node *lhsDecl = nullptr;
-        #if PENDANTIC_DEBUG
-        cout << "{LHS}" << endl;
-        #endif
-        switch (lhs->getNodeType()) {
-            case NT::ID:
-            case NT::ID_ARRAY: {
-                if (lhsDecl = processIdentifier(lhs)) {}
-                break;
-            }
-            case NT::OPERATOR:
-                processOperator(lhs);
-                break;
-            case NT::CALL:
-                lhsDecl = processCall(lhs);
-                break;
-            default:
-                break;
-        }
-
-        // Right-hand side of the assignment
-        node::Node *rhsDecl = nullptr;
-        #if PENDANTIC_DEBUG
-        cout << "{RHS}" << endl;
-        #endif
-        switch (rhs->getNodeType()) {
-            case NT::ID:
-            case NT::ID_ARRAY: {
-                if (rhsDecl = processIdentifier(rhs)) {}
-                break;
-            }
-            case NT::OPERATOR:
-                processOperator(rhs);
-                break;
-            case NT::CALL:
-                rhsDecl = processCall(rhs);
-                break;
-            default:
-                break;
-        }
-
-        if (lhsDecl) {            
-            // Check if the LHS is a function
-            if (lhs->getNodeType() != NT::CALL) {
-                if (lhsDecl->getNodeType() == NT::FUNCTION) {
-                    logger::ERROR_VariableAsFunction(this, lhs);
-                    return op;
-                }
-            }
-        }
-
-        if (rhsDecl) {
-            // Check if the RHS is a function
-            if (rhs->getNodeType() != NT::CALL) {
-                if (rhsDecl->getNodeType() == NT::FUNCTION) {
-                    logger::ERROR_VariableAsFunction(this, rhs);
-                    return op;
-                }
-            }
-        }
-
-        checkBinaryTypes(op, lhs, rhs);
-
-    }
-
-    return op;
-}
-
-void SemanticAnalyzer::evaluateOperation(node::Node *op) {
-    if (op == nullptr) throw runtime_error("Error in evaluateOperation(): 'op' is null.");   
-
-    #if PENDANTIC_DEBUG
-    cout << "[OPERATION: " << logger::loggerNodeTypeToStr(op) << "] ";
-    #endif
-
-    op->setIsVisited(true);
-
-    switch (op->getNodeType()) {
-        case NT::NOT:
-        case NT::SIZEOF_UNARY:
-        case NT::CHSIGN_UNARY:
-        case NT::QUES_UNARY:
-            processUnaryOperation(op);
-            return;
-        case NT::ASSIGNMENT: {
-            switch (op->getAsgnType()) {
-                case AT::ASGN:
-                    processAssignment(op);
-                    return;
-                case AT::ADDASGN:
-                case AT::SUBASGN:
-                case AT::MULASGN:
-                case AT::DIVASGN: {
-                    processOperator(op);
-                    return;
-                }
-                case AT::INC:
-                case AT::DEC: {
-                    processUnaryOperation(op);
-                    return;
-                }
-            }
-            return;
-        }
-        case NT::OPERATOR: {
-            switch (op->getOpType()) {
-                case OT::EQL:
-                case OT::NEQ:
-                case OT::LESS:
-                case OT::LEQ:
-                case OT::GREATER:
-                case OT::GEQ: {
-                    processOperator(op);
-                    return;
-                }
-                case OT::ADD:
-                case OT::SUB:
-                case OT::MUL:
-                case OT::DIV:
-                case OT::MOD: {
-                    processOperator(op);
-                    return;
-                }
-            }
-            return;
-        }
-        case NT::AND:
-        case NT::OR: {
-            processBooleanBinaryOperator(op);
-            return;
-        }
-        default:
-            return;
-    }
-}
-
-void SemanticAnalyzer::processUnaryOperation(node::Node *op) {
-    if (op == nullptr) throw runtime_error("Error in processUnaryOperation(): 'op' is null.");
-
-    #if PENDANTIC_DEBUG
-    cout << "[Operation: Unary - " << types::literalNodeTypeStr(op->getNodeType()) << "] ";
-    #endif
-
-    op->setIsVisited(true);
-
-    auto operand = op->getChildren()[0];
-
-    if (operand == nullptr) throw runtime_error("Error in processUnaryOperation(): 'operand' is null.");
-
-
-    node::Node *operandDecl;
-    switch (operand->getNodeType()) {
-        case NT::CHSIGN_UNARY:
-            processUnaryOperation(operand);
-            return;
-        default:
-            if (operandDecl = processIdentifier(operand)) {}
-            break;
-    }
-
-    checkUnaryTypes(op, operand);
 }
 
 void SemanticAnalyzer::processIf(node::Node *op) {
@@ -975,8 +615,6 @@ void SemanticAnalyzer::processIf(node::Node *op) {
     #if PENDANTIC_DEBUG
     cout << "[Process If] ";
     #endif
-
-    op->setIsVisited(true);
 
     // IF simpleExpression THEN matchedStatements ELSE matchedStatements
 
@@ -1023,7 +661,6 @@ void SemanticAnalyzer::processIf(node::Node *op) {
                 processWhile(thenStmt);
                 break;
             default:
-                evaluateOperation(thenStmt);
                 break;
         }
     }
@@ -1050,7 +687,6 @@ void SemanticAnalyzer::processIf(node::Node *op) {
                 processWhile(elseStmt);
                 break;
             default:
-                evaluateOperation(elseStmt);
                 break;
         }
     }
@@ -1062,8 +698,6 @@ void SemanticAnalyzer::processWhile(node::Node *op) {
     #if PENDANTIC_DEBUG
     cout << "[Process While] ";
     #endif
-
-    op->setIsVisited(true);
 
     // WHILE simpleExpression DO matchedStatements
 
@@ -1082,7 +716,6 @@ void SemanticAnalyzer::processWhile(node::Node *op) {
                 processIdentifier(cnd);
                 break;
             default:
-                evaluateOperation(cnd);
                 break;
         }
     }
@@ -1109,66 +742,10 @@ void SemanticAnalyzer::processWhile(node::Node *op) {
                 processWhile(stmt);
                 break;
             default:
-                evaluateOperation(stmt);
                 break;
         }
     }
 }
-
-/* void SemanticAnalyzer::processBooleanBinaryOperators(node::Node *op) {
-    if (op == nullptr) throw runtime_error("Error in processBooleanBinaryOperators(): 'op' is null.");
-
-    #if PENDANTIC_DEBUG
-    cout << "[Process Boolean Operation]" << endl;
-    #endif
-
-    op->setIsVisited(true);
-
-    if (op->getChildren().size() == 2) {
-        auto lhs = op->getChildren()[0];
-        auto rhs = op->getChildren()[1];
-
-        if (lhs == nullptr || rhs == nullptr) throw runtime_error("Error in processBooleanBinaryOperators(): LHS or RHS is null.");
-
-        lhs->setIsVisited(true); rhs->setIsVisited(true);
-
-        // Left-hand side of the assignment
-        node::Node *lhsDecl = nullptr;
-        switch (lhs->getNodeType()) {
-            case NT::AND:
-            case NT::OR: {
-                processBooleanBinaryOperators(lhs);
-                break;
-            }
-            case NT::OPERATOR: {
-                processOperator(lhs);
-                break;
-            }
-            default:
-                lhsDecl = processIdentifier(lhs);
-                break;
-        }
-
-        // Right-hand side of the assignment
-        node::Node *rhsDecl = nullptr;
-        switch (rhs->getNodeType()) {
-           case NT::AND:
-            case NT::OR: {
-                processBooleanBinaryOperators(rhs);
-                break;
-            }
-            case NT::OPERATOR: {
-                processOperator(rhs);
-                break;
-            }
-            default:
-                rhsDecl = processIdentifier(rhs);
-                break;
-        }
-
-        checkBinaryTypes(op, lhs, rhs);
-    }
-} */
 
 #pragma endregion Analyzer
 

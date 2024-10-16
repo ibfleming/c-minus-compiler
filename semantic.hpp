@@ -318,132 +318,25 @@ public:
     *  SEMANTIC ANALYSIS FUNCTIONS
     ***********************************************/
 
-    /**
-     * @fn checkLinker
-     * @brief Checks for the presence of a main function.
-     */
     void checkLinker();
-
-    /**
-     * @fn checkForInitializer
-     * @brief Checks for the presence of an initializer in a variable declaration.
-     * @param var The variable to check.
-     */
     void checkForInitializer(node::Node *var);
-
-    /**
-     * @fn checkInitialization
-     * @brief Checks if a variable is initialized.
-     * @param decl The identifier to check.
-     * @note Only passed found declarations for variables, declarations for IDs
-     */
     void checkInit(node::Node *decl);
-    
-    /**
-     * @fn checkBinaryTypes
-     * @brief Checks if the operands of operators/assignments have matching types.
-     * @param op The operator/assignment node.
-     * @param lhs The left-hand side node.
-     * @param rhs The right-hand side node.
-     * @note The rhs can be null depending on the operation!
-     */
-    void checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
-
-    void checkUnaryTypes(node::Node *op, node::Node *operand);
-
-    /**
-     * @fn checkForUse
-     * @brief Checks for the use of a variables in the current scope.
-     * @param scope The scope to check.
-     */
+    node::Node* checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
+    node::Node* checkUnaryTypes(node::Node *op, node::Node *operand);
     void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
-
-    /**
-     * @fn processReturn
-     * @brief Processes a return node.
-     * @param ret The return node to process.
-     */
     void processReturn(node::Node *ret);
-
-    /**
-     * @fn processArray
-     * @brief Processes an array  node.
-     * @param arr The array node to process.
-     * @param init Is the array suppose to be checked for initialization?
-     * @note true = check for initialization, false = apply initialization
-     */
-    node::Node* processArray(node::Node* arr, bool init = true);
-
-    /**
-     * @fn processCall
-     * @brief Checks for the use of a function in the current scope.
-     * @param call The function to check.
-     */
-    node::Node* processCall(node::Node* call);
-
-    /**
-     * @fn processIdentifier
-     * @brief Processes an identifier node.
-     * @param id The identifier node to process.
-     * @param init Is the identifier suppose to be checked for initialization?
-     * @note true = check for initialization, false = apply initialization
-     * @return node::Node* - The declaration of the identifier otherwise nullptr.
-     */
-    node::Node* processIdentifier(node::Node *id, bool init = true);
-
-    /**
-     * @fn processOperator
-     * @brief Processes an operator node.
-     * @param op The operator node to process.
-     * @param isLHSinASGN Is the operator the left-hand side of an assignment?
-     * @return node::Node*
-     */
+    node::Node* processArray(node::Node* arr, bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node* processCall(node::Node* call, bool init = true);
+    node::Node* processIdentifier(node::Node *id, bool init = true); // @note true = check for initialization, false = apply initialization
     node::Node* processOperator(node::Node *op);
-
-    /**
-     * @fn processBinaryOperation
-     * @brief Processes a binary operation node.
-     * @param op The binary operation node to process.
-     */
-    void evaluateOperation(node::Node *op);
-
-    /**
-     * @fn processUnaryOperation
-     * @brief Processes a unary operation node.
-     * @param op The unary operation node to process.
-     */
     void processUnaryOperation(node::Node *op);
-  
-    /**
-     * @fn processIf
-     * @brief Processes an if node.
-     * @param op The if node to process.
-     */
     void processIf(node::Node *op);
-
-    /**
-     * @fn processWhile
-     * @brief Processes a while node.
-     * @param op The while node to process.
-     */
     void processWhile(node::Node *op);
-
-    /**
-     * @fn processBooleanBinaryOperators
-     * @brief Processes boolean binary operators.
-     * @param op The boolean binary operator node to process.
-     * @note The operators are AND and OR.
-     */
-    //void processBooleanBinaryOperators(node::Node *op);
-
-    ///
-
     void processAssignment(node::Node *node);
     void processBinaryOperator(node::Node *node);
     void processUnaryOperator(node::Node *node);
     void processBooleanBinaryOperator(node::Node *node);
-
-    ///
+    bool isDeclarationFunctionAsVariable(node::Node *id, node::Node *decl);
 
     #pragma endregion Semantic_M
 
