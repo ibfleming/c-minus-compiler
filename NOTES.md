@@ -46,3 +46,9 @@ not, NOT
 *, SIZEOF, ARRAY
 -, CHSIGN
 ?, QUES
+
+Assignment in C- expressions occurs at the time that the assignment operator is encountered
+when evaluating an expression in its proper order. The value of an assignment expression is the
+righthand side of the expression. The ++ and - - operators are assignment operators in C- (this
+is different than in C/C++). Note that assignment in a C- <simpleExp> must be enclosed in
+parentheses.

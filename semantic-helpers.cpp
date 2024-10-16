@@ -96,7 +96,7 @@ void SemanticAnalyzer::analyzeNode(node::Node *node) {
 
             // While
             case NT::WHILE:
-                processWhile(node);
+                //processWhile(node);
                 return;
 
             /* RETURN */
@@ -169,7 +169,7 @@ void SemanticAnalyzer::processAssignment(node::Node *node) {
         // (2) Set the node as visited if it is not nullptr
         lhs->setIsVisited(true);
 
-        auto lhsDecl = processIdentifier(lhs, false);   // false, we don't check the initialization but apply it to the LHS of assignments
+        auto lhsDecl = processIdentifier(lhs);
         
         checkUnaryTypes(node, lhs);
 
@@ -255,6 +255,5 @@ void SemanticAnalyzer::processUnaryOperator(node::Node *node) {
     // (1) Set the node as visited if it is not nullptr
     operand->setIsVisited(true);
 }
-
 
 }

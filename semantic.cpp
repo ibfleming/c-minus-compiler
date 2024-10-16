@@ -229,8 +229,8 @@ node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id, bool init) {
         else {
             std::vector<semantic::Scope *, std::allocator<semantic::Scope *>> scopes;
 
-            if (init) scopes = utils::stackToVectorReverse(scopes_);
-            else scopes = utils::stackToVectorInOrder(scopes_);
+            scopes = utils::stackToVectorReverse(scopes_);
+            // scopes = utils::stackToVectorInOrder(scopes_);
 
             for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
                 #if PENDANTIC_DEBUG
@@ -244,6 +244,7 @@ node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id, bool init) {
                 #endif
                 if (decl = (*it)->lookupSymbol(id)) {
                     id->setDeclaration(decl);
+                    decl->setIsUsed(true);
                     return decl;
                 }
             }
@@ -753,8 +754,6 @@ node::Node* SemanticAnalyzer::processIdentifier(node::Node *id, bool init) {
             // (2) Lookup the symbol in the current scope and other scopes
             auto decl = lookupSymbol(id, init);
             if (decl) {
-                // (3) Mark the variable as used
-                decl->setIsUsed(true);
                 // (4) Check if the variable is initialized
                 if (init) {
                     if (!decl->getIsInitialized()) {
