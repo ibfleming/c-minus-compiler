@@ -8,15 +8,13 @@
 
 using namespace std;
 
-namespace semantic
-{
+namespace semantic {
 
-void SemanticAnalyzer::analyzeNode(node::Node *node)
+void SemanticAnalyzer::analyzeNode(node::Node* node)
 {
 
     // Scopes
-    switch (node->getNodeType())
-    {
+    switch (node->getNodeType()) {
     case NT::FUNCTION:
 #if PENDANTIC_DEBUG
         cout << endl;
@@ -26,15 +24,13 @@ void SemanticAnalyzer::analyzeNode(node::Node *node)
         enterScope(new Scope(node, "FUNCTION_" + node->getString()));
         return;
     case NT::COMPOUND:
-        if (node->getFunctionNode() == nullptr)
-        {
+        if (node->getFunctionNode() == nullptr) {
             enterScope(new Scope(node, "COMPOUND_" + to_string(compoundLevel_)));
             compoundLevel_++;
         }
         return;
     case NT::FOR:
-        if (node->getFunctionNode() == nullptr)
-        {
+        if (node->getFunctionNode() == nullptr) {
             enterScope(new Scope(node, "FOR_" + to_string(compoundLevel_)));
             compoundLevel_++;
         }
@@ -44,12 +40,10 @@ void SemanticAnalyzer::analyzeNode(node::Node *node)
     }
 
     // Statements/Variables/Operations
-    if (!node->getIsVisited())
-    {
+    if (!node->getIsVisited()) {
         // Set the node as visited
         node->setIsVisited(true);
-        switch (node->getNodeType())
-        {
+        switch (node->getNodeType()) {
 
         // Variable Declarations
         case NT::VARIABLE:
@@ -140,28 +134,25 @@ void SemanticAnalyzer::analyzeNode(node::Node *node)
     }
 }
 
-void SemanticAnalyzer::processAssignment(node::Node *node)
+void SemanticAnalyzer::processAssignment(node::Node* node)
 {
 #if PENDANTIC_DEBUG
     cout << "[Process Assign - " << types::literalNodeTypeStr(node->getNodeType()) << "]" << endl;
 #endif
 
-    if (node == nullptr)
-    {
+    if (node == nullptr) {
         throw runtime_error("Error in processAssignment(): 'node' is null.");
     }
 
     // (1) Determine the number of children to see if assignment is binary or unary
 
     // BINARY
-    if (node->getChildren().size() == 2)
-    {
+    if (node->getChildren().size() == 2) {
 
         auto lhs = node->getChildren()[0];
         auto rhs = node->getChildren()[1];
 
-        if (lhs == nullptr || rhs == nullptr)
-        {
+        if (lhs == nullptr || rhs == nullptr) {
             throw runtime_error("Error in processAssignment(): LHS or RHS is null.");
         }
 
@@ -170,9 +161,8 @@ void SemanticAnalyzer::processAssignment(node::Node *node)
         rhs->setIsVisited(true);
 
         // (3) Process the RHS
-        node::Node *rhsDecl = nullptr;
-        switch (rhs->getNodeType())
-        {
+        node::Node* rhsDecl = nullptr;
+        switch (rhs->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
         case NT::CALL:
@@ -193,8 +183,7 @@ void SemanticAnalyzer::processAssignment(node::Node *node)
 
         if (lhsDecl)
             node->setVarType(lhsDecl->getVarType());
-        else
-        {
+        else {
             node->setVarType(lhs->getVarType());
             return;
         }
@@ -205,13 +194,11 @@ void SemanticAnalyzer::processAssignment(node::Node *node)
     }
 
     // UNARY
-    if (node->getChildren().size() == 1)
-    {
+    if (node->getChildren().size() == 1) {
 
         auto lhs = node->getChildren()[0];
 
-        if (lhs == nullptr)
-        {
+        if (lhs == nullptr) {
             throw runtime_error("Error in processAssignment(): LHS is null.");
         }
 
@@ -226,22 +213,20 @@ void SemanticAnalyzer::processAssignment(node::Node *node)
     }
 }
 
-void SemanticAnalyzer::processBinaryOperator(node::Node *node)
+void SemanticAnalyzer::processBinaryOperator(node::Node* node)
 {
 #if PENDANTIC_DEBUG
     cout << "[Process Binary - " << types::literalNodeTypeStr(node->getNodeType()) << "]" << endl;
 #endif
 
-    if (node == nullptr)
-    {
+    if (node == nullptr) {
         throw runtime_error("Error in processBinaryOperator(): 'node' is null.");
     }
 
     auto lhs = node->getChildren()[0];
     auto rhs = node->getChildren()[1];
 
-    if (lhs == nullptr || rhs == nullptr)
-    {
+    if (lhs == nullptr || rhs == nullptr) {
         throw runtime_error("Error in processBinaryOperator(): LHS or RHS is null.");
     }
 
@@ -250,9 +235,8 @@ void SemanticAnalyzer::processBinaryOperator(node::Node *node)
     rhs->setIsVisited(true);
 
     // (2) Process the LHS
-    node::Node *lhsDecl = nullptr;
-    switch (lhs->getNodeType())
-    {
+    node::Node* lhsDecl = nullptr;
+    switch (lhs->getNodeType()) {
     case NT::OPERATOR:
         processBinaryOperator(lhs);
         break;
@@ -262,9 +246,8 @@ void SemanticAnalyzer::processBinaryOperator(node::Node *node)
     }
 
     // (3) Process the RHS
-    node::Node *rhsDecl = nullptr;
-    switch (rhs->getNodeType())
-    {
+    node::Node* rhsDecl = nullptr;
+    switch (rhs->getNodeType()) {
     case NT::OPERATOR:
         processBinaryOperator(rhs);
         break;
@@ -283,22 +266,20 @@ void SemanticAnalyzer::processBinaryOperator(node::Node *node)
     checkBinaryTypes(node, lhs, rhs);
 }
 
-void SemanticAnalyzer::processBooleanBinaryOperator(node::Node *node)
+void SemanticAnalyzer::processBooleanBinaryOperator(node::Node* node)
 {
 #if PENDANTIC_DEBUG
     cout << "[Process Boolean Binary - " << types::literalNodeTypeStr(node->getNodeType()) << "]" << endl;
 #endif
 
-    if (node == nullptr)
-    {
+    if (node == nullptr) {
         throw runtime_error("Error in processBooleanBinaryOperator(): 'node' is null.");
     }
 
     auto lhs = node->getChildren()[0];
     auto rhs = node->getChildren()[1];
 
-    if (lhs == nullptr || rhs == nullptr)
-    {
+    if (lhs == nullptr || rhs == nullptr) {
         throw runtime_error("Error in processBooleanBinaryOperator(): LHS or RHS is null.");
     }
 
@@ -307,16 +288,14 @@ void SemanticAnalyzer::processBooleanBinaryOperator(node::Node *node)
     rhs->setIsVisited(true);
 
     // (2) Process the LHS
-    switch (lhs->getNodeType())
-    {
+    switch (lhs->getNodeType()) {
     default:
         processIdentifier(lhs);
         break;
     }
 
     // (3) Process the RHS
-    switch (rhs->getNodeType())
-    {
+    switch (rhs->getNodeType()) {
     default:
         processIdentifier(rhs);
         break;
@@ -325,21 +304,19 @@ void SemanticAnalyzer::processBooleanBinaryOperator(node::Node *node)
     checkBinaryTypes(node, lhs, rhs);
 }
 
-void SemanticAnalyzer::processUnaryOperator(node::Node *node)
+void SemanticAnalyzer::processUnaryOperator(node::Node* node)
 {
 #if PENDANTIC_DEBUG
     cout << "[Process Unary - " << types::literalNodeTypeStr(node->getNodeType()) << "]" << endl;
 #endif
 
-    if (node == nullptr)
-    {
+    if (node == nullptr) {
         throw runtime_error("Error in processUnaryOperator(): 'node' is null.");
     }
 
     auto operand = node->getChildren()[0];
 
-    if (operand == nullptr)
-    {
+    if (operand == nullptr) {
         throw runtime_error("Error in processUnaryOperator(): 'operand' is null.");
     }
 
@@ -347,9 +324,8 @@ void SemanticAnalyzer::processUnaryOperator(node::Node *node)
     operand->setIsVisited(true);
 
     // (2) Process the operand
-    node::Node *operandDecl = nullptr;
-    switch (operand->getNodeType())
-    {
+    node::Node* operandDecl = nullptr;
+    switch (operand->getNodeType()) {
     case NT::OPERATOR:
         processBinaryOperator(operand);
         break;
@@ -364,14 +340,11 @@ void SemanticAnalyzer::processUnaryOperator(node::Node *node)
     checkUnaryTypes(node, operand);
 }
 
-bool SemanticAnalyzer::isDeclarationFunctionAsVariable(node::Node *id, node::Node *decl)
+bool SemanticAnalyzer::isDeclarationFunctionAsVariable(node::Node* id, node::Node* decl)
 {
-    if (id && decl)
-    {
-        if (id->getNodeType() != NT::CALL)
-        {
-            if (decl->getNodeType() == NT::FUNCTION)
-            {
+    if (id && decl) {
+        if (id->getNodeType() != NT::CALL) {
+            if (decl->getNodeType() == NT::FUNCTION) {
                 logger::ERROR_VariableAsFunction(this, id);
                 return true;
             }
@@ -380,7 +353,7 @@ bool SemanticAnalyzer::isDeclarationFunctionAsVariable(node::Node *id, node::Nod
     return false;
 }
 
-node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
+node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool init)
 {
     if (arr == nullptr)
         throw runtime_error("Error in processArray(): 'arr' is null.");
@@ -389,8 +362,7 @@ node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
     cout << "[Process Array]" << endl;
 #endif
 
-    if (arr->getChildren().size() == 2)
-    {
+    if (arr->getChildren().size() == 2) {
 
         auto id = arr->getChildren()[0];
         auto index = arr->getChildren()[1];
@@ -408,20 +380,17 @@ node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
         // (1) Process Child 0 (the ID)
         auto arrDecl = processIdentifier(id, init);
 
-        if (arrDecl)
-        {
+        if (arrDecl) {
             // (2) Set the ID_ARRAY type to the ID if found
             arr->setVarType(arrDecl->getVarType());
 
             // (3) Error if the array declaration isn't actually an array
-            if (!arrDecl->getIsArray())
-            {
+            if (!arrDecl->getIsArray()) {
                 logger::ERROR_CannotIndexNonArray(this, id);
             }
         }
         // (6) Array Declarataion is not found so there error to this
-        else
-        {
+        else {
             logger::ERROR_CannotIndexNonArray(this, id);
         }
 
@@ -429,9 +398,8 @@ node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
          *  Processing Child 1: Index
          */
 
-        node::Node *indexDecl = nullptr;
-        switch (index->getNodeType())
-        {
+        node::Node* indexDecl = nullptr;
+        switch (index->getNodeType()) {
         case NT::OPERATOR: {
             processBinaryOperator(index);
             break;
@@ -442,22 +410,16 @@ node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
         }
         default: {
             indexDecl = processIdentifier(index, init);
-            if (indexDecl)
-            {
-                if (indexDecl->getVarType() != VT::INT)
-                {
+            if (indexDecl) {
+                if (indexDecl->getVarType() != VT::INT) {
                     logger::ERROR_ArrayIndexNotInt(this, arr, index);
                 }
-                if (index->getNodeType() == NT::ID)
-                {
+                if (index->getNodeType() == NT::ID) {
                     if (indexDecl->getIsArray())
                         logger::ERROR_ArrayIndexIsUnindexedArray(this, index);
                 }
-            }
-            else
-            {
-                if (index->getVarType() != VT::INT)
-                {
+            } else {
+                if (index->getVarType() != VT::INT) {
                     logger::ERROR_ArrayIndexNotInt(this, arr, index);
                 }
             }
@@ -465,8 +427,7 @@ node::Node *SemanticAnalyzer::processArray(node::Node *arr, bool init)
         }
         }
 
-        if (indexDecl == nullptr)
-        {
+        if (indexDecl == nullptr) {
             if (index->getVarType() != VT::INT)
                 logger::ERROR_ArrayIndexNotInt(this, arr, index);
         }

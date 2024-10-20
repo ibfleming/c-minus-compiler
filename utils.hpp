@@ -5,8 +5,7 @@
 #include <stack>
 #include <vector>
 
-namespace node
-{
+namespace node {
 class Node;
 }
 
@@ -14,8 +13,7 @@ class Node;
  * @namespace utils
  * @brief Contains utility functions for the compiler.
  */
-namespace utils
-{
+namespace utils {
 
 extern bool PRINT_TYPES; // Print the types of the AST nodes
 
@@ -57,12 +55,12 @@ void printHelpMenu();
  * @tparam T The type of the stack.
  * @note The stack is not modified. Definition is inside the header file to prevent compilation errors.
  */
-template <typename T> std::vector<T> stackToVectorReverse(std::stack<T> &stack)
+template <typename T>
+std::vector<T> stackToVectorReverse(std::stack<T>& stack)
 {
     std::vector<T> vector;
     std::stack<T> tempStack = stack;
-    while (!tempStack.empty())
-    {
+    while (!tempStack.empty()) {
         vector.push_back(tempStack.top());
         tempStack.pop();
     }
@@ -78,12 +76,12 @@ template <typename T> std::vector<T> stackToVectorReverse(std::stack<T> &stack)
  * @tparam T The type of the stack.
  * @note The stack is not modified. Definition is inside the header file to prevent compilation errors.
  */
-template <typename T> std::vector<T> stackToVectorInOrder(std::stack<T> &stack)
+template <typename T>
+std::vector<T> stackToVectorInOrder(std::stack<T>& stack)
 {
     std::vector<T> vector;
     std::stack<T> tempStack = stack;
-    while (!tempStack.empty())
-    {
+    while (!tempStack.empty()) {
         vector.push_back(tempStack.top());
         tempStack.pop();
     }
@@ -96,9 +94,9 @@ template <typename T> std::vector<T> stackToVectorInOrder(std::stack<T> &stack)
  * @brief Checks if the node is an array.
  * @return bool
  */
-bool isArray(node::Node *node);
+bool isArray(node::Node* node);
 
-void printLine(node::Node *node);
+void printLine(node::Node* node);
 
 } // namespace utils
 

@@ -29,8 +29,7 @@ typedef types::OperatorType OT;
  * @namespace semantic
  * @brief Contains the semantic analysis members and functions.
  */
-namespace semantic
-{
+namespace semantic {
 
 class Scope;
 class SemanticAnalyzer;
@@ -41,14 +40,13 @@ class SemanticAnalyzer;
  * @class SymbolTable
  * @brief Represents a symbol table.
  */
-class SymbolTable
-{
+class SymbolTable {
 
-  private:
+private:
     // Map of variable declarations, (name => node)
-    std::map<std::string, node::Node *> symbols_;
+    std::map<std::string, node::Node*> symbols_;
 
-  public:
+public:
     /**
      * @fn SymbolTable
      * @brief Constructor for the symbol table.
@@ -64,7 +62,7 @@ class SymbolTable
      * @brief Returns the symbols in the symbol table.
      * @return std::map<std::string, node::Node*>
      */
-    std::map<std::string, node::Node *> getSymbols()
+    std::map<std::string, node::Node*> getSymbols()
     {
         return symbols_;
     }
@@ -89,7 +87,7 @@ class SymbolTable
      * @param node The node (symbol) to insert.
      * @return bool
      */
-    bool insertSymbol(node::Node *node);
+    bool insertSymbol(node::Node* node);
 
     /**
      * @fn lookupSymbol
@@ -97,7 +95,7 @@ class SymbolTable
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node *lookupSymbol(const node::Node *sym);
+    node::Node* lookupSymbol(const node::Node* sym);
 };
 
 #pragma endregion SymbolTable
@@ -108,22 +106,24 @@ class SymbolTable
  * @class Scope
  * @brief Represents a scope in the program.
  */
-class Scope
-{
+class Scope {
 
-  private:
-    SymbolTable table_;  // Symbol table for the scope
-    node::Node *parent_; // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
-    std::string name_;   // Name of the scope
-    int location_;       // Location of the scope relative to other scopes?
+private:
+    SymbolTable table_; // Symbol table for the scope
+    node::Node* parent_; // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
+    std::string name_; // Name of the scope
+    int location_; // Location of the scope relative to other scopes?
 
-  public:
+public:
     /**
      * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      */
-    Scope(node::Node *parent) : parent_(parent), name_(types::literalNodeTypeStr(parent->getNodeType())), location_(-1)
+    Scope(node::Node* parent)
+        : parent_(parent)
+        , name_(types::literalNodeTypeStr(parent->getNodeType()))
+        , location_(-1)
     {
     }
     /**
@@ -132,7 +132,10 @@ class Scope
      * @param parent The parent node of the scope.
      * @param name The name of the scope.
      */
-    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name), location_(-1)
+    Scope(node::Node* parent, std::string name)
+        : parent_(parent)
+        , name_(name)
+        , location_(-1)
     {
     }
 
@@ -145,7 +148,7 @@ class Scope
      * @brief Returns the symbol table of the scope.
      * @return SymbolTable*
      */
-    SymbolTable *getTable()
+    SymbolTable* getTable()
     {
         return &table_;
     }
@@ -155,7 +158,7 @@ class Scope
      * @brief Returns the parent node of the scope.
      * @return node::Node*
      */
-    node::Node *getParent()
+    node::Node* getParent()
     {
         return parent_;
     }
@@ -180,7 +183,7 @@ class Scope
      * @param node The node to insert.
      * @return bool
      */
-    bool insertSymbol(node::Node *node)
+    bool insertSymbol(node::Node* node)
     {
         return table_.insertSymbol(node);
     }
@@ -191,7 +194,7 @@ class Scope
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node *lookupSymbol(const node::Node *sym)
+    node::Node* lookupSymbol(const node::Node* sym)
     {
         return table_.lookupSymbol(sym);
     }
@@ -201,7 +204,7 @@ class Scope
      * @brief Checks for unused variables in the scope.
      * @return void
      */
-    void checkUsedVariables(semantic::SemanticAnalyzer *analyzer);
+    void checkUsedVariables(semantic::SemanticAnalyzer* analyzer);
 
     /***********************************************
      *  SCOPE INFORMATION
@@ -223,25 +226,28 @@ class Scope
  * @class SemanticAnalyzer
  * @brief Analyzes the AST for semantic errors and warnings.
  */
-class SemanticAnalyzer
-{
+class SemanticAnalyzer {
 
-  private:
-    node::Node *tree_;           // Root of the AST
-    Scope *globalScope_;         // Global scope
-    std::stack<Scope *> scopes_; // Stack of scopes
-    int compoundLevel_;          // Tracks the level of compounds in the scope stack
-    int warnings_;               // Number of warnings
-    int errors_;                 // Number of errors
+private:
+    node::Node* tree_; // Root of the AST
+    Scope* globalScope_; // Global scope
+    std::stack<Scope*> scopes_; // Stack of scopes
+    int compoundLevel_; // Tracks the level of compounds in the scope stack
+    int warnings_; // Number of warnings
+    int errors_; // Number of errors
 
-  public:
+public:
     /**
      * @fn SemanticAnalyzer
      * @brief Constructor for the semantic analyzer.
      * @param tree Root of the AST.
      */
-    SemanticAnalyzer(node::Node *tree)
-        : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0), compoundLevel_(0)
+    SemanticAnalyzer(node::Node* tree)
+        : tree_(tree)
+        , globalScope_(new Scope(nullptr, "GLOBAL"))
+        , warnings_(0)
+        , errors_(0)
+        , compoundLevel_(0)
     {
 #if PENDANTIC_DEBUG
         std::cout << std::endl;
@@ -272,7 +278,7 @@ class SemanticAnalyzer
      * @brief Enters a new scope, i.e. pushes a new scope onto the stack.
      * @param scope The scope to enter.
      */
-    void enterScope(Scope *scope);
+    void enterScope(Scope* scope);
 
     /**
      * @fn leaveScope
@@ -285,7 +291,7 @@ class SemanticAnalyzer
      * @brief Gets the current scope, i.e. scope on the top of the stack.
      * @return Scope*
      */
-    Scope *getCurrentScope()
+    Scope* getCurrentScope()
     {
         return scopes_.top();
     }
@@ -295,7 +301,7 @@ class SemanticAnalyzer
      * @brief Returns the global scope.
      * @return Scope*
      */
-    Scope *getGlobalScope()
+    Scope* getGlobalScope()
     {
         return globalScope_;
     }
@@ -341,7 +347,7 @@ class SemanticAnalyzer
      * @param sym The symbol to insert.
      * @return bool
      */
-    bool insertSymbol(node::Node *sym);
+    bool insertSymbol(node::Node* sym);
 
     /**
      * @fn lookupSymbol
@@ -350,7 +356,7 @@ class SemanticAnalyzer
      * @param init If the symbol is being check for initialization or not, check it's lookup logic.
      * @return node::Node*
      */
-    node::Node *lookupSymbol(node::Node *id, bool init = true);
+    node::Node* lookupSymbol(node::Node* id, bool init = true);
 
 #pragma region Semantic_M
 
@@ -359,29 +365,29 @@ class SemanticAnalyzer
      ***********************************************/
 
     void checkLinker();
-    void checkForInitializer(node::Node *var);
-    void checkInit(node::Node *decl);
-    node::Node *checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
-    node::Node *checkUnaryTypes(node::Node *op, node::Node *operand);
-    void checkForUse(Scope *scope)
+    void checkForInitializer(node::Node* var);
+    void checkInit(node::Node* decl);
+    node::Node* checkBinaryTypes(node::Node* op, node::Node* lhs, node::Node* rhs);
+    node::Node* checkUnaryTypes(node::Node* op, node::Node* operand);
+    void checkForUse(Scope* scope)
     {
         scope->checkUsedVariables(this);
     }
-    void processReturn(node::Node *ret);
-    node::Node *processArray(node::Node *arr,
-                             bool init = true); // @note true = check for initialization, false = apply initialization
-    node::Node *processCall(node::Node *call, bool init = true);
-    node::Node *processIdentifier(
-        node::Node *id, bool init = true); // @note true = check for initialization, false = apply initialization
-    node::Node *processOperator(node::Node *op);
-    void processUnaryOperation(node::Node *op);
-    void processIf(node::Node *op);
-    void processWhile(node::Node *op);
-    void processAssignment(node::Node *node);
-    void processBinaryOperator(node::Node *node);
-    void processUnaryOperator(node::Node *node);
-    void processBooleanBinaryOperator(node::Node *node);
-    bool isDeclarationFunctionAsVariable(node::Node *id, node::Node *decl);
+    void processReturn(node::Node* ret);
+    node::Node* processArray(node::Node* arr,
+        bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node* processCall(node::Node* call, bool init = true);
+    node::Node* processIdentifier(
+        node::Node* id, bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node* processOperator(node::Node* op);
+    void processUnaryOperation(node::Node* op);
+    void processIf(node::Node* op);
+    void processWhile(node::Node* op);
+    void processAssignment(node::Node* node);
+    void processBinaryOperator(node::Node* node);
+    void processUnaryOperator(node::Node* node);
+    void processBooleanBinaryOperator(node::Node* node);
+    bool isDeclarationFunctionAsVariable(node::Node* id, node::Node* decl);
 
 #pragma endregion Semantic_M
 
@@ -398,14 +404,14 @@ class SemanticAnalyzer
      * @brief Processes the semantics of the AST.
      * @param node The node to process.
      */
-    void analyzeNode(node::Node *node);
+    void analyzeNode(node::Node* node);
 
     /**
      * @fn traverse
      * @brief Depth-first search traversal of the AST for local variables.
      * @param node The node to start the traversal from.
      */
-    void traverse(node::Node *node);
+    void traverse(node::Node* node);
 
     /**
      * @fn analyze

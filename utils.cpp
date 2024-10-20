@@ -2,8 +2,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace utils
-{
+namespace utils {
 
 bool PRINT_TYPES = false;
 
@@ -15,8 +14,7 @@ void printTree()
 std::string printIndent(int times)
 {
     std::string result;
-    for (int i = 0; i < times; ++i)
-    {
+    for (int i = 0; i < times; ++i) {
         result += ".   ";
     }
     return result;
@@ -24,8 +22,7 @@ std::string printIndent(int times)
 
 bool checkFileExtension(std::string filename)
 {
-    if (filename.find(".c-") == std::string::npos)
-    { // check valid file type e.g. program.c-
+    if (filename.find(".c-") == std::string::npos) { // check valid file type e.g. program.c-
         std::cerr << "Error: File name must contain '.c-'" << std::endl;
         return false;
     }
@@ -43,10 +40,9 @@ void printHelpMenu()
     std::cout << "-P" << std::string(10, ' ') << "- print the abstract syntax tree plus type information" << std::endl;
 }
 
-bool isArray(node::Node *node)
+bool isArray(node::Node* node)
 {
-    switch (node->getNodeType())
-    {
+    switch (node->getNodeType()) {
     case types::NodeType::VARIABLE_ARRAY:
     case types::NodeType::VARIABLE_STATIC_ARRAY:
     case types::NodeType::PARAMETER_ARRAY:
@@ -55,7 +51,7 @@ bool isArray(node::Node *node)
     return false;
 }
 
-void printLine(node::Node *node)
+void printLine(node::Node* node)
 {
     std::cout << std::endl;
     std::cout << "(" << node->getLine() << ") ";

@@ -9,8 +9,7 @@
  * @namespace token
  * @brief Contains the Token class and related functions.
  */
-namespace token
-{
+namespace token {
 
 class Token; // forward declaration
 
@@ -20,7 +19,7 @@ class Token; // forward declaration
  * @return char
  * @brief Processes the character token and returns the character.
  */
-char processCharConst(Token &token);
+char processCharConst(Token& token);
 
 /**
  * @fn processBoolConst
@@ -28,7 +27,7 @@ char processCharConst(Token &token);
  * @return int
  * @brief Processes the boolean token and returns the integer value.
  */
-int processBoolConst(const std::string &token);
+int processBoolConst(const std::string& token);
 
 /**
  * @fn processStringConst
@@ -36,7 +35,7 @@ int processBoolConst(const std::string &token);
  * @return string
  * @brief Processes the string token and returns the string.
  */
-std::string processStringConst(Token &token);
+std::string processStringConst(Token& token);
 
 /**
  * @fn processToken
@@ -44,7 +43,7 @@ std::string processStringConst(Token &token);
  * @return void
  * @brief Processes the token and sets the value based on the token type.
  */
-void processToken(Token &token);
+void processToken(Token& token);
 
 /**
  * @fn lexicalPrint
@@ -52,24 +51,23 @@ void processToken(Token &token);
  * @return void
  * @brief Prints the token to the console (used in hw1).
  */
-void lexicalPrint(const Token &token);
+void lexicalPrint(const Token& token);
 
 /**
  * @class Token
  * @brief Represents a token (lexeme) that was read by the lexer.
  */
-class Token
-{
+class Token {
 
-  private:
-    types::TokenType type_;   // Name of the token class (ID, ASGN, SUB, IF, FOR, etc.)
+private:
+    types::TokenType type_; // Name of the token class (ID, ASGN, SUB, IF, FOR, etc.)
     types::TokenValue value_; // Value of the token (int, char, string) after processing
-    int strLength_;           // Length of the processed STRINGCONST (only used for STRINGCONST
-    std::string token_;       // Original token (lexeme) that was read by lexer
-    int length_;              // Length of the token (lexeme)
-    int line_;                // Line number where the token was found
+    int strLength_; // Length of the processed STRINGCONST (only used for STRINGCONST
+    std::string token_; // Original token (lexeme) that was read by lexer
+    int length_; // Length of the token (lexeme)
+    int line_; // Line number where the token was found
 
-  public:
+public:
     /**
      * @fn Token
      * @param token The token (lexeme) that was read by the lexer.
@@ -78,8 +76,12 @@ class Token
      * @param type The name of the token class (ID, ASGN, SUB, IF, FOR, etc.).
      * @brief Constructor for the Token class.
      */
-    Token(const std::string &token, int line, int length, types::TokenType type)
-        : type_(type), strLength_(0), token_(token), length_(length), line_(line)
+    Token(const std::string& token, int line, int length, types::TokenType type)
+        : type_(type)
+        , strLength_(0)
+        , token_(token)
+        , length_(length)
+        , line_(line)
     {
         processToken(*this);
     }

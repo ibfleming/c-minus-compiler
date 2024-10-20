@@ -6,15 +6,13 @@ typedef types::NodeType NT; // shorthand for NodeType
 
 using namespace std;
 
-namespace node
-{
+namespace node {
 
-Node *root = nullptr;
+Node* root = nullptr;
 
 int Node::getInt() const
 {
-    if (std::holds_alternative<int>(value_))
-    {
+    if (std::holds_alternative<int>(value_)) {
         return std::get<int>(value_);
     }
     throw std::bad_variant_access();
@@ -22,21 +20,19 @@ int Node::getInt() const
 
 char Node::getChar() const
 {
-    if (std::holds_alternative<char>(value_))
-    {
+    if (std::holds_alternative<char>(value_)) {
         return std::get<char>(value_);
     }
     throw std::bad_variant_access();
 }
 
-std::string Node::getString() const
+std::string
+Node::getString() const
 {
-    if (std::holds_alternative<std::string>(value_))
-    {
+    if (std::holds_alternative<std::string>(value_)) {
         return std::get<std::string>(value_);
     }
-    if (std::holds_alternative<int>(value_))
-    {
+    if (std::holds_alternative<int>(value_)) {
         return std::to_string(std::get<int>(value_));
     }
     throw std::bad_variant_access();
@@ -44,35 +40,30 @@ std::string Node::getString() const
 
 int Node::getBool() const
 {
-    if (std::holds_alternative<int>(value_))
-    {
+    if (std::holds_alternative<int>(value_)) {
         return std::get<int>(value_);
     }
     throw std::bad_variant_access();
 }
 
-void Node::setSibling(Node *sibling)
+void Node::setSibling(Node* sibling)
 {
-    if (sibling_ == nullptr)
-    {
+    if (sibling_ == nullptr) {
         sibling_ = sibling;
         sibling_->setSibLoc(siblingLocation_ + 1);
 
-        Node *current = sibling_->getSibling();
+        Node* current = sibling_->getSibling();
         int loc = sibling_->getSibLoc();
-        while (current != nullptr)
-        {
+        while (current != nullptr) {
             current->setSibLoc(loc + 1);
             loc = current->getSibLoc();
             current = current->getSibling();
         }
         return;
     }
-    if (sibling_ != nullptr)
-    {
-        Node *current = sibling_;
-        while (current->getSibling() != nullptr)
-        {
+    if (sibling_ != nullptr) {
+        Node* current = sibling_;
+        while (current->getSibling() != nullptr) {
             current = current->getSibling();
         }
         current->setSibling(sibling);
@@ -82,8 +73,7 @@ void Node::setSibling(Node *sibling)
 
 void Node::printValue()
 {
-    switch (nodeType_)
-    {
+    switch (nodeType_) {
 
         // Print these specific CONSTANT nodes.
 
@@ -104,15 +94,15 @@ void Node::printValue()
         cout << "\"" << getString() << "\"";
         return;
 
-        // These nodes are no different from the rest other than having an extra space after them in the output. Sigh...
+        // These nodes are no different from the rest other than having an extra
+        // space after them in the output. Sigh...
 
     case NT::FUNCTION:
     case NT::PARAMETER:
     case NT::VARIABLE:
     case NT::VARIABLE_STATIC:
         cout << types::treeNodeTypeToStr(nodeType_) << getString();
-        if (!utils::PRINT_TYPES)
-        {
+        if (!utils::PRINT_TYPES) {
             cout << " ";
         }
         return;
@@ -121,8 +111,7 @@ void Node::printValue()
     case NT::VARIABLE_ARRAY:
     case NT::VARIABLE_STATIC_ARRAY:
         cout << types::treeNodeTypeToStr(nodeType_) << getString();
-        if (!utils::PRINT_TYPES)
-        {
+        if (!utils::PRINT_TYPES) {
             cout << " ";
         }
         return;
@@ -156,8 +145,7 @@ void Node::printValue()
 
 void Node::printType()
 {
-    switch (nodeType_)
-    {
+    switch (nodeType_) {
 
     case NT::COMPOUND:
     case NT::WHILE:
@@ -189,13 +177,12 @@ void Node::printType()
 
 void Node::printNode(int depth = 0)
 {
-    if (siblingLocation_ != 0)
-    {
-        cout << utils::printIndent(depth) << "Sibling: " << siblingLocation_ << "  ";
+    if (siblingLocation_ != 0) {
+        cout << utils::printIndent(depth) << "Sibling: " << siblingLocation_
+             << "  ";
     }
     printValue();
-    if (utils::PRINT_TYPES)
-    {
+    if (utils::PRINT_TYPES) {
         printType();
     }
     cout << " [line: " << line_ << "]";
@@ -203,11 +190,10 @@ void Node::printNode(int depth = 0)
     std::flush(cout);
 }
 
-void printTree(Node *root, int depth = 0)
+void printTree(Node* root, int depth = 0)
 {
 
-    if (root == nullptr)
-    {
+    if (root == nullptr) {
         return;
     }
 
@@ -216,24 +202,23 @@ void printTree(Node *root, int depth = 0)
      *
      * If the:
      *
-     * - first child of a function is a compound statement then the child location will be 1.
+     * - first child of a function is a compound statement then the child
+     * location will be 1.
      *
-     * - first child of a compound statement is anything but a VARIABLE or VARIABLE_ARRAY then the child location will
-     * start be 1.
+     * - first child of a compound statement is anything but a VARIABLE or
+     * VARIABLE_ARRAY then the child location will start be 1.
      *
-     * These were very well addressed in the 'parser.y' wherein adding a child has a parameter to which location (i.e.
-     * childLocation)
+     * These were very well addressed in the 'parser.y' wherein adding a child
+     * has a parameter to which location (i.e. childLocation)
      */
-    Node *current = root;
+    Node* current = root;
 
-    while (current != nullptr)
-    {
+    while (current != nullptr) {
         current->printNode(depth);
-        if (current->getChildren().size() > 0)
-        {
-            for (auto child : current->getChildren())
-            {
-                cout << utils::printIndent(depth + 1) << "Child: " << child->getChildLoc() << "  ";
+        if (current->getChildren().size() > 0) {
+            for (auto child : current->getChildren()) {
+                cout << utils::printIndent(depth + 1)
+                     << "Child: " << child->getChildLoc() << "  ";
                 printTree(child, depth + 1);
             }
         }

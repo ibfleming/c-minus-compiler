@@ -8,16 +8,14 @@
 
 using namespace std;
 
-namespace semantic
-{
+namespace semantic {
 
 #pragma region SymbolTable
 
-bool SymbolTable::insertSymbol(node::Node *node)
+bool SymbolTable::insertSymbol(node::Node* node)
 {
     string name = node->getString();
-    if (symbols_.find(name) == symbols_.end())
-    {
+    if (symbols_.find(name) == symbols_.end()) {
         symbols_[name] = node;
 #if PENDANTIC_DEBUG
         cout << "\tInserted symbol \"" << name << "\"." << endl;
@@ -30,12 +28,10 @@ bool SymbolTable::insertSymbol(node::Node *node)
     return false;
 }
 
-node::Node *SymbolTable::lookupSymbol(const node::Node *sym)
+node::Node* SymbolTable::lookupSymbol(const node::Node* sym)
 {
-    for (auto const &item : symbols_)
-    {
-        if (item.first == sym->getString())
-        {
+    for (auto const& item : symbols_) {
+        if (item.first == sym->getString()) {
 #if PENDANTIC_DEBUG
             cout << "\tSymbol Found: \"" << sym->getString() << "\" (";
             cout << types::literalNodeTypeStr(item.second->getNodeType()) << ")" << endl;
@@ -59,16 +55,12 @@ void Scope::printScope()
     cout << "| SCOPE: \"" << name_ << "\"" << string(SPACE - 10 - name_.size(), ' ') << "|" << endl;
     cout << "+" << string(SPACE, '-') << "+" << endl;
 
-    if (getTable()->getSize() == 0)
-    {
+    if (getTable()->getSize() == 0) {
         cout << "|";
         cout << setw(SPACE) << left << " NO SYMBOLS.";
         cout << "|" << endl;
-    }
-    else
-    {
-        for (auto const &[key, val] : getTable()->getSymbols())
-        {
+    } else {
+        for (auto const& [key, val] : getTable()->getSymbols()) {
             // string line = " (" + to_string(val->getLine()) + ")   ";
             string nodeType = types::literalNodeTypeStr(val->getNodeType());
             string varType = types::varTypeToStr(val->getVarType());
@@ -81,12 +73,10 @@ void Scope::printScope()
     cout << "+" << string(SPACE, '-') << "+" << endl;
 }
 
-void Scope::checkUsedVariables(semantic::SemanticAnalyzer *analyzer)
+void Scope::checkUsedVariables(semantic::SemanticAnalyzer* analyzer)
 {
-    for (auto const &[key, val] : getTable()->getSymbols())
-    {
-        if (!val->getIsUsed())
-        {
+    for (auto const& [key, val] : getTable()->getSymbols()) {
+        if (!val->getIsUsed()) {
             logger::WARN_VariableNotUsed(analyzer, val);
         }
     }
@@ -112,7 +102,7 @@ void SemanticAnalyzer::enterGlobalScope()
 #endif
 }
 
-void SemanticAnalyzer::enterScope(Scope *scope)
+void SemanticAnalyzer::enterScope(Scope* scope)
 {
     scopes_.push(scope);
 #if PENDANTIC_DEBUG
@@ -127,10 +117,8 @@ void SemanticAnalyzer::leaveScope()
 {
     auto scope = scopes_.top();
     checkForUse(scope);
-    if (scope != nullptr)
-    {
-        if (scope == globalScope_)
-        {
+    if (scope != nullptr) {
+        if (scope == globalScope_) {
 #if PENDANTIC_DEBUG
             cout << endl;
             cout << string(SPACE + 2, '#') << endl;
@@ -154,21 +142,18 @@ void SemanticAnalyzer::leaveScope()
 
 void SemanticAnalyzer::printScopes()
 {
-    std::vector<Scope *> scopes;
-    std::stack<Scope *> scopesTemp = scopes_;
+    std::vector<Scope*> scopes;
+    std::stack<Scope*> scopesTemp = scopes_;
 
-    while (!scopesTemp.empty())
-    {
-        Scope *currentScope = scopesTemp.top();
-        if (currentScope != nullptr)
-        {
+    while (!scopesTemp.empty()) {
+        Scope* currentScope = scopesTemp.top();
+        if (currentScope != nullptr) {
             scopes.push_back(currentScope);
         }
         scopesTemp.pop();
     }
 
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
-    {
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         (*it)->printScope();
     }
 }
@@ -179,7 +164,7 @@ void SemanticAnalyzer::printScopes()
  *  SYMBOL TABLE MANAGEMENT
  ***********************************************/
 
-bool SemanticAnalyzer::insertSymbol(node::Node *sym)
+bool SemanticAnalyzer::insertSymbol(node::Node* sym)
 {
     if (sym == nullptr)
         throw runtime_error("Error in insertSymbol(): 'sym' is null.");
@@ -188,36 +173,28 @@ bool SemanticAnalyzer::insertSymbol(node::Node *sym)
     cout << "(INSERT SYMBOL)" << endl;
 #endif
 
-    if (getCurrentScope() == globalScope_)
-    { // In global scope.
+    if (getCurrentScope() == globalScope_) { // In global scope.
 #if PENDANTIC_DEBUG
         cout << "\t[Global Scope]:" << endl;
 #endif
         sym->setIsUsed(true);
         sym->setIsInitialized(true);
-        if (auto decl = getGlobalScope()->lookupSymbol(sym))
-        {
+        if (auto decl = getGlobalScope()->lookupSymbol(sym)) {
             logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
             return false;
         }
-    }
-    else if (getCurrentScope() != globalScope_)
-    { // Not in global scope.
+    } else if (getCurrentScope() != globalScope_) { // Not in global scope.
         auto scopes = utils::stackToVectorReverse(scopes_);
-        for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
-        {
+        for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
             if ((*it) == globalScope_)
                 continue; // Skip global scope
 #if PENDANTIC_DEBUG
             cout << ((*it) == getCurrentScope() ? "\t[Current Scope]:" : "\t[Other Scope]:") << endl;
 #endif
-            if (auto decl = (*it)->lookupSymbol(sym))
-            {
+            if (auto decl = (*it)->lookupSymbol(sym)) {
                 logger::ERROR_VariableAlreadyDeclared(this, sym, decl);
                 return false;
-            }
-            else
-            {
+            } else {
                 return (*it)->insertSymbol(sym);
             }
         }
@@ -225,7 +202,7 @@ bool SemanticAnalyzer::insertSymbol(node::Node *sym)
     return getCurrentScope()->insertSymbol(sym);
 }
 
-node::Node *SemanticAnalyzer::lookupSymbol(node::Node *id, bool init)
+node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id, bool init)
 {
     if (id == nullptr)
         throw runtime_error("Error in lookupSymbol(): 'id' is null.");
@@ -234,66 +211,47 @@ node::Node *SemanticAnalyzer::lookupSymbol(node::Node *id, bool init)
     cout << "(LOOKUP DECLARATION)" << endl;
 #endif
 
-    node::Node *decl = nullptr;
+    node::Node* decl = nullptr;
 
-    if (getCurrentScope() == globalScope_)
-    { // In global scope.
+    if (getCurrentScope() == globalScope_) { // In global scope.
 #if PENDANTIC_DEBUG
         cout << "\t[Global Scope]:" << endl;
 #endif
-        if (decl = id->getDeclaration())
-        {
+        if (decl = id->getDeclaration()) {
 #if PENDANTIC_DEBUG
             cout << "\tID has been declared." << endl;
 #endif
             return decl;
-        }
-        else if (decl = getGlobalScope()->lookupSymbol(id))
-        {
+        } else if (decl = getGlobalScope()->lookupSymbol(id)) {
             id->setDeclaration(decl);
             return decl;
         }
-    }
-    else if (getCurrentScope() != globalScope_)
-    { // Not in global scope.
-        if (decl = id->getDeclaration())
-        {
+    } else if (getCurrentScope() != globalScope_) { // Not in global scope.
+        if (decl = id->getDeclaration()) {
 #if PENDANTIC_DEBUG
             cout << "\tID has been declared." << endl;
 #endif
             return decl;
-        }
-        else
-        {
-            std::vector<semantic::Scope *, std::allocator<semantic::Scope *>> scopes;
+        } else {
+            std::vector<semantic::Scope*, std::allocator<semantic::Scope*>> scopes;
 
-            if (init)
-            {
+            if (init) {
                 scopes = utils::stackToVectorReverse(scopes_);
-            }
-            else
-            {
+            } else {
                 scopes = utils::stackToVectorInOrder(scopes_);
             }
 
-            for (auto it = scopes.rbegin(); it != scopes.rend(); ++it)
-            {
+            for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
 #if PENDANTIC_DEBUG
-                if (*it == getGlobalScope())
-                {
+                if (*it == getGlobalScope()) {
                     cout << "\t[Global Scope]:" << endl;
-                }
-                else if (*it == getCurrentScope())
-                {
+                } else if (*it == getCurrentScope()) {
                     cout << "\t[Current Scope]:" << endl;
-                }
-                else
-                {
+                } else {
                     cout << "\t[Other Scope]:" << endl;
                 }
 #endif
-                if (decl = (*it)->lookupSymbol(id))
-                {
+                if (decl = (*it)->lookupSymbol(id)) {
                     id->setDeclaration(decl);
                     decl->setIsUsed(true);
                     return decl;
@@ -313,28 +271,23 @@ void SemanticAnalyzer::checkLinker()
 {
     auto decl = getGlobalScope()->getTable()->getSymbols();
     bool isValidMain = false;
-    for (auto &symbol : decl)
-    {
-        if (symbol.first == "main")
-        {
+    for (auto& symbol : decl) {
+        if (symbol.first == "main") {
             auto node = symbol.second;
-            if (node->getChildren().size() == 1)
-            {
+            if (node->getChildren().size() == 1) {
                 isValidMain = true;
                 break;
             }
         }
     }
-    if (!isValidMain)
-    {
+    if (!isValidMain) {
         logger::ERROR_Linker(this);
     }
 }
 
-void SemanticAnalyzer::checkForInitializer(node::Node *var)
+void SemanticAnalyzer::checkForInitializer(node::Node* var)
 {
-    if (var->getChildren().size() == 1)
-    {
+    if (var->getChildren().size() == 1) {
 #if PENDANTIC_DEBUG
         cout << "\t[Has Initializer]" << endl;
 #endif
@@ -351,20 +304,19 @@ void SemanticAnalyzer::checkForInitializer(node::Node *var)
     }
 }
 
-void SemanticAnalyzer::checkInit(node::Node *decl)
+void SemanticAnalyzer::checkInit(node::Node* decl)
 {
 
     if (decl == nullptr)
         throw runtime_error("Error in checkInitialization(): 'declaration' is null.");
 
-    if (!decl->getIsInitialized())
-    {
+    if (!decl->getIsInitialized()) {
         logger::WARN_VariableNotInitialized(this, decl);
         decl->setIsInitialized(true);
     }
 }
 
-node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs)
+node::Node* SemanticAnalyzer::checkBinaryTypes(node::Node* op, node::Node* lhs, node::Node* rhs)
 {
 #if PENDANTIC_DEBUG
     cout << "\t(Check Binary Types)" << endl;
@@ -380,26 +332,20 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
         throw runtime_error("Error in checkBinaryTypes(): 'lhsDecl' or 'rhsDecl' is null.");
 
     // Check the node type of the operator to determine the type and semantic checking
-    switch (op->getNodeType())
-    {
+    switch (op->getNodeType()) {
     case NT::ASSIGNMENT: {
-        switch (op->getAsgnType())
-        {
+        switch (op->getAsgnType()) {
 
         /* EQUAL TYPES AND ARRAYS */
         case AT::ASGN: {
-            if (lhsDecl && rhsDecl)
-            {
-                if (lhsDecl->getIsArray() != rhsDecl->getIsArray())
-                {
+            if (lhsDecl && rhsDecl) {
+                if (lhsDecl->getIsArray() != rhsDecl->getIsArray()) {
                     logger::ERROR_RequiresOperandsAsArrayTypes(this, op, lhsDecl, rhsDecl);
                 }
-                if (lhsDecl->getVarType() != rhsDecl->getVarType())
-                {
+                if (lhsDecl->getVarType() != rhsDecl->getVarType()) {
                     logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
                 }
-                if (lhsDecl->getNodeType() == NT::FUNCTION)
-                {
+                if (lhsDecl->getNodeType() == NT::FUNCTION) {
                     logger::ERROR_VariableAsFunction(this, lhs);
                 }
             }
@@ -410,31 +356,21 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
         case AT::SUBASGN:
         case AT::MULASGN:
         case AT::DIVASGN: {
-            if (lhsDecl)
-            {
-                if (lhsDecl->getVarType() != VT::INT)
-                {
+            if (lhsDecl) {
+                if (lhsDecl->getVarType() != VT::INT) {
+                    logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
+                }
+            } else {
+                if (lhs->getVarType() != VT::INT) {
                     logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
                 }
             }
-            else
-            {
-                if (lhs->getVarType() != VT::INT)
-                {
-                    logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
-                }
-            }
-            if (rhsDecl)
-            {
-                if (rhsDecl->getVarType() != VT::INT)
-                {
+            if (rhsDecl) {
+                if (rhsDecl->getVarType() != VT::INT) {
                     logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
                 }
-            }
-            else
-            {
-                if (rhs->getVarType() != VT::INT)
-                {
+            } else {
+                if (rhs->getVarType() != VT::INT) {
                     logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
                 }
             }
@@ -445,8 +381,7 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
         return op;
     }
     case NT::OPERATOR: {
-        switch (op->getOpType())
-        {
+        switch (op->getOpType()) {
 
         /* EQUAL TYPES AND ARRAYS */
         case OT::EQL:
@@ -455,14 +390,11 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
         case OT::LEQ:
         case OT::GREATER:
         case OT::GEQ: {
-            if (lhsDecl && rhsDecl)
-            {
-                if (lhsDecl->getVarType() != rhsDecl->getVarType())
-                {
+            if (lhsDecl && rhsDecl) {
+                if (lhsDecl->getVarType() != rhsDecl->getVarType()) {
                     logger::ERROR_RequiresOperandsEqualTypes(this, op, lhs, rhs);
                 }
-                if (lhsDecl->getIsArray() != rhsDecl->getIsArray())
-                {
+                if (lhsDecl->getIsArray() != rhsDecl->getIsArray()) {
                     logger::ERROR_RequiresOperandsAsArrayTypes(this, op, lhsDecl, rhsDecl);
                 }
             }
@@ -475,30 +407,23 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
         case OT::MUL:
         case OT::DIV:
         case OT::MOD: {
-            if (lhsDecl || rhsDecl)
-            {
-                if (lhsDecl)
-                {
+            if (lhsDecl || rhsDecl) {
+                if (lhsDecl) {
                     if (lhsDecl->getVarType() != VT::INT)
                         logger::ERROR_RequiresOperandIntTypes(this, op, lhs, logger::OperandType::LHS);
                 }
-                if (rhsDecl)
-                {
+                if (rhsDecl) {
                     if (rhsDecl->getVarType() != VT::INT)
                         logger::ERROR_RequiresOperandIntTypes(this, op, rhs, logger::OperandType::RHS);
                 }
-                if (lhsDecl)
-                {
-                    if (lhsDecl->getIsArray())
-                    {
+                if (lhsDecl) {
+                    if (lhsDecl->getIsArray()) {
                         logger::ERROR_OperationCannotUseArrays(this, op, lhs);
                         return op;
                     }
                 }
-                if (rhsDecl)
-                {
-                    if (rhsDecl->getIsArray())
-                    {
+                if (rhsDecl) {
+                    if (rhsDecl->getIsArray()) {
                         logger::ERROR_OperationCannotUseArrays(this, op, rhs);
                         return op;
                     }
@@ -514,22 +439,17 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
     /* BOOL AND NON-ARRAY ONLY */
     case NT::AND:
     case NT::OR: {
-        if (lhsDecl || rhsDecl)
-        {
-            if (lhsDecl)
-            {
-                if (lhsDecl->getIsArray())
-                {
+        if (lhsDecl || rhsDecl) {
+            if (lhsDecl) {
+                if (lhsDecl->getIsArray()) {
                     logger::ERROR_OperationCannotUseArrays(this, op, lhs);
                     return op;
                 }
                 if (lhsDecl->getVarType() != VT::BOOL)
                     logger::ERROR_RequiresOperandBoolTypes(this, op, lhs, logger::OperandType::LHS);
             }
-            if (rhsDecl)
-            {
-                if (rhsDecl->getIsArray())
-                {
+            if (rhsDecl) {
+                if (rhsDecl->getIsArray()) {
                     logger::ERROR_OperationCannotUseArrays(this, op, rhs);
                     return op;
                 }
@@ -544,7 +464,7 @@ node::Node *SemanticAnalyzer::checkBinaryTypes(node::Node *op, node::Node *lhs, 
     }
 }
 
-node::Node *SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operand)
+node::Node* SemanticAnalyzer::checkUnaryTypes(node::Node* op, node::Node* operand)
 {
 #if PENDANTIC_DEBUG
     cout << "\t(Check Unary Types)" << endl;
@@ -558,51 +478,42 @@ node::Node *SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operan
     if (operandDecl == nullptr)
         throw runtime_error("Error in checkUnaryTypes(): 'operandDecl' is null.");
 
-    switch (op->getNodeType())
-    {
+    switch (op->getNodeType()) {
     case NT::QUES_UNARY: {
-        if (operandDecl->getVarType() != VT::INT)
-        {
+        if (operandDecl->getVarType() != VT::INT) {
             logger::ERROR_UnaryRequiresOperandSameType(this, op, operand);
         }
-        if (operandDecl->getIsArray())
-        {
+        if (operandDecl->getIsArray()) {
             logger::ERROR_OperationCannotUseArrays(this, op, operand);
         }
         return op;
     }
     case NT::SIZEOF_UNARY: {
-        if (!operandDecl->getIsArray())
-        {
+        if (!operandDecl->getIsArray()) {
             logger::ERROR_OperationWorksOnlyOnArrays(this, op, operand);
         }
         return op;
     }
     case NT::CHSIGN_UNARY: {
-        if (operandDecl->getVarType() != VT::INT)
-        {
+        if (operandDecl->getVarType() != VT::INT) {
             logger::ERROR_UnaryRequiresOperandSameType(this, op, operand);
         }
-        if (operandDecl->getIsArray())
-        {
+        if (operandDecl->getIsArray()) {
             logger::ERROR_OperationCannotUseArrays(this, op, operand);
         }
         return op;
     }
     case NT::NOT: {
-        if (operandDecl->getVarType() != VT::BOOL)
-        {
+        if (operandDecl->getVarType() != VT::BOOL) {
             logger::ERROR_UnaryRequiresOperandSameType(this, op, operand);
         }
-        if (operandDecl->getIsArray())
-        {
+        if (operandDecl->getIsArray()) {
             logger::ERROR_OperationCannotUseArrays(this, op, operand);
         }
         return op;
     }
     case NT::ASSIGNMENT: {
-        if (operandDecl->getIsArray())
-        {
+        if (operandDecl->getIsArray()) {
             logger::ERROR_OperationCannotUseArrays(this, op, operand);
         }
         return op;
@@ -613,7 +524,7 @@ node::Node *SemanticAnalyzer::checkUnaryTypes(node::Node *op, node::Node *operan
     return op;
 }
 
-void SemanticAnalyzer::processReturn(node::Node *ret)
+void SemanticAnalyzer::processReturn(node::Node* ret)
 {
     if (ret == nullptr)
         throw runtime_error("Error in processReturn(): 'ret' is null.");
@@ -622,8 +533,7 @@ void SemanticAnalyzer::processReturn(node::Node *ret)
     cout << "[Process Return]" << endl;
 #endif
 
-    if (ret->getChildren().size() == 1)
-    {
+    if (ret->getChildren().size() == 1) {
         auto child = ret->getChildren()[0];
 
         if (child == nullptr)
@@ -631,17 +541,14 @@ void SemanticAnalyzer::processReturn(node::Node *ret)
 
         child->setIsVisited(true);
 
-        switch (child->getNodeType())
-        {
+        switch (child->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
         case NT::CALL: {
             auto decl = processIdentifier(child);
-            if (decl)
-            {
+            if (decl) {
                 ret->setVarType(decl->getVarType());
-                if (decl->getIsArray())
-                {
+                if (decl->getIsArray()) {
                     logger::ERROR_CannotReturnArray(this, child);
                 }
             }
@@ -656,7 +563,7 @@ void SemanticAnalyzer::processReturn(node::Node *ret)
     }
 }
 
-node::Node *SemanticAnalyzer::processCall(node::Node *call, bool init)
+node::Node* SemanticAnalyzer::processCall(node::Node* call, bool init)
 {
     if (call == nullptr)
         throw runtime_error("Error in processCall(): 'call' is null.");
@@ -666,25 +573,21 @@ node::Node *SemanticAnalyzer::processCall(node::Node *call, bool init)
 #endif
 
     // (1) Process the call symbol and see if it's a function declaration
-    node::Node *decl = lookupSymbol(call, init);
+    node::Node* decl = lookupSymbol(call, init);
 
     // (2) Process the declaration of the function if found
-    if (decl)
-    {
+    if (decl) {
         call->setVarType(decl->getVarType());
 
-        if (decl->getNodeType() != NT::FUNCTION)
-        {
+        if (decl->getNodeType() != NT::FUNCTION) {
             logger::ERROR_CannotCallSimpleVariable(this, call);
         }
     }
 
     // (3) Process the arguments of the function
-    if (call->getChildren().size() == 1)
-    {
+    if (call->getChildren().size() == 1) {
         auto arg = call->getChildren()[0];
-        while (arg != nullptr)
-        {
+        while (arg != nullptr) {
             processIdentifier(arg);
             arg = arg->getSibling();
         }
@@ -692,7 +595,7 @@ node::Node *SemanticAnalyzer::processCall(node::Node *call, bool init)
     return decl;
 }
 
-node::Node *SemanticAnalyzer::processIdentifier(node::Node *id, bool init)
+node::Node* SemanticAnalyzer::processIdentifier(node::Node* id, bool init)
 {
     if (id == nullptr)
         throw runtime_error("Error in processIdentifier(): 'id' is null.");
@@ -700,29 +603,23 @@ node::Node *SemanticAnalyzer::processIdentifier(node::Node *id, bool init)
     id->setIsVisited(true);
 
     // (1) Determine the type of the identifier
-    switch (id->getNodeType())
-    {
+    switch (id->getNodeType()) {
     case NT::ID: {
 #if PENDANTIC_DEBUG
         cout << "[Process ID - \"" << id->getString() << "\"] -> ";
 #endif
         // (2) Lookup the symbol in the current scope and other scopes
         auto decl = lookupSymbol(id, init);
-        if (decl)
-        {
+        if (decl) {
             // (4) Check if the variable is initialized
-            if (init)
-            {
-                if (!decl->getIsInitialized())
-                {
+            if (init) {
+                if (!decl->getIsInitialized()) {
                     // (5) Warn if not intialized
                     logger::WARN_VariableNotInitialized(this, id);
                     decl->setIsInitialized(true);
                 }
                 isDeclarationFunctionAsVariable(id, decl);
-            }
-            else
-            {
+            } else {
                 // (5) Set the variable as initialized
                 decl->setIsInitialized(true);
             }
@@ -750,7 +647,7 @@ node::Node *SemanticAnalyzer::processIdentifier(node::Node *id, bool init)
     return nullptr;
 }
 
-void SemanticAnalyzer::processIf(node::Node *op)
+void SemanticAnalyzer::processIf(node::Node* op)
 {
     if (op == nullptr)
         throw runtime_error("Error in processIf(): 'op' is null.");
@@ -763,8 +660,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
 
     // (1) Process the simple expression/conditional
     auto cnd = op->getChildren()[0];
-    if (cnd)
-    {
+    if (cnd) {
 
         cnd->setIsVisited(true);
 
@@ -772,8 +668,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
         cout << "[Condition]: ";
 #endif
 
-        switch (cnd->getNodeType())
-        {
+        switch (cnd->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
         case NT::CALL:
@@ -786,8 +681,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
 
     // (2) Process the 'then' block
     auto thenStmt = op->getChildren()[1];
-    if (thenStmt)
-    {
+    if (thenStmt) {
 
         thenStmt->setIsVisited(true);
 
@@ -795,8 +689,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
         cout << "[Then]: ";
 #endif
 
-        switch (thenStmt->getNodeType())
-        {
+        switch (thenStmt->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
             processIdentifier(thenStmt);
@@ -814,8 +707,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
 
     // (3) Process the 'else' block
     auto elseStmt = op->getChildren()[2];
-    if (elseStmt)
-    {
+    if (elseStmt) {
 
         elseStmt->setIsVisited(true);
 
@@ -823,8 +715,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
         cout << "[Else]: ";
 #endif
 
-        switch (elseStmt->getNodeType())
-        {
+        switch (elseStmt->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
             processIdentifier(elseStmt);
@@ -841,7 +732,7 @@ void SemanticAnalyzer::processIf(node::Node *op)
     }
 }
 
-void SemanticAnalyzer::processWhile(node::Node *op)
+void SemanticAnalyzer::processWhile(node::Node* op)
 {
     if (op == nullptr)
         throw runtime_error("Error in processWhile(): 'op' is null.");
@@ -853,8 +744,7 @@ void SemanticAnalyzer::processWhile(node::Node *op)
     // WHILE simpleExpression DO matchedStatements
 
     auto cnd = op->getChildren()[0];
-    if (cnd)
-    {
+    if (cnd) {
 
         cnd->setIsVisited(true);
 
@@ -862,8 +752,7 @@ void SemanticAnalyzer::processWhile(node::Node *op)
         cout << "[Condition]: ";
 #endif
 
-        switch (cnd->getNodeType())
-        {
+        switch (cnd->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
             processIdentifier(cnd);
@@ -875,8 +764,7 @@ void SemanticAnalyzer::processWhile(node::Node *op)
 
     // (2) Process the 'do' block
     auto stmt = op->getChildren()[1];
-    if (stmt)
-    {
+    if (stmt) {
 
         stmt->setIsVisited(true);
 
@@ -884,8 +772,7 @@ void SemanticAnalyzer::processWhile(node::Node *op)
         cout << "[Do]: ";
 #endif
 
-        switch (stmt->getNodeType())
-        {
+        switch (stmt->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
             processIdentifier(stmt);
@@ -916,42 +803,32 @@ void SemanticAnalyzer::processWhile(node::Node *op)
  * DFS traversal for the semantic analysis.
  ******************************************************************************/
 
-void SemanticAnalyzer::traverse(node::Node *node)
+void SemanticAnalyzer::traverse(node::Node* node)
 {
-    if (node == nullptr)
-    {
+    if (node == nullptr) {
         return;
     }
 
     analyzeNode(node);
 
     // Traverse children nodes recursively first (inner blocks)
-    for (node::Node *child : node->getChildren())
-    {
+    for (node::Node* child : node->getChildren()) {
         traverse(child);
     }
 
     // After children, check sibling node (for next block at the same level)
-    if (node->getSibling() != nullptr)
-    {
-        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR)
-        {
+    if (node->getSibling() != nullptr) {
+        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
             compoundLevel_--;
             leaveScope();
         }
         traverse(node->getSibling());
-    }
-    else
-    {
-        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR)
-        {
-            if (node->getFunctionNode() == nullptr)
-            { // regular compound
+    } else {
+        if (node->getNodeType() == NT::COMPOUND || node->getNodeType() == NT::FOR) {
+            if (node->getFunctionNode() == nullptr) { // regular compound
                 compoundLevel_--;
                 leaveScope();
-            }
-            else
-            { // function's body compound
+            } else { // function's body compound
                 leaveScope();
             }
         }

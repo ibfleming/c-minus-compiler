@@ -1,12 +1,10 @@
 #include "types.hpp"
 
-namespace types
-{
+namespace types {
 
 std::string tknTypeToStr(TokenType type)
 {
-    switch (type)
-    {
+    switch (type) {
 
         // CONSTANTS
 
@@ -124,8 +122,7 @@ std::string tknTypeToStr(TokenType type)
 
 std::string treeNodeTypeToStr(NodeType type)
 {
-    switch (type)
-    {
+    switch (type) {
     case NodeType::BOOLEAN:
     case NodeType::CHARACTER:
     case NodeType::NUMBER:
@@ -189,8 +186,7 @@ std::string treeNodeTypeToStr(NodeType type)
 
 std::string literalNodeTypeStr(NodeType type)
 {
-    switch (type)
-    {
+    switch (type) {
     case NodeType::BOOLEAN:
         return "BOOLEAN";
     case NodeType::CHARACTER:
@@ -258,8 +254,7 @@ std::string literalNodeTypeStr(NodeType type)
 
 std::string varTypeToStr(VarType type)
 {
-    switch (type)
-    {
+    switch (type) {
     case VarType::INT:
         return "int";
     case VarType::CHAR:

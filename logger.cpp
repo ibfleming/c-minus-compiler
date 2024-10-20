@@ -8,14 +8,13 @@
 
 using namespace std;
 
-namespace logger
-{
+namespace logger {
 
 /***********************************************
  *  ERRORS
  ***********************************************/
 
-void ERROR_VariableNotDeclared(SA *analyzer, node::Node *sym)
+void ERROR_VariableNotDeclared(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << sym->getLine() << "): Symbol '" << sym->getString() << "' is not declared." << endl;
@@ -23,7 +22,7 @@ void ERROR_VariableNotDeclared(SA *analyzer, node::Node *sym)
     analyzer->incErrors();
 }
 
-void ERROR_VariableAlreadyDeclared(SA *analyzer, node::Node *sym, node::Node *decl)
+void ERROR_VariableAlreadyDeclared(SA* analyzer, node::Node* sym, node::Node* decl)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << sym->getLine() << "): Symbol '" << sym->getString() << "' is already declared at line ";
@@ -32,7 +31,7 @@ void ERROR_VariableAlreadyDeclared(SA *analyzer, node::Node *sym, node::Node *de
     analyzer->incErrors();
 }
 
-void ERROR_VariableAsFunction(SA *analyzer, node::Node *sym)
+void ERROR_VariableAsFunction(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << sym->getLine() << "): Cannot use function '" << sym->getString() << "' as a variable." << endl;
@@ -40,7 +39,7 @@ void ERROR_VariableAsFunction(SA *analyzer, node::Node *sym)
     analyzer->incErrors();
 }
 
-void ERROR_CannotCallSimpleVariable(SA *analyzer, node::Node *sym)
+void ERROR_CannotCallSimpleVariable(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << sym->getLine() << "): '" << sym->getString() << "' is a simple variable and cannot be called."
@@ -49,7 +48,7 @@ void ERROR_CannotCallSimpleVariable(SA *analyzer, node::Node *sym)
     analyzer->incErrors();
 }
 
-void ERROR_Linker(SA *analyzer)
+void ERROR_Linker(SA* analyzer)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(LINKER): A function named 'main()' must be defined." << endl;
@@ -57,7 +56,7 @@ void ERROR_Linker(SA *analyzer)
     analyzer->incErrors();
 }
 
-void ERROR_RequiresOperandsEqualTypes(SA *analyzer, node::Node *op, node::Node *lhs, node::Node *rhs)
+void ERROR_RequiresOperandsEqualTypes(SA* analyzer, node::Node* op, node::Node* lhs, node::Node* rhs)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << lhs->getLine() << "): '" << op->getString()
@@ -68,7 +67,7 @@ void ERROR_RequiresOperandsEqualTypes(SA *analyzer, node::Node *op, node::Node *
     analyzer->incErrors();
 }
 
-void ERROR_UnaryRequiresOperandSameType(SA *analyzer, node::Node *op, node::Node *operand)
+void ERROR_UnaryRequiresOperandSameType(SA* analyzer, node::Node* op, node::Node* operand)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << operand->getLine() << "): Unary '" << logger::loggerNodeTypeToStr(op)
@@ -79,16 +78,13 @@ void ERROR_UnaryRequiresOperandSameType(SA *analyzer, node::Node *op, node::Node
     analyzer->incErrors();
 }
 
-void ERROR_RequiresOperandIntTypes(SA *analyzer, node::Node *op, node::Node *operand, OperandType type)
+void ERROR_RequiresOperandIntTypes(SA* analyzer, node::Node* op, node::Node* operand, OperandType type)
 {
 #if SEMANTIC_DEBUG
-    if (type == OperandType::LHS)
-    {
+    if (type == OperandType::LHS) {
         cout << "ERROR(" << operand->getLine() << "): '" << op->getString()
              << "' requires operands of type int but lhs is of type ";
-    }
-    else
-    {
+    } else {
         cout << "ERROR(" << operand->getLine() << "): '" << op->getString()
              << "' requires operands of type int but rhs is of type ";
     }
@@ -97,16 +93,13 @@ void ERROR_RequiresOperandIntTypes(SA *analyzer, node::Node *op, node::Node *ope
     analyzer->incErrors();
 }
 
-void ERROR_RequiresOperandBoolTypes(SA *analyzer, node::Node *op, node::Node *operand, OperandType type)
+void ERROR_RequiresOperandBoolTypes(SA* analyzer, node::Node* op, node::Node* operand, OperandType type)
 {
 #if SEMANTIC_DEBUG
-    if (type == OperandType::LHS)
-    {
+    if (type == OperandType::LHS) {
         cout << "ERROR(" << operand->getLine() << "): '" << logger::loggerNodeTypeToStr(op)
              << "' requires operands of type bool but lhs is of type ";
-    }
-    else
-    {
+    } else {
         cout << "ERROR(" << operand->getLine() << "): '" << logger::loggerNodeTypeToStr(op)
              << "' requires operands of type bool but rhs is of type ";
     }
@@ -115,17 +108,15 @@ void ERROR_RequiresOperandBoolTypes(SA *analyzer, node::Node *op, node::Node *op
     analyzer->incErrors();
 }
 
-void ERROR_RequiresOperandsAsArrayTypes(SA *analyzer, node::Node *op, node::Node *lhs, node::Node *rhs)
+void ERROR_RequiresOperandsAsArrayTypes(SA* analyzer, node::Node* op, node::Node* lhs, node::Node* rhs)
 {
 #if SEMANTIC_DEBUG
-    if (lhs->getIsArray() && !rhs->getIsArray())
-    {
+    if (lhs->getIsArray() && !rhs->getIsArray()) {
         cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op)
              << "' requires both operands be arrays or not but lhs is an array ";
         cout << "and rhs is not an array." << endl;
     }
-    if (!lhs->getIsArray() && rhs->getIsArray())
-    {
+    if (!lhs->getIsArray() && rhs->getIsArray()) {
         cout << "ERROR(" << op->getLine() << "): '" << logger::loggerNodeTypeToStr(op)
              << "' requires both operands be arrays or not but lhs is not an array ";
         cout << "and rhs is an array." << endl;
@@ -134,7 +125,7 @@ void ERROR_RequiresOperandsAsArrayTypes(SA *analyzer, node::Node *op, node::Node
     analyzer->incErrors();
 }
 
-void ERROR_ArrayIndexNotInt(SA *analyzer, node::Node *arr, node::Node *index)
+void ERROR_ArrayIndexNotInt(SA* analyzer, node::Node* arr, node::Node* index)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << index->getLine() << "): Array '" << arr->getString()
@@ -144,7 +135,7 @@ void ERROR_ArrayIndexNotInt(SA *analyzer, node::Node *arr, node::Node *index)
     analyzer->incErrors();
 }
 
-void ERROR_ArrayIndexIsUnindexedArray(SA *analyzer, node::Node *arr)
+void ERROR_ArrayIndexIsUnindexedArray(SA* analyzer, node::Node* arr)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << arr->getLine() << "): Array index is the unindexed array '" << arr->getString() << "'." << endl;
@@ -152,7 +143,7 @@ void ERROR_ArrayIndexIsUnindexedArray(SA *analyzer, node::Node *arr)
     analyzer->incErrors();
 }
 
-void ERROR_CannotIndexNonArray(SA *analyzer, node::Node *arr)
+void ERROR_CannotIndexNonArray(SA* analyzer, node::Node* arr)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << arr->getLine() << "): Cannot index nonarray '" << arr->getString() << "'." << endl;
@@ -160,7 +151,7 @@ void ERROR_CannotIndexNonArray(SA *analyzer, node::Node *arr)
     analyzer->incErrors();
 }
 
-void ERROR_CannotReturnArray(SA *analyzer, node::Node *sym)
+void ERROR_CannotReturnArray(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << sym->getLine() << "): Cannot return an array." << endl;
@@ -168,7 +159,7 @@ void ERROR_CannotReturnArray(SA *analyzer, node::Node *sym)
     analyzer->incErrors();
 }
 
-void ERROR_OperationCannotUseArrays(SA *analyzer, node::Node *op, node::Node *operand)
+void ERROR_OperationCannotUseArrays(SA* analyzer, node::Node* op, node::Node* operand)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << operand->getLine() << "): The operation '" << logger::loggerNodeTypeToStr(op)
@@ -177,7 +168,7 @@ void ERROR_OperationCannotUseArrays(SA *analyzer, node::Node *op, node::Node *op
     analyzer->incErrors();
 }
 
-void ERROR_OperationWorksOnlyOnArrays(SA *analyzer, node::Node *op, node::Node *operand)
+void ERROR_OperationWorksOnlyOnArrays(SA* analyzer, node::Node* op, node::Node* operand)
 {
 #if SEMANTIC_DEBUG
     cout << "ERROR(" << operand->getLine() << "): The operation '" << logger::loggerNodeTypeToStr(op)
@@ -190,7 +181,7 @@ void ERROR_OperationWorksOnlyOnArrays(SA *analyzer, node::Node *op, node::Node *
  *  WARNINGS
  ***********************************************/
 
-void WARN_VariableNotUsed(SA *analyzer, node::Node *sym)
+void WARN_VariableNotUsed(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "WARNING(" << sym->getLine() << "): The variable '" << sym->getString() << "' seems not to be used."
@@ -199,7 +190,7 @@ void WARN_VariableNotUsed(SA *analyzer, node::Node *sym)
     analyzer->incWarnings();
 }
 
-void WARN_VariableNotInitialized(SA *analyzer, node::Node *sym)
+void WARN_VariableNotInitialized(SA* analyzer, node::Node* sym)
 {
 #if SEMANTIC_DEBUG
     cout << "WARNING(" << sym->getLine() << "): Variable '" << sym->getString()
@@ -212,10 +203,9 @@ void WARN_VariableNotInitialized(SA *analyzer, node::Node *sym)
  *  HELPER FUNCTIONS
  ***********************************************/
 
-std::string loggerNodeTypeToStr(node::Node *sym)
+std::string loggerNodeTypeToStr(node::Node* sym)
 {
-    switch (sym->getNodeType())
-    {
+    switch (sym->getNodeType()) {
     case NT::BOOLEAN:
         return "boolean";
     case NT::CHARACTER:
@@ -251,8 +241,7 @@ std::string loggerNodeTypeToStr(node::Node *sym)
     case NT::SIZEOF_UNARY:
         return "sizeof";
     case NT::OPERATOR: {
-        switch (sym->getOpType())
-        {
+        switch (sym->getOpType()) {
         case OT::EQL:
             return "=";
         case OT::LESS:
@@ -286,8 +275,7 @@ std::string loggerNodeTypeToStr(node::Node *sym)
     case NT::OR:
         return "or";
     case NT::ASSIGNMENT: {
-        switch (sym->getAsgnType())
-        {
+        switch (sym->getAsgnType()) {
         case AT::ASGN:
             return ":=";
         case AT::ADDASGN:

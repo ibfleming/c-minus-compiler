@@ -8,8 +8,7 @@
  * @namespace types
  * @brief Contains the various types used in the compiler.
  */
-namespace types
-{
+namespace types {
 
 /**
  * @typedef TokenValue
@@ -29,8 +28,7 @@ using TokenValue = std::variant<int, char, std::string>;
  * Tokens are categorized into constants, types, control structures, loops, binary operators,
  * unary operators, and return statements.
  */
-enum class TokenType
-{
+enum class TokenType {
 
     // CONSTANTS
 
@@ -72,7 +70,7 @@ enum class TokenType
     LEQ_OP,
     GREATER_OP,
     GEQ_OP,
-    ASGN_OP,    // assignment 'x := 0' => 'x = 0' OR 'x is 0'
+    ASGN_OP, // assignment 'x := 0' => 'x = 0' OR 'x is 0'
     ADDASGN_OP, // assignment
     SUBASGN_OP, // assignment
     MULASGN_OP, // assignment
@@ -112,8 +110,7 @@ enum class TokenType
  *
  * Some nodes in the AST will have a variable type associated with them directly or indirectly from a token.
  */
-enum class VarType
-{
+enum class VarType {
     INT,
     CHAR,
     STRING,
@@ -126,8 +123,7 @@ enum class VarType
  * @enum NodeType
  * @brief Represents the node type in the AST.
  */
-enum class NodeType
-{
+enum class NodeType {
 
     // DATA TYPES
 
@@ -185,8 +181,7 @@ enum class NodeType
  * @enum OperatorType
  * @brief Represents the various types of operators that can be encountered in the compiler.
  */
-enum class OperatorType
-{
+enum class OperatorType {
     ADD,
     SUB,
     MUL,
@@ -205,8 +200,7 @@ enum class OperatorType
  * @enum AssignmentType
  * @brief Represents the various types of assignments that can be encountered in the compiler.
  */
-enum class AssignmentType
-{
+enum class AssignmentType {
     ASGN,
     ADDASGN,
     SUBASGN,
