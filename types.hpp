@@ -8,12 +8,13 @@
  * @namespace types
  * @brief Contains the various types used in the compiler.
  */
-namespace types {
+namespace types
+{
 
 /**
  * @typedef TokenValue
  * @brief Represents the value of a token.
- * 
+ *
  * A token can have a value of type int, char, or string.
  */
 using TokenValue = std::variant<int, char, std::string>;
@@ -21,14 +22,15 @@ using TokenValue = std::variant<int, char, std::string>;
 /**
  * @enum TokenType
  * @brief Represents the various types of tokens that can be encountered in the compiler.
- * 
+ *
  * These are assigned in the "lexical analysis phase".
- * 
+ *
  * This enumeration defines the different categories of tokens that the compiler can recognize.
  * Tokens are categorized into constants, types, control structures, loops, binary operators,
  * unary operators, and return statements.
  */
-enum class TokenType {
+enum class TokenType
+{
 
     // CONSTANTS
 
@@ -107,10 +109,11 @@ enum class TokenType {
 /**
  * @enum VarType
  * @brief Represents the various variable types that can be encountered in the compiler.
- * 
+ *
  * Some nodes in the AST will have a variable type associated with them directly or indirectly from a token.
  */
-enum class VarType {
+enum class VarType
+{
     INT,
     CHAR,
     STRING,
@@ -123,7 +126,8 @@ enum class VarType {
  * @enum NodeType
  * @brief Represents the node type in the AST.
  */
-enum class NodeType {
+enum class NodeType
+{
 
     // DATA TYPES
 
@@ -181,7 +185,8 @@ enum class NodeType {
  * @enum OperatorType
  * @brief Represents the various types of operators that can be encountered in the compiler.
  */
-enum class OperatorType {
+enum class OperatorType
+{
     ADD,
     SUB,
     MUL,
@@ -200,7 +205,8 @@ enum class OperatorType {
  * @enum AssignmentType
  * @brief Represents the various types of assignments that can be encountered in the compiler.
  */
-enum class AssignmentType {
+enum class AssignmentType
+{
     ASGN,
     ADDASGN,
     SUBASGN,

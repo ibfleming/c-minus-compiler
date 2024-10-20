@@ -1,6 +1,6 @@
 /*********************************************************************
  * @file semantic.hpp
- * 
+ *
  * @brief Header file for semantic analysis.
  *********************************************************************/
 
@@ -10,15 +10,15 @@
 #define PENDANTIC_DEBUG 0
 #define SPACE 64
 
-#include "utils.hpp"
-#include "types.hpp"
-#include "node.hpp"
 #include "logger.hpp"
+#include "node.hpp"
+#include "types.hpp"
+#include "utils.hpp"
 #include <algorithm>
-#include <iostream>
 #include <iomanip>
-#include <stack>
+#include <iostream>
 #include <map>
+#include <stack>
 
 typedef types::NodeType NT;
 typedef types::VarType VT;
@@ -29,7 +29,8 @@ typedef types::OperatorType OT;
  * @namespace semantic
  * @brief Contains the semantic analysis members and functions.
  */
-namespace semantic {
+namespace semantic
+{
 
 class Scope;
 class SemanticAnalyzer;
@@ -40,12 +41,14 @@ class SemanticAnalyzer;
  * @class SymbolTable
  * @brief Represents a symbol table.
  */
-class SymbolTable {
+class SymbolTable
+{
 
-private:
+  private:
     // Map of variable declarations, (name => node)
-    std::map<std::string, node::Node*> symbols_;
-public:
+    std::map<std::string, node::Node *> symbols_;
+
+  public:
     /**
      * @fn SymbolTable
      * @brief Constructor for the symbol table.
@@ -53,26 +56,32 @@ public:
     SymbolTable() = default;
 
     /***********************************************
-    *  ACCESSORS
-    ***********************************************/
+     *  ACCESSORS
+     ***********************************************/
 
     /**
      * @fn getSymbols
      * @brief Returns the symbols in the symbol table.
      * @return std::map<std::string, node::Node*>
      */
-    std::map<std::string, node::Node*> getSymbols() { return symbols_; }
+    std::map<std::string, node::Node *> getSymbols()
+    {
+        return symbols_;
+    }
 
     /**
      * @fn getSize
      * @brief Returns the size of the symbol table.
      * @return int
      */
-    int getSize() { return symbols_.size(); }
+    int getSize()
+    {
+        return symbols_.size();
+    }
 
     /***********************************************
-    *  SYMBOL MANAGEMENT
-    ***********************************************/
+     *  SYMBOL MANAGEMENT
+     ***********************************************/
 
     /**
      * @fn insertSymbol
@@ -80,7 +89,7 @@ public:
      * @param node The node (symbol) to insert.
      * @return bool
      */
-    bool insertSymbol(node::Node* node);
+    bool insertSymbol(node::Node *node);
 
     /**
      * @fn lookupSymbol
@@ -88,8 +97,7 @@ public:
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(const node::Node* sym);
-
+    node::Node *lookupSymbol(const node::Node *sym);
 };
 
 #pragma endregion SymbolTable
@@ -100,58 +108,71 @@ public:
  * @class Scope
  * @brief Represents a scope in the program.
  */
-class Scope {
+class Scope
+{
 
-private:
-    SymbolTable table_;     // Symbol table for the scope
-    node::Node *parent_;    // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
-    std::string name_;      // Name of the scope
-    int location_;          // Location of the scope relative to other scopes?
+  private:
+    SymbolTable table_;  // Symbol table for the scope
+    node::Node *parent_; // Node of the scope (FUNCTION, COMPOUND, LOOP, etc.)
+    std::string name_;   // Name of the scope
+    int location_;       // Location of the scope relative to other scopes?
 
-public:
+  public:
     /**
      * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      */
-    Scope(node::Node *parent)
-     : parent_(parent), name_(types::literalNodeTypeStr(parent->getNodeType())), location_(-1) {}
+    Scope(node::Node *parent) : parent_(parent), name_(types::literalNodeTypeStr(parent->getNodeType())), location_(-1)
+    {
+    }
     /**
      * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      * @param name The name of the scope.
      */
-    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name), location_(-1) {}
+    Scope(node::Node *parent, std::string name) : parent_(parent), name_(name), location_(-1)
+    {
+    }
 
     /***********************************************
-    *  ACCESSORS
-    ***********************************************/
+     *  ACCESSORS
+     ***********************************************/
 
     /**
      * @fn getSymbols
      * @brief Returns the symbol table of the scope.
      * @return SymbolTable*
      */
-    SymbolTable* getTable() { return &table_; }
+    SymbolTable *getTable()
+    {
+        return &table_;
+    }
 
     /**
      * @fn getParent
      * @brief Returns the parent node of the scope.
      * @return node::Node*
      */
-    node::Node* getParent() { return parent_; }
+    node::Node *getParent()
+    {
+        return parent_;
+    }
 
     /**
      * @fn getName
      * @brief Returns the name of the scope.
      * @return std::string
      */
-    std::string getName() { return name_; }
+    std::string getName()
+    {
+        return name_;
+    }
 
     /***********************************************
-    *  SYMBOL TABLE MANAGEMENT
-    ***********************************************/
+     *  SYMBOL TABLE MANAGEMENT
+     ***********************************************/
 
     /**
      * @fn insertSymbol
@@ -159,7 +180,10 @@ public:
      * @param node The node to insert.
      * @return bool
      */
-    bool insertSymbol(node::Node *node) { return table_.insertSymbol(node); }
+    bool insertSymbol(node::Node *node)
+    {
+        return table_.insertSymbol(node);
+    }
 
     /**
      * @fn lookupSymbol
@@ -167,7 +191,10 @@ public:
      * @param name The name of the symbol to lookup.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(const node::Node* sym) { return table_.lookupSymbol(sym); }
+    node::Node *lookupSymbol(const node::Node *sym)
+    {
+        return table_.lookupSymbol(sym);
+    }
 
     /**
      * @fn checkUsedVariables
@@ -177,8 +204,8 @@ public:
     void checkUsedVariables(semantic::SemanticAnalyzer *analyzer);
 
     /***********************************************
-    *  SCOPE INFORMATION
-    ***********************************************/
+     *  SCOPE INFORMATION
+     ***********************************************/
 
     /**
      * @fn printScope
@@ -186,7 +213,6 @@ public:
      * @return void
      */
     void printScope();
-
 };
 
 #pragma endregion Scope
@@ -197,40 +223,42 @@ public:
  * @class SemanticAnalyzer
  * @brief Analyzes the AST for semantic errors and warnings.
  */
-class SemanticAnalyzer {
+class SemanticAnalyzer
+{
 
-private:
-    node::Node *tree_;          // Root of the AST
-    Scope *globalScope_;        // Global scope
-    std::stack<Scope*> scopes_; // Stack of scopes
-    int compoundLevel_;         // Tracks the level of compounds in the scope stack
-    int warnings_;              // Number of warnings
-    int errors_;                // Number of errors
+  private:
+    node::Node *tree_;           // Root of the AST
+    Scope *globalScope_;         // Global scope
+    std::stack<Scope *> scopes_; // Stack of scopes
+    int compoundLevel_;          // Tracks the level of compounds in the scope stack
+    int warnings_;               // Number of warnings
+    int errors_;                 // Number of errors
 
-public:
+  public:
     /**
      * @fn SemanticAnalyzer
      * @brief Constructor for the semantic analyzer.
      * @param tree Root of the AST.
      */
-    SemanticAnalyzer(node::Node *tree) 
-    : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0), compoundLevel_(0) {
-        #if PENDANTIC_DEBUG
+    SemanticAnalyzer(node::Node *tree)
+        : tree_(tree), globalScope_(new Scope(nullptr, "GLOBAL")), warnings_(0), errors_(0), compoundLevel_(0)
+    {
+#if PENDANTIC_DEBUG
         std::cout << std::endl;
         std::cout << std::string(SPACE + 2, '=') << std::endl;
         std::cout << "Analyzing the AST..." << std::endl;
         std::cout << std::string(SPACE + 2, '=') << std::endl;
         std::cout << std::endl;
-        #endif
+#endif
         enterGlobalScope();
         analyze();
     }
 
     /***********************************************
-    *  SCOPE MANAGEMENT
-    ***********************************************/
+     *  SCOPE MANAGEMENT
+     ***********************************************/
 
-    #pragma region Scope_M
+#pragma region Scope_M
 
     /**
      * @fn enterGlobalScope
@@ -257,21 +285,30 @@ public:
      * @brief Gets the current scope, i.e. scope on the top of the stack.
      * @return Scope*
      */
-    Scope* getCurrentScope() { return scopes_.top(); }
+    Scope *getCurrentScope()
+    {
+        return scopes_.top();
+    }
 
     /**
      * @fn getGlobalScope
      * @brief Returns the global scope.
      * @return Scope*
      */
-    Scope* getGlobalScope() { return globalScope_; }
+    Scope *getGlobalScope()
+    {
+        return globalScope_;
+    }
 
     /**
      * @fn getScopeCount
      * @brief Returns the number of scopes on the stack.
      * @return int
      */
-    int getScopeCount() { return scopes_.size(); }
+    int getScopeCount()
+    {
+        return scopes_.size();
+    }
 
     /**
      * @fn printScopes
@@ -285,15 +322,18 @@ public:
      * @brief Prints the global scope.
      * @return void
      */
-    void printGlobal() { globalScope_->printScope(); }
+    void printGlobal()
+    {
+        globalScope_->printScope();
+    }
 
-    #pragma endregion Scope_M
+#pragma endregion Scope_M
 
     /***********************************************
-    *  SYMBOL TABLE MANAGEMENT
-    ***********************************************/
+     *  SYMBOL TABLE MANAGEMENT
+     ***********************************************/
 
-    #pragma region Table_M
+#pragma region Table_M
 
     /**
      * @fn insertSymbol
@@ -310,25 +350,30 @@ public:
      * @param init If the symbol is being check for initialization or not, check it's lookup logic.
      * @return node::Node*
      */
-    node::Node* lookupSymbol(node::Node* id, bool init = true);
+    node::Node *lookupSymbol(node::Node *id, bool init = true);
 
-    #pragma region Semantic_M
+#pragma region Semantic_M
 
     /***********************************************
-    *  SEMANTIC ANALYSIS FUNCTIONS
-    ***********************************************/
+     *  SEMANTIC ANALYSIS FUNCTIONS
+     ***********************************************/
 
     void checkLinker();
     void checkForInitializer(node::Node *var);
     void checkInit(node::Node *decl);
-    node::Node* checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
-    node::Node* checkUnaryTypes(node::Node *op, node::Node *operand);
-    void checkForUse(Scope *scope) { scope->checkUsedVariables(this); }
+    node::Node *checkBinaryTypes(node::Node *op, node::Node *lhs, node::Node *rhs);
+    node::Node *checkUnaryTypes(node::Node *op, node::Node *operand);
+    void checkForUse(Scope *scope)
+    {
+        scope->checkUsedVariables(this);
+    }
     void processReturn(node::Node *ret);
-    node::Node* processArray(node::Node* arr, bool init = true); // @note true = check for initialization, false = apply initialization
-    node::Node* processCall(node::Node* call, bool init = true);
-    node::Node* processIdentifier(node::Node *id, bool init = true); // @note true = check for initialization, false = apply initialization
-    node::Node* processOperator(node::Node *op);
+    node::Node *processArray(node::Node *arr,
+                             bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node *processCall(node::Node *call, bool init = true);
+    node::Node *processIdentifier(
+        node::Node *id, bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node *processOperator(node::Node *op);
     void processUnaryOperation(node::Node *op);
     void processIf(node::Node *op);
     void processWhile(node::Node *op);
@@ -338,15 +383,15 @@ public:
     void processBooleanBinaryOperator(node::Node *node);
     bool isDeclarationFunctionAsVariable(node::Node *id, node::Node *decl);
 
-    #pragma endregion Semantic_M
+#pragma endregion Semantic_M
 
-    #pragma endregion Table_M
+#pragma endregion Table_M
 
     /***********************************************
-    *  TRAVERSAL & ANALYSIS
-    ***********************************************/
+     *  TRAVERSAL & ANALYSIS
+     ***********************************************/
 
-    #pragma region Traversal_M
+#pragma region Traversal_M
 
     /**
      * @fn analyzeNode
@@ -368,47 +413,55 @@ public:
      */
     void analyze();
 
-    #pragma endregion Traversal_M
+#pragma endregion Traversal_M
 
     /***********************************************
-    *  ERRORS/WARNINGS MANAGEMENT
-    ***********************************************/
+     *  ERRORS/WARNINGS MANAGEMENT
+     ***********************************************/
 
-    #pragma region ErrWarns_M
-    
+#pragma region ErrWarns_M
+
     /**
      * @fn incWarnings
      * @brief Incremenet the warnings
      * @return void
      */
-    void incWarnings() { warnings_++; }
+    void incWarnings()
+    {
+        warnings_++;
+    }
 
     /**
      * @fn incErrors
      * @brief Incremenet the warnings
      * @return void
      */
-    void incErrors() { errors_++; }
+    void incErrors()
+    {
+        errors_++;
+    }
 
     /**
      * @fn printWarnings
      * @brief Prints the number of warnings.
      */
-    void printWarnings() { 
-        std::cout << "Number of warnings: " << warnings_ << std::endl; 
-        std::flush(std::cout); }
+    void printWarnings()
+    {
+        std::cout << "Number of warnings: " << warnings_ << std::endl;
+        std::flush(std::cout);
+    }
 
     /**
      * @fn printErrors
      * @brief Prints the number of errors.
      */
-    void printErrors() { 
-        std::cout << "Number of errors: " << errors_ << std::endl; 
-        std::flush(std::cout); 
+    void printErrors()
+    {
+        std::cout << "Number of errors: " << errors_ << std::endl;
+        std::flush(std::cout);
     }
 
-    #pragma endregion ErrWarns_M
-
+#pragma endregion ErrWarns_M
 };
 
 #pragma endregion Analyzer

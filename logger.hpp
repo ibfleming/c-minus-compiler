@@ -1,20 +1,21 @@
 /*********************************************************************
  * @file logger.hpp
- * 
+ *
  * @brief Header file for logging.
  *********************************************************************/
 
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-#include "semantic.hpp"
 #include "node.hpp"
+#include "semantic.hpp"
 #include <iostream>
 
 #define SEMANTIC_DEBUG true
 
-namespace semantic {
-    class SemanticAnalyzer;
+namespace semantic
+{
+class SemanticAnalyzer;
 }
 
 typedef semantic::SemanticAnalyzer SA;
@@ -27,9 +28,11 @@ typedef types::AssignmentType AT;
  * @brief Contains the logging functions for semantic analysis.
  * @param analyzer The semantic analyzer.
  */
-namespace logger {
+namespace logger
+{
 
-enum class OperandType {
+enum class OperandType
+{
     LHS,
     RHS
 };
