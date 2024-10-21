@@ -2,11 +2,11 @@
 #define TOKEN_HPP
 
 #include "types.hpp"
+#include <iostream>
 #include <string>
 #include <variant>
 
 /**
- * @namespace token
  * @brief Contains the Token class and related functions.
  */
 namespace token {
@@ -14,7 +14,6 @@ namespace token {
 class Token; // forward declaration
 
 /**
- * @fn processCharConst
  * @param token The character token to process.
  * @return char
  * @brief Processes the character token and returns the character.
@@ -22,7 +21,6 @@ class Token; // forward declaration
 char processCharConst(Token& token);
 
 /**
- * @fn processBoolConst
  * @param token The boolean token to process.
  * @return int
  * @brief Processes the boolean token and returns the integer value.
@@ -30,7 +28,6 @@ char processCharConst(Token& token);
 int processBoolConst(const std::string& token);
 
 /**
- * @fn processStringConst
  * @param token The string token to process.
  * @return string
  * @brief Processes the string token and returns the string.
@@ -38,7 +35,6 @@ int processBoolConst(const std::string& token);
 std::string processStringConst(Token& token);
 
 /**
- * @fn processToken
  * @param token The token to process.
  * @return void
  * @brief Processes the token and sets the value based on the token type.
@@ -46,7 +42,6 @@ std::string processStringConst(Token& token);
 void processToken(Token& token);
 
 /**
- * @fn lexicalPrint
  * @param token The token to print.
  * @return void
  * @brief Prints the token to the console (used in hw1).
@@ -54,7 +49,6 @@ void processToken(Token& token);
 void lexicalPrint(const Token& token);
 
 /**
- * @class Token
  * @brief Represents a token (lexeme) that was read by the lexer.
  */
 class Token {
@@ -69,7 +63,6 @@ private:
 
 public:
     /**
-     * @fn Token
      * @param token The token (lexeme) that was read by the lexer.
      * @param line The line number where the token was found.
      * @param length The length of the token (lexeme).
@@ -124,38 +117,33 @@ public:
         strLength_ = length;
     }
 
-    // TokenValue Getters (int, char, string)
+    // TokenValue Getters
 
     /**
-     * @fn getInt
      * @brief Returns integer variant of the value.
      * @return int
      */
     int getInt() const;
 
     /**
-     * @fn getChar
      * @brief Returns character variant of the value.
      * @return char
      */
     char getChar() const;
 
     /**
-     * @fn getString
      * @brief Returns string variant of the value.
      * @return std::string
      */
     std::string getString() const;
 
     /**
-     * @fn getBool
      * @brief Returns boolean variant of the value.
      * @return int
      */
     int getBool() const;
 
     /**
-     * @fn print
      * @brief Prints the token to the console using lexcalPrint().
      */
     void print()
@@ -164,7 +152,6 @@ public:
     }
 
     /**
-     * @fn printType
      * @brief Returns the name of the token class (ID, ASGN, SUB, IF, FOR, etc.).
      * @return std::string
      */

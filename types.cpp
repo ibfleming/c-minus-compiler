@@ -6,8 +6,7 @@ std::string tknTypeToStr(TokenType type)
 {
     switch (type) {
 
-        // CONSTANTS
-
+    // CONSTANTS
     case TokenType::ID_CONST:
         return "ID";
     case TokenType::NUM_CONST:
@@ -19,8 +18,7 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::BOOL_CONST:
         return "BOOLCONST";
 
-        // TYPES
-
+    // TYPES
     case TokenType::INT_TYPE:
         return "INT";
     case TokenType::CHAR_TYPE:
@@ -30,8 +28,7 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::STATIC_TYPE:
         return "STATIC";
 
-        // CONTROL
-
+    // CONTROL
     case TokenType::IF_CONTROL:
         return "IF";
     case TokenType::THEN_CONTROL:
@@ -39,8 +36,7 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::ELSE_CONTROL:
         return "ELSE";
 
-        // LOOPS (ITERATION)
-
+    // LOOPS (ITERATION)
     case TokenType::FOR_LOOP:
         return "FOR";
     case TokenType::TO_LOOP:
@@ -54,8 +50,7 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::BREAK_LOOP:
         return "BREAK";
 
-        // BINARY OPERATORS
-
+    // BINARY OPERATORS
     case TokenType::AND_OP:
         return "AND";
     case TokenType::OR_OP:
@@ -93,8 +88,7 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::MOD_OP:
         return "%";
 
-        // UNARY OPERATORS
-
+    // UNARY OPERATORS
     case TokenType::DEC_OP:
         return "--";
     case TokenType::INC_OP:
@@ -104,15 +98,13 @@ std::string tknTypeToStr(TokenType type)
     case TokenType::QUES_OP:
         return "?";
 
-        // COMPOUND
-
+    // COMPOUND
     case TokenType::LBRACE:
         return "{";
     case TokenType::RBRACE:
         return "}";
 
-        // RETURN
-
+    // RETURN
     case TokenType::RETURN:
         return "RETURN";
     default:
@@ -265,8 +257,8 @@ std::string varTypeToStr(VarType type)
         return "bool";
     case VarType::VOID:
         return "void";
-    case VarType::UNKNOWN:
-        return "unknown";
+    case VarType::UNDEFINED:
+        return "undefined";
     default:
         return "Invalid Var Type";
     }

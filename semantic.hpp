@@ -26,7 +26,6 @@ typedef types::AssignmentType AT;
 typedef types::OperatorType OT;
 
 /**
- * @namespace semantic
  * @brief Contains the semantic analysis members and functions.
  */
 namespace semantic {
@@ -37,7 +36,6 @@ class SemanticAnalyzer;
 #pragma region SymbolTable
 
 /**
- * @class SymbolTable
  * @brief Represents a symbol table.
  */
 class SymbolTable {
@@ -48,7 +46,6 @@ private:
 
 public:
     /**
-     * @fn SymbolTable
      * @brief Constructor for the symbol table.
      */
     SymbolTable() = default;
@@ -58,7 +55,6 @@ public:
      ***********************************************/
 
     /**
-     * @fn getSymbols
      * @brief Returns the symbols in the symbol table.
      * @return std::map<std::string, node::Node*>
      */
@@ -68,7 +64,6 @@ public:
     }
 
     /**
-     * @fn getSize
      * @brief Returns the size of the symbol table.
      * @return int
      */
@@ -82,7 +77,6 @@ public:
      ***********************************************/
 
     /**
-     * @fn insertSymbol
      * @brief Inserts a symbol into the symbol table.
      * @param node The node (symbol) to insert.
      * @return bool
@@ -90,7 +84,6 @@ public:
     bool insertSymbol(node::Node* node);
 
     /**
-     * @fn lookupSymbol
      * @brief Looks up a symbol in the symbol table.
      * @param name The name of the symbol to lookup.
      * @return node::Node*
@@ -103,7 +96,6 @@ public:
 #pragma region Scope
 
 /**
- * @class Scope
  * @brief Represents a scope in the program.
  */
 class Scope {
@@ -116,7 +108,6 @@ private:
 
 public:
     /**
-     * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      */
@@ -127,7 +118,6 @@ public:
     {
     }
     /**
-     * @fn Scope
      * @brief Constructor for the scope.
      * @param parent The parent node of the scope.
      * @param name The name of the scope.
@@ -144,7 +134,6 @@ public:
      ***********************************************/
 
     /**
-     * @fn getSymbols
      * @brief Returns the symbol table of the scope.
      * @return SymbolTable*
      */
@@ -154,7 +143,6 @@ public:
     }
 
     /**
-     * @fn getParent
      * @brief Returns the parent node of the scope.
      * @return node::Node*
      */
@@ -164,7 +152,6 @@ public:
     }
 
     /**
-     * @fn getName
      * @brief Returns the name of the scope.
      * @return std::string
      */
@@ -178,7 +165,6 @@ public:
      ***********************************************/
 
     /**
-     * @fn insertSymbol
      * @brief Inserts a symbol into the symbol table.
      * @param node The node to insert.
      * @return bool
@@ -189,7 +175,6 @@ public:
     }
 
     /**
-     * @fn lookupSymbol
      * @brief Looks up a symbol in the symbol table.
      * @param name The name of the symbol to lookup.
      * @return node::Node*
@@ -200,7 +185,6 @@ public:
     }
 
     /**
-     * @fn checkUsedVariables
      * @brief Checks for unused variables in the scope.
      * @return void
      */
@@ -211,7 +195,6 @@ public:
      ***********************************************/
 
     /**
-     * @fn printScope
      * @brief Prints the scope and its contained symbols.
      * @return void
      */
@@ -223,7 +206,6 @@ public:
 #pragma region Analyzer
 
 /**
- * @class SemanticAnalyzer
  * @brief Analyzes the AST for semantic errors and warnings.
  */
 class SemanticAnalyzer {
@@ -238,7 +220,6 @@ private:
 
 public:
     /**
-     * @fn SemanticAnalyzer
      * @brief Constructor for the semantic analyzer.
      * @param tree Root of the AST.
      */
@@ -267,27 +248,23 @@ public:
 #pragma region Scope_M
 
     /**
-     * @fn enterGlobalScope
      * @brief Enters the global scope.
      * @return void
      */
     void enterGlobalScope();
 
     /**
-     * @fn enterScope
      * @brief Enters a new scope, i.e. pushes a new scope onto the stack.
      * @param scope The scope to enter.
      */
     void enterScope(Scope* scope);
 
     /**
-     * @fn leaveScope
      * @brief Leaves the current scope, i.e. pops the top scope on the stack.
      */
     void leaveScope();
 
     /**
-     * @fn getCurrentScope
      * @brief Gets the current scope, i.e. scope on the top of the stack.
      * @return Scope*
      */
@@ -297,7 +274,6 @@ public:
     }
 
     /**
-     * @fn getGlobalScope
      * @brief Returns the global scope.
      * @return Scope*
      */
@@ -307,7 +283,6 @@ public:
     }
 
     /**
-     * @fn getScopeCount
      * @brief Returns the number of scopes on the stack.
      * @return int
      */
@@ -317,14 +292,12 @@ public:
     }
 
     /**
-     * @fn printScopes
      * @brief Prints the stack of scopes in reverse order.
      * @return void
      */
     void printScopes();
 
     /**
-     * @fn printGlobal
      * @brief Prints the global scope.
      * @return void
      */
@@ -342,7 +315,6 @@ public:
 #pragma region Table_M
 
     /**
-     * @fn insertSymbol
      * @brief Inserts a symbol into the current scope.
      * @param sym The symbol to insert.
      * @return bool
@@ -350,7 +322,6 @@ public:
     bool insertSymbol(node::Node* sym);
 
     /**
-     * @fn lookupSymbol
      * @brief Looks up a declaration in the current scope and other scopes if there are more on the stack.
      * @param id The identifier to lookup.
      * @param init If the symbol is being check for initialization or not, check it's lookup logic.
@@ -374,11 +345,9 @@ public:
         scope->checkUsedVariables(this);
     }
     void processReturn(node::Node* ret);
-    node::Node* processArray(node::Node* arr,
-        bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node* processArray(node::Node* arr, bool init = true); // @note true = check for initialization, false = apply initialization
     node::Node* processCall(node::Node* call, bool init = true);
-    node::Node* processIdentifier(
-        node::Node* id, bool init = true); // @note true = check for initialization, false = apply initialization
+    node::Node* processIdentifier(node::Node* id, bool init = true); // @note true = check for initialization, false = apply initialization
     node::Node* processOperator(node::Node* op);
     void processUnaryOperation(node::Node* op);
     void processIf(node::Node* op);
@@ -387,6 +356,7 @@ public:
     void processBinaryOperator(node::Node* node);
     void processUnaryOperator(node::Node* node);
     void processBooleanBinaryOperator(node::Node* node);
+    void processRange(node::Node* node);
     bool isDeclarationFunctionAsVariable(node::Node* id, node::Node* decl);
 
 #pragma endregion Semantic_M
@@ -400,21 +370,18 @@ public:
 #pragma region Traversal_M
 
     /**
-     * @fn analyzeNode
      * @brief Processes the semantics of the AST.
      * @param node The node to process.
      */
     void analyzeNode(node::Node* node);
 
     /**
-     * @fn traverse
      * @brief Depth-first search traversal of the AST for local variables.
      * @param node The node to start the traversal from.
      */
     void traverse(node::Node* node);
 
     /**
-     * @fn analyze
      * @brief Analyzes the AST.
      */
     void analyze();
@@ -428,7 +395,6 @@ public:
 #pragma region ErrWarns_M
 
     /**
-     * @fn incWarnings
      * @brief Incremenet the warnings
      * @return void
      */
@@ -438,7 +404,6 @@ public:
     }
 
     /**
-     * @fn incErrors
      * @brief Incremenet the warnings
      * @return void
      */
@@ -448,7 +413,6 @@ public:
     }
 
     /**
-     * @fn printWarnings
      * @brief Prints the number of warnings.
      */
     void printWarnings()
@@ -458,7 +422,6 @@ public:
     }
 
     /**
-     * @fn printErrors
      * @brief Prints the number of errors.
      */
     void printErrors()

@@ -3,7 +3,6 @@
 #include "semantic.hpp"
 #include "utils.hpp"
 #include <cstdlib>
-#include <iostream>
 
 #define ARG_DEBUG false
 
@@ -14,8 +13,9 @@ typedef semantic::SemanticAnalyzer SA;
 
 int main(int argc, char** argv)
 {
+    // skip the first argument
     argc--;
-    argv++; // skip the first argument
+    argv++;
 
     bool printAST = false;
 

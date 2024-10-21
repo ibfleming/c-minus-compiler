@@ -1,6 +1,5 @@
 #include "node.hpp"
 #include "types.hpp"
-#include <iostream>
 
 typedef types::NodeType NT; // shorthand for NodeType
 
@@ -75,8 +74,7 @@ void Node::printValue()
 {
     switch (nodeType_) {
 
-        // Print these specific CONSTANT nodes.
-
+    // Print these specific CONSTANT nodes.
     case NT::CHARACTER:
         cout << "Const ";
         cout << "'" << getChar() << "'";
@@ -94,9 +92,8 @@ void Node::printValue()
         cout << "\"" << getString() << "\"";
         return;
 
-        // These nodes are no different from the rest other than having an extra
-        // space after them in the output. Sigh...
-
+    // These nodes are no different from the rest other than having an extra
+    // space after them in the output. Sigh...
     case NT::FUNCTION:
     case NT::PARAMETER:
     case NT::VARIABLE:
@@ -116,8 +113,7 @@ void Node::printValue()
         }
         return;
 
-        // Print these nodes expect for their stored value.
-
+    // Print these nodes expect for their stored value.
     case NT::COMPOUND:
     case NT::ID_ARRAY:
     case NT::CHSIGN_UNARY:
@@ -135,8 +131,7 @@ void Node::printValue()
         cout << types::treeNodeTypeToStr(nodeType_);
         return;
 
-        // By default, print the nodetype and the value.
-
+    // By default, print the nodetype and the value.
     default:
         cout << types::treeNodeTypeToStr(nodeType_) << getString();
         return;
@@ -169,6 +164,12 @@ void Node::printType()
         return;
 
     default:
+        if (varType_ == types::VarType::UNDEFINED) {
+            cout << " of ";
+            cout << types::varTypeToStr(varType_);
+            cout << " type";
+            return;
+        }
         cout << " of type ";
         cout << types::varTypeToStr(varType_);
         return;

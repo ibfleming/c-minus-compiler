@@ -1,14 +1,15 @@
 %code requires{
-    #include "token.hpp"
     #include "node.hpp"
 }
 
 %{
     #include "lexer.hpp"
+
     #define NT types::NodeType
     #define VT types::VarType
     #define OT types::OperatorType
     #define AT types::AssignmentType
+    
     void yyerror(const char *msg);
 %}
 
@@ -387,7 +388,7 @@ expression                : mutable assignmentOperator expression
                           | simpleExpression   
                           ; 
 
-assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT, AT::ASGN, VT::UNKNOWN); }
+assignmentOperator        : ASGN        { $$ = new node::Node($1, NT::ASSIGNMENT, AT::ASGN, VT::UNDEFINED); }
                           | ADDASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::ADDASGN, VT::INT); }
                           | SUBASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::SUBASGN, VT::INT); }
                           | MULASGN     { $$ = new node::Node($1, NT::ASSIGNMENT, AT::MULASGN, VT::INT); }
@@ -518,9 +519,9 @@ argumentList              : argumentList ',' expression
                           ;
 
                           
-constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARACTER, VT::CHAR); }  
-                          | NUMCONST    { $$ = new node::Node($1, NT::NUMBER, VT::INT); }   
-                          | STRINGCONST { $$ = new node::Node($1, NT::STRING, VT::CHAR); }  
-                          | BOOLCONST   { $$ = new node::Node($1, NT::BOOLEAN, VT::BOOL); }  
+constant                  : CHARCONST   { $$ = new node::Node($1, NT::CHARACTER, VT::CHAR); $$->setIsConst(true); }  
+                          | NUMCONST    { $$ = new node::Node($1, NT::NUMBER, VT::INT); $$->setIsConst(true); }   
+                          | STRINGCONST { $$ = new node::Node($1, NT::STRING, VT::CHAR); $$->setIsConst(true); }  
+                          | BOOLCONST   { $$ = new node::Node($1, NT::BOOLEAN, VT::BOOL); $$->setIsConst(true); }  
                           ;                    
 %%

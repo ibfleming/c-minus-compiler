@@ -12,7 +12,6 @@ namespace semantic {
 
 void SemanticAnalyzer::analyzeNode(node::Node* node)
 {
-
     // Scopes
     switch (node->getNodeType()) {
     case NT::FUNCTION:
@@ -128,6 +127,12 @@ void SemanticAnalyzer::analyzeNode(node::Node* node)
             return;
         }
 
+        // Range
+        case NT::RANGE: {
+            processRange(node);
+            return;
+        }
+
         default:
             return;
         }
@@ -160,13 +165,22 @@ void SemanticAnalyzer::processAssignment(node::Node* node)
         lhs->setIsVisited(true);
         rhs->setIsVisited(true);
 
-        // (3) Process the RHS
-        node::Node* rhsDecl = nullptr;
+        // (3) Process the LHS
+        auto lhsDecl = processIdentifier(lhs, false);
+
+        if (lhsDecl)
+            node->setVarType(lhsDecl->getVarType());
+        else {
+            node->setVarType(lhs->getVarType());
+        }
+
+        // (4) Process the RHS
+        // node::Node* rhsDecl = nullptr;
         switch (rhs->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
         case NT::CALL:
-            rhsDecl = processIdentifier(rhs);
+            processIdentifier(rhs);
             break;
         case NT::ASSIGNMENT:
             processAssignment(rhs);
@@ -178,16 +192,13 @@ void SemanticAnalyzer::processAssignment(node::Node* node)
             break;
         }
 
-        // (4) Process the LHS
-        auto lhsDecl = processIdentifier(lhs, false);
+        if (lhsDecl == nullptr)
+#if PENDANITC_DEBUG
+            cout << "\tLHS symbol is undeclared." << endl;
+#endif
+        return;
 
-        if (lhsDecl)
-            node->setVarType(lhsDecl->getVarType());
-        else {
-            node->setVarType(lhs->getVarType());
-            return;
-        }
-
+        // (5) Check the types
         checkBinaryTypes(node, lhs, rhs);
 
         return;
@@ -205,7 +216,8 @@ void SemanticAnalyzer::processAssignment(node::Node* node)
         // (2) Set the node as visited if it is not nullptr
         lhs->setIsVisited(true);
 
-        auto lhsDecl = processIdentifier(lhs);
+        // auto lhsDecl =
+        processIdentifier(lhs);
 
         checkUnaryTypes(node, lhs);
 
@@ -333,7 +345,8 @@ void SemanticAnalyzer::processUnaryOperator(node::Node* node)
         processUnaryOperator(operand);
         break;
     default:
-        operandDecl = processIdentifier(operand);
+        // operandDecl =
+        processIdentifier(operand);
         break;
     }
 
@@ -436,6 +449,32 @@ node::Node* SemanticAnalyzer::processArray(node::Node* arr, bool init)
         return arrDecl;
     }
     return nullptr;
+}
+
+void SemanticAnalyzer::processRange(node::Node* node)
+{
+#if PENDANTIC_DEBUG
+    cout << "[Process Range]" << endl;
+#endif
+
+    if (node == nullptr) {
+        throw runtime_error("Error in processRange(): 'node' is null.");
+    }
+
+    if (node->getChildren().size() > 0) {
+        for (auto child : node->getChildren()) {
+            if (child) {
+#if PENDANTIC_DEBUG
+                cout << "\t(Child) " << types::literalNodeTypeStr(child->getNodeType()) << endl;
+#endif
+                child->setIsVisited(true);
+                if (!child->getIsConst()) {
+                    child->setVarType(VT::UNDEFINED);
+                }
+            }
+        }
+        return;
+    }
 }
 
 } // namespace semantic

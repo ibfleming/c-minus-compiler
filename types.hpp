@@ -5,25 +5,20 @@
 #include <variant>
 
 /**
- * @namespace types
  * @brief Contains the various types used in the compiler.
  */
 namespace types {
 
 /**
- * @typedef TokenValue
  * @brief Represents the value of a token.
- *
- * A token can have a value of type int, char, or string.
+ * @note A token can have a value of type int, char, or string.
  */
 using TokenValue = std::variant<int, char, std::string>;
 
 /**
- * @enum TokenType
  * @brief Represents the various types of tokens that can be encountered in the compiler.
  *
- * These are assigned in the "lexical analysis phase".
- *
+ * @note These are assigned in the "lexical analysis phase".
  * This enumeration defines the different categories of tokens that the compiler can recognize.
  * Tokens are categorized into constants, types, control structures, loops, binary operators,
  * unary operators, and return statements.
@@ -105,10 +100,8 @@ enum class TokenType {
 };
 
 /**
- * @enum VarType
  * @brief Represents the various variable types that can be encountered in the compiler.
- *
- * Some nodes in the AST will have a variable type associated with them directly or indirectly from a token.
+ * @note Some nodes in the AST will have a variable type associated with them directly or indirectly from a token.
  */
 enum class VarType {
     INT,
@@ -116,24 +109,21 @@ enum class VarType {
     STRING,
     BOOL,
     VOID,
-    UNKNOWN
+    UNDEFINED
 };
 
 /**
- * @enum NodeType
  * @brief Represents the node type in the AST.
  */
 enum class NodeType {
 
-    // DATA TYPES
-
+    // Data Types
     BOOLEAN,
     CHARACTER,
     NUMBER,
     STRING,
 
-    // EXPRESSIONS
-
+    // Expressions
     FUNCTION,
     CALL,
     ID,
@@ -146,8 +136,7 @@ enum class NodeType {
     AND,
     OR,
 
-    // CONTROL FLOW
-
+    // Control Flow
     BREAK,
     FOR,
     WHILE,
@@ -155,8 +144,7 @@ enum class NodeType {
     COMPOUND,
     RETURN,
 
-    // VARIABLES
-
+    // Variables
     VARIABLE,
     VARIABLE_ARRAY,
     PARAMETER,
@@ -164,21 +152,17 @@ enum class NodeType {
     VARIABLE_STATIC,
     VARIABLE_STATIC_ARRAY,
 
-    // ASSIGNMENT
-
+    // Assignment
     ASSIGNMENT,
 
-    // LOOPS (ITERATION)
-
+    // Loops (Iteration)
     RANGE,
 
-    // MISCELLANEOUSS
-
+    // Misc
     UNKNOWN
 };
 
 /**
- * @enum OperatorType
  * @brief Represents the various types of operators that can be encountered in the compiler.
  */
 enum class OperatorType {
@@ -197,7 +181,6 @@ enum class OperatorType {
 };
 
 /**
- * @enum AssignmentType
  * @brief Represents the various types of assignments that can be encountered in the compiler.
  */
 enum class AssignmentType {
@@ -212,28 +195,24 @@ enum class AssignmentType {
 };
 
 /**
- * @fn tknTypeToStr
  * @param type The type of token to convert to a string.
  * @brief Converts token type to a printable string.
  */
 std::string tknTypeToStr(TokenType type);
 
 /**
- * @fn treeNodeTypeToStr
  * @param type The type of node to convert to a string.
  * @brief Converts node type to a printable string for the AST.
  */
 std::string treeNodeTypeToStr(NodeType type);
 
 /**
- * @fn literalNodeTypeStr
  * @param type The type of node to convert to a string.
  * @brief Converts node type to a printable string as the literal enum name.
  */
 std::string literalNodeTypeStr(NodeType type);
 
 /**
- * @fn varTypeToStr
  * @param type The type of node to convert to a string.
  * @brief Converts node type to a printable string.
  */

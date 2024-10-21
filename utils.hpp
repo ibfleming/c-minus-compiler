@@ -2,6 +2,7 @@
 #define UTILS_HPP
 
 #include "node.hpp"
+#include <iomanip>
 #include <stack>
 #include <vector>
 
@@ -10,7 +11,6 @@ class Node;
 }
 
 /**
- * @namespace utils
  * @brief Contains utility functions for the compiler.
  */
 namespace utils {
@@ -18,14 +18,12 @@ namespace utils {
 extern bool PRINT_TYPES; // Print the types of the AST nodes
 
 /**
- * @fn printTree
  * @brief Prints the AST to the console.
  * @return void
  */
 void printTree();
 
 /**
- * @fn printIndent
  * @param times The number of times to print the indent.
  * @brief Prints an indent to the console for the AST.
  * @return string
@@ -33,7 +31,6 @@ void printTree();
 std::string printIndent(int times);
 
 /**
- * @fn checkFileExtension
  * @param filename The name of the file to check.
  * @brief Checks if the file has a valid extension.
  * @return bool
@@ -41,14 +38,12 @@ std::string printIndent(int times);
 bool checkFileExtension(std::string filename);
 
 /**
- * @fn printHelpMenu
  * @brief Prints the help menu to the console.
  * @return void
  */
 void printHelpMenu();
 
 /**
- * @fn stackToVectorReverse
  * @param stack The stack to convert to a vector in reverse order.
  * @brief Converts a stack to a vector.
  * @return std::vector<T>
@@ -69,7 +64,6 @@ std::vector<T> stackToVectorReverse(std::stack<T>& stack)
 }
 
 /**
- * @fn stackToVectorInOrder
  * @param stack The stack to convert to a vector in order.
  * @brief Converts a stack to a vector.
  * @return std::vector<T>
@@ -89,7 +83,6 @@ std::vector<T> stackToVectorInOrder(std::stack<T>& stack)
 }
 
 /**
- * @fn isArray
  * @param node The node to check if it is an array.
  * @brief Checks if the node is an array.
  * @return bool

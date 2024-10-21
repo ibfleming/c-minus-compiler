@@ -526,12 +526,12 @@ node::Node* SemanticAnalyzer::checkUnaryTypes(node::Node* op, node::Node* operan
 
 void SemanticAnalyzer::processReturn(node::Node* ret)
 {
-    if (ret == nullptr)
-        throw runtime_error("Error in processReturn(): 'ret' is null.");
-
 #if PENDANTIC_DEBUG
     cout << "[Process Return]" << endl;
 #endif
+
+    if (ret == nullptr)
+        throw runtime_error("Error in processReturn(): 'ret' is null.");
 
     if (ret->getChildren().size() == 1) {
         auto child = ret->getChildren()[0];
@@ -541,24 +541,23 @@ void SemanticAnalyzer::processReturn(node::Node* ret)
 
         child->setIsVisited(true);
 
+        node::Node* decl = nullptr;
         switch (child->getNodeType()) {
-        case NT::ID:
-        case NT::ID_ARRAY:
-        case NT::CALL: {
-            auto decl = processIdentifier(child);
-            if (decl) {
-                ret->setVarType(decl->getVarType());
-                if (decl->getIsArray()) {
-                    logger::ERROR_CannotReturnArray(this, child);
-                }
-            }
-            break;
-        }
         case NT::OPERATOR:
             processBinaryOperator(child);
             break;
         default:
+            decl = processIdentifier(child);
             break;
+        }
+
+        if (decl) {
+            ret->setVarType(decl->getVarType());
+            if (child->getNodeType() == NT::ID) {
+                if (decl->getIsArray()) {
+                    logger::ERROR_CannotReturnArray(this, child);
+                }
+            }
         }
     }
 }

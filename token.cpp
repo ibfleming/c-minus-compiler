@@ -1,5 +1,4 @@
 #include "token.hpp"
-#include <iostream>
 
 using namespace types;
 
@@ -94,7 +93,7 @@ std::string processStringConst(Token& token)
     std::string result;
     result.reserve(length - 2); // reserve space for the string w/o quotes
 
-    for (size_t i = 1; i < length - 1; ++i) {
+    for (int i = 1; i < length - 1; ++i) {
         if (lexeme[i] == '\\') {
             ++i;
             if (i < length - 1) {

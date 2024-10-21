@@ -9,7 +9,6 @@
 
 #include "node.hpp"
 #include "semantic.hpp"
-#include <iostream>
 
 #define SEMANTIC_DEBUG true
 
@@ -23,9 +22,7 @@ typedef types::OperatorType OT;
 typedef types::AssignmentType AT;
 
 /**
- * @namespace logger
  * @brief Contains the logging functions for semantic analysis.
- * @param analyzer The semantic analyzer.
  */
 namespace logger {
 
