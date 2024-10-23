@@ -1,11 +1,6 @@
-elk(int a, a)
-{
+int main() {
    int a;
-   b := a;
-   {
-        int a, b;
-        c := c;
-        c := b;
-        b := b;
-   }
+   a := 12;
+   a := 24;
+   return;
 }

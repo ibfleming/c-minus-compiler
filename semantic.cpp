@@ -217,45 +217,35 @@ node::Node* SemanticAnalyzer::lookupSymbol(node::Node* id, bool init)
 #if PENDANTIC_DEBUG
         cout << "\t[Global Scope]:" << endl;
 #endif
-        if (decl = id->getDeclaration()) {
-#if PENDANTIC_DEBUG
-            cout << "\tID has been declared." << endl;
-#endif
-            return decl;
-        } else if (decl = getGlobalScope()->lookupSymbol(id)) {
+        if (decl = getGlobalScope()->lookupSymbol(id)) {
             id->setDeclaration(decl);
             return decl;
         }
     } else if (getCurrentScope() != globalScope_) { // Not in global scope.
-        if (decl = id->getDeclaration()) {
 #if PENDANTIC_DEBUG
-            cout << "\tID has been declared." << endl;
+        cout << "\tSearching through the scopes..." << endl;
 #endif
-            return decl;
+        std::vector<semantic::Scope*, std::allocator<semantic::Scope*>> scopes;
+
+        if (init) {
+            scopes = utils::stackToVectorReverse(scopes_);
         } else {
-            std::vector<semantic::Scope*, std::allocator<semantic::Scope*>> scopes;
+            scopes = utils::stackToVectorInOrder(scopes_);
+        }
 
-            if (init) {
-                scopes = utils::stackToVectorReverse(scopes_);
-            } else {
-                scopes = utils::stackToVectorInOrder(scopes_);
-            }
-
-            for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
 #if PENDANTIC_DEBUG
-                if (*it == getGlobalScope()) {
-                    cout << "\t[Global Scope]:" << endl;
-                } else if (*it == getCurrentScope()) {
-                    cout << "\t[Current Scope]:" << endl;
-                } else {
-                    cout << "\t[Other Scope]:" << endl;
-                }
+            if (*it == getGlobalScope()) {
+                cout << "\t[Global Scope]:" << endl;
+            } else if (*it == getCurrentScope()) {
+                cout << "\t[Current Scope]:" << endl;
+            } else {
+                cout << "\t[Other Scope]:" << endl;
+            }
 #endif
-                if (decl = (*it)->lookupSymbol(id)) {
-                    id->setDeclaration(decl);
-                    decl->setIsUsed(true);
-                    return decl;
-                }
+            if (decl = (*it)->lookupSymbol(id)) {
+                id->setDeclaration(decl);
+                return decl;
             }
         }
     }
@@ -325,8 +315,8 @@ node::Node* SemanticAnalyzer::checkBinaryTypes(node::Node* op, node::Node* lhs, 
     if (op == nullptr)
         throw runtime_error("Error in checkBinaryTypes(): 'op' is null.");
 
-    auto lhsDecl = lhs->getDeclaration() != nullptr ? lhs->getDeclaration() : lhs;
-    auto rhsDecl = rhs->getDeclaration() != nullptr ? rhs->getDeclaration() : rhs;
+    auto lhsDecl = lhs;
+    auto rhsDecl = rhs;
 
     if (lhsDecl == nullptr || rhsDecl == nullptr)
         throw runtime_error("Error in checkBinaryTypes(): 'lhsDecl' or 'rhsDecl' is null.");
@@ -473,7 +463,7 @@ node::Node* SemanticAnalyzer::checkUnaryTypes(node::Node* op, node::Node* operan
     if (op == nullptr)
         throw runtime_error("Error in checlUnaryTypes(): 'op' is null.");
 
-    auto operandDecl = operand->getDeclaration() != nullptr ? operand->getDeclaration() : operand;
+    auto operandDecl = operand;
 
     if (operandDecl == nullptr)
         throw runtime_error("Error in checkUnaryTypes(): 'operandDecl' is null.");
@@ -513,6 +503,9 @@ node::Node* SemanticAnalyzer::checkUnaryTypes(node::Node* op, node::Node* operan
         return op;
     }
     case NT::ASSIGNMENT: {
+        if (operandDecl->getVarType() != VT::INT) {
+            logger::ERROR_UnaryRequiresOperandSameType(this, op, operand);
+        }
         if (operandDecl->getIsArray()) {
             logger::ERROR_OperationCannotUseArrays(this, op, operand);
         }
@@ -542,22 +535,33 @@ void SemanticAnalyzer::processReturn(node::Node* ret)
         child->setIsVisited(true);
 
         node::Node* decl = nullptr;
-        switch (child->getNodeType()) {
-        case NT::OPERATOR:
-            processBinaryOperator(child);
-            break;
-        default:
-            decl = processIdentifier(child);
-            break;
-        }
 
-        if (decl) {
-            ret->setVarType(decl->getVarType());
-            if (child->getNodeType() == NT::ID) {
-                if (decl->getIsArray()) {
-                    logger::ERROR_CannotReturnArray(this, child);
+        while (child != nullptr) {
+            switch (child->getNodeType()) {
+            case NT::OPERATOR:
+                processBinaryOperator(child);
+                break;
+            case NT::NOT:
+            case NT::SIZEOF_UNARY:
+            case NT::CHSIGN_UNARY:
+            case NT::QUES_UNARY:
+                processUnaryOperator(child);
+                break;
+            default:
+                decl = processIdentifier(child);
+                break;
+            }
+
+            if (decl) {
+                ret->setVarType(decl->getVarType());
+                if (child->getNodeType() == NT::ID) {
+                    if (decl->getIsArray()) {
+                        logger::ERROR_CannotReturnArray(this, child);
+                    }
                 }
             }
+
+            child = child->getSibling();
         }
     }
 }
@@ -587,7 +591,14 @@ node::Node* SemanticAnalyzer::processCall(node::Node* call, bool init)
     if (call->getChildren().size() == 1) {
         auto arg = call->getChildren()[0];
         while (arg != nullptr) {
-            processIdentifier(arg);
+            switch (arg->getNodeType()) {
+            case NT::ASSIGNMENT:
+                processAssignment(arg);
+                break;
+            default:
+                processIdentifier(arg);
+                break;
+            }
             arg = arg->getSibling();
         }
     }
@@ -612,16 +623,37 @@ node::Node* SemanticAnalyzer::processIdentifier(node::Node* id, bool init)
         if (decl) {
             // (4) Check if the variable is initialized
             if (init) {
+#if PENDANTIC_DEBUG
+                cout << "\t[INIT] Checking initialization of variable..." << endl;
+#endif
                 if (!decl->getIsInitialized()) {
                     // (5) Warn if not intialized
                     logger::WARN_VariableNotInitialized(this, id);
                     decl->setIsInitialized(true);
+                    id->setIsInitialized(true);
+#if PENDANTIC_DEBUG
+                    cout << "\t** Symbol '" << id->getString() << "' is now initialized!" << endl;
+#endif
+                } else {
+#if PENDANTIC_DEBUG
+                    cout << "\t** Symbol '" << id->getString() << "' is already initialized!" << endl;
+#endif
                 }
-                isDeclarationFunctionAsVariable(id, decl);
             } else {
-                // (5) Set the variable as initialized
-                decl->setIsInitialized(true);
+                if (!decl->getIsInitialized()) {
+                    decl->setIsInitialized(true);
+                    id->setIsInitialized(true);
+#if PENDANTIC_DEBUG
+                    cout << "\t** Symbol '" << id->getString() << "' is now initialized!" << endl;
+#endif
+                } else {
+                    id->setIsInitialized(decl->getIsInitialized());
+#if PENDANTIC_DEBUG
+                    cout << "\t** Symbol '" << id->getString() << "' is already initialized!" << endl;
+#endif
+                }
             }
+            isDeclarationFunctionAsVariable(id, decl);
             return decl;
         }
         return nullptr;

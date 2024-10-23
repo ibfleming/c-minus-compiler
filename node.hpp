@@ -195,10 +195,6 @@ public:
     {
         return isConstant_;
     }
-    Node* getDeclaration() const
-    {
-        return declaration_;
-    }
     Node* getFunctionNode() const
     {
         return function_;
@@ -265,8 +261,8 @@ public:
     void setDeclaration(Node* declaration)
     {
         if (declaration != nullptr) {
-            declaration_ = declaration;
             declaration->setIsUsed(true);
+            isInitialized_ = declaration->getIsInitialized();
             isArray_ = declaration->getIsArray();
             varType_ = declaration->getVarType();
         }

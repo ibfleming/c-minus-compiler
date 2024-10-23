@@ -2,6 +2,13 @@
  * @file semantic.cpp
  *
  * @brief Source file for semantic analysis.
+ *
+ * @note
+ * "In the beginning was the Word, and the Word was with God, and the Word
+ * was God. He was in the beginning with God. All things came into being through
+ * Him, and apart from Him nothing came into being that has come into being. In Him
+ * was life, and the life was the Light of men. And the Light shines in the darkness,
+ * and the darkness did not overtake it." - John 1:1-5 LSB
  *********************************************************************/
 
 #include "semantic.hpp"
@@ -9,6 +16,58 @@
 using namespace std;
 
 namespace semantic {
+
+bool areAssignmentOperatorsIdentical(node::Node* lhs, node::Node* rhs)
+{
+    // (1) Check if LHS is an ID or and ID_ARRAY, e.g. arr[2]
+    switch (lhs->getNodeType()) {
+    case types::NodeType::ID: {
+        switch (rhs->getNodeType()) {
+        case types::NodeType::ID:
+        case types::NodeType::CALL: // a := a
+            if (lhs->getString() == rhs->getString()) {
+#if PENDANTIC_DEBUG
+                std::cout << "[LHS: ID | RHS: ID/CALL] LHS AND RHS SYMBOLS ARE THE SAME!" << std::endl;
+#endif
+                return true;
+            }
+            return false;
+        case types::NodeType::ID_ARRAY: // a := a[3]
+            if (lhs->getString() == rhs->getChildren()[0]->getString()) {
+#if PENDANTIC_DEBUG
+                std::cout << "[LHS: ID | RHS: ID_ARRAY] LHS AND RHS SYMBOLS ARE THE SAME!" << std::endl;
+#endif
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+    case types::NodeType::ID_ARRAY: {
+        switch (rhs->getNodeType()) {
+        case types::NodeType::ID:
+        case types::NodeType::CALL: // a[0] := a
+            if (lhs->getChildren()[0]->getString() == rhs->getString()) {
+#if PENDANTIC_DEBUG
+                std::cout << "[LHS: ID_ARRAY | RHS: ID/CALL] LHS AND RHS SYMBOLS ARE THE SAME!" << std::endl;
+#endif
+                return true;
+            }
+            return false;
+        case types::NodeType::ID_ARRAY: // a[0] := a[3]
+            if (lhs->getChildren()[0]->getString() == rhs->getChildren()[0]->getString()) {
+#if PENDANTIC_DEBUG
+                std::cout << "[LHS: ID_ARRAY | RHS: ID_ARRAY] LHS AND RHS SYMBOLS ARE THE SAME!" << std::endl;
+#endif
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+    }
+    return false;
+}
 
 void SemanticAnalyzer::analyzeNode(node::Node* node)
 {
@@ -165,28 +224,62 @@ void SemanticAnalyzer::processAssignment(node::Node* node)
         lhs->setIsVisited(true);
         rhs->setIsVisited(true);
 
-        // (3) Process the LHS
-        auto lhsDecl = processIdentifier(lhs, false);
+        node::Node* lhsDecl = nullptr;
+        bool doNotProcessAgain = false;
+
+        // (3) Check, in some cases, if the LHS = RHS
+        if (areAssignmentOperatorsIdentical(lhs, rhs)) {
+#if PENDANTIC_DEBUG
+            cout << "{RHS}" << endl;
+#endif
+            processIdentifier(rhs);
+            doNotProcessAgain = true;
+        }
+
+#if PENDANTIC_DEBUG
+        cout << "{LHS}" << endl;
+#endif
+        lhsDecl = processIdentifier(lhs, false);
 
         if (lhsDecl)
             node->setVarType(lhsDecl->getVarType());
         else {
             node->setVarType(lhs->getVarType());
         }
-
-        // (4) Process the RHS
-        // node::Node* rhsDecl = nullptr;
+        // (5) Process the RHS
         switch (rhs->getNodeType()) {
         case NT::ID:
         case NT::ID_ARRAY:
-        case NT::CALL:
-            processIdentifier(rhs);
+        case NT::CALL: {
+            if (!doNotProcessAgain) {
+#if PENDANTIC_DEBUG
+                cout << "{RHS}" << endl;
+#endif
+                processIdentifier(rhs);
+            }
             break;
-        case NT::ASSIGNMENT:
+        }
+        case NT::ASSIGNMENT: {
+#if PENDANTIC_DEBUG
+            cout << "{RHS}" << endl;
+#endif
             processAssignment(rhs);
             break;
-        case NT::OPERATOR:
+        }
+        case NT::OPERATOR: {
+#if PENDANTIC_DEBUG
+            cout << "{RHS}" << endl;
+#endif
             processBinaryOperator(rhs);
+            break;
+        }
+        case NT::NUMBER:
+        case NT::BOOLEAN:
+        case NT::STRING:
+        case NT::CHARACTER:
+#if PENDANTIC_DEBUG
+            cout << "{RHS}\nCONSTANT: " << types::literalNodeTypeStr(rhs->getNodeType()) << endl;
+#endif
             break;
         default:
             break;
@@ -216,7 +309,6 @@ void SemanticAnalyzer::processAssignment(node::Node* node)
         // (2) Set the node as visited if it is not nullptr
         lhs->setIsVisited(true);
 
-        // auto lhsDecl =
         processIdentifier(lhs);
 
         checkUnaryTypes(node, lhs);
@@ -461,19 +553,24 @@ void SemanticAnalyzer::processRange(node::Node* node)
         throw runtime_error("Error in processRange(): 'node' is null.");
     }
 
-    if (node->getChildren().size() > 0) {
-        for (auto child : node->getChildren()) {
-            if (child) {
+    for (auto child : node->getChildren()) {
+        if (child) {
 #if PENDANTIC_DEBUG
-                cout << "\t(Child) " << types::literalNodeTypeStr(child->getNodeType()) << endl;
+            cout << "\t(Child) " << types::literalNodeTypeStr(child->getNodeType()) << endl;
 #endif
-                child->setIsVisited(true);
-                if (!child->getIsConst()) {
-                    child->setVarType(VT::UNDEFINED);
+            child->setIsVisited(true);
+            if (!child->getIsConst()) {
+                child->setVarType(VT::UNDEFINED);
+            }
+            for (auto subChildren : child->getChildren()) {
+                if (subChildren) {
+                    subChildren->setIsVisited(true);
+                    if (!subChildren->getIsConst()) {
+                        subChildren->setVarType(VT::UNDEFINED);
+                    }
                 }
             }
         }
-        return;
     }
 }
 
